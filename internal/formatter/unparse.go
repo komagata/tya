@@ -64,7 +64,7 @@ func canonicalizeTopLevel(stmts []ast.Stmt) []ast.Stmt {
 	out := make([]ast.Stmt, 0, len(stmts))
 	i := 0
 	for i < len(stmts) {
-		if _, ok := stmts[i].(*ast.ImportStmt); !ok {
+		if !isImportStmt(stmts[i]) {
 			out = append(out, stmts[i])
 			i++
 			continue
@@ -72,20 +72,41 @@ func canonicalizeTopLevel(stmts []ast.Stmt) []ast.Stmt {
 		j := i
 		var imports []*ast.ImportStmt
 		for j < len(stmts) {
-			imp, ok := stmts[j].(*ast.ImportStmt)
-			if !ok {
+			if !isImportStmt(stmts[j]) {
 				break
 			}
-			imports = append(imports, imp)
+			imports = append(imports, flattenImportStmt(stmts[j])...)
 			j++
 		}
 		sortImports(imports)
-		for _, imp := range imports {
-			out = append(out, imp)
+		if len(imports) == 1 {
+			out = append(out, imports[0])
+		} else if len(imports) > 1 {
+			out = append(out, &ast.ImportBlockStmt{Imports: imports})
 		}
 		i = j
 	}
 	return out
+}
+
+func isImportStmt(stmt ast.Stmt) bool {
+	switch stmt.(type) {
+	case *ast.ImportStmt, *ast.ImportBlockStmt:
+		return true
+	default:
+		return false
+	}
+}
+
+func flattenImportStmt(stmt ast.Stmt) []*ast.ImportStmt {
+	switch n := stmt.(type) {
+	case *ast.ImportStmt:
+		return []*ast.ImportStmt{n}
+	case *ast.ImportBlockStmt:
+		return n.Imports
+	default:
+		return nil
+	}
 }
 
 func sortImports(imports []*ast.ImportStmt) {
@@ -97,6 +118,17 @@ func sortImports(imports []*ast.ImportStmt) {
 		}
 		return ia.BindingName() < ib.BindingName()
 	})
+}
+
+func importEntryString(imp *ast.ImportStmt) string {
+	name := imp.Name
+	if imp.Wildcard {
+		name += "/*"
+	}
+	if imp.Alias != "" {
+		return fmt.Sprintf("%s as %s", name, imp.Alias)
+	}
+	return name
 }
 
 // stdlibModules is the set of names recognized as stdlib for
@@ -141,8 +173,8 @@ func isStdlibImport(name string) bool {
 // always stay in one import block. All other transitions get no blank
 // line.
 func requiresBlankBefore(cur, prev ast.Stmt) bool {
-	_, prevImport := prev.(*ast.ImportStmt)
-	_, curImport := cur.(*ast.ImportStmt)
+	prevImport := isImportStmt(prev)
+	curImport := isImportStmt(cur)
 	if prevImport && curImport {
 		return false
 	}
@@ -243,11 +275,15 @@ func (u *unparser) stmt(s ast.Stmt) error {
 	u.preStmt(s)
 	switch n := s.(type) {
 	case *ast.ImportStmt:
-		if n.Alias != "" {
-			u.emitStmtLine(s, fmt.Sprintf("import %s as %s", n.Name, n.Alias))
-		} else {
-			u.emitStmtLine(s, fmt.Sprintf("import %s", n.Name))
+		u.emitStmtLine(s, "import "+importEntryString(n))
+		return nil
+	case *ast.ImportBlockStmt:
+		u.line("import")
+		u.indent++
+		for _, imp := range n.Imports {
+			u.line(importEntryString(imp))
 		}
+		u.indent--
 		return nil
 	case *ast.EmbedStmt:
 		body := fmt.Sprintf("embed %q as %s", n.Path, n.Name)

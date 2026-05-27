@@ -2,8 +2,8 @@
 # GET  /users/:id   → "User <id>"
 # POST /users       → "got: <body>"
 # Run: tya run examples/http_demo/api.tya
-import bytes as bytes
-import net/http
+import bytes/* as bytes
+import net/http/*
 
 show_user = req -> { status: 200, body: "User " + req["params"]["id"] }
 

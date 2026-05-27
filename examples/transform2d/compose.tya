@@ -1,5 +1,5 @@
-import geometry as geo
-import transform2d as transform2d
+import geometry/* as geo
+import transform2d/* as transform2d
 
 move = transform2d.Transform2D(1, 0, 0, 1, 0, 0).translation(10, 20)
 scale = transform2d.Transform2D(1, 0, 0, 1, 0, 0).uniform_scale(2)

@@ -14,7 +14,7 @@ stdout 'close=/close:false'
 stdout 'close-conn=close'
 
 -- main.tya --
-import net/http as http
+import net/http/* as http
 
 app = http.Server()
 

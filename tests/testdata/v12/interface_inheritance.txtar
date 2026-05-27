@@ -91,7 +91,7 @@ class ConcreteFile extends AbstractFile
   read: ->
     "abstract-data"
 
-import io
+import io as io
 
 file = File()
 print(file.read())

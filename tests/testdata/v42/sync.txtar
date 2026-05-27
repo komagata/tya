@@ -18,7 +18,7 @@ exec go run ./cmd/tya run $WORK/waitgroup.tya
 stdout 'wait_group ok'
 
 -- mutex.tya --
-import sync as sync
+import sync/* as sync
 
 state = {}
 state["count"] = 0
@@ -39,7 +39,7 @@ await t2
 print("count: " + state["count"].to_s())
 
 -- atomic.tya --
-import sync as sync
+import sync/* as sync
 
 a = sync.AtomicInteger(0)
 a.add(10)
@@ -54,7 +54,7 @@ ok2 = a.cas(99, 100)
 print("cas alias: " + ok2.to_s())
 
 -- with_lock_raise.tya --
-import sync as sync
+import sync/* as sync
 
 m = sync.Mutex()
 boom = ->
@@ -69,8 +69,8 @@ catch e
   print("same: " + e["message"])
 
 -- waitgroup.tya --
-import sync as sync
-import channel as channel
+import sync/* as sync
+import channel/* as channel
 
 wg = sync.WaitGroup()
 wg.add(3)

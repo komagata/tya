@@ -28,13 +28,13 @@ stderr 'import name conflict: Request'
 stderr 'import name conflict: Request'
 
 -- bare.tya --
-import net/http
+import net/http/*
 
 request = Request("bare")
 print(request.label())
 
 -- bare_path_name_local.tya --
-import net/http
+import net/http/*
 
 http = "local http"
 request = Request("bare")
@@ -42,31 +42,31 @@ print(http)
 print(request.label())
 
 -- aliased.tya --
-import net/http as http
+import net/http/* as http
 
 request = http.Request("aliased")
 print(request.label())
 
 -- bare_namespace.tya --
-import net/http
+import net/http/*
 
 request = http.Request("hidden")
 print(request.label())
 
 -- aliased_bare.tya --
-import net/http as http
+import net/http/* as http
 
 request = Request("hidden")
 print(request.label())
 
 -- conflict_imports.tya --
-import api
-import web
+import api/*
+import web/*
 
 print("unreachable")
 
 -- conflict_local.tya --
-import net/http
+import net/http/*
 
 Request = -> "local"
 print(Request())

@@ -1,5 +1,5 @@
-import unittest
-import time as time
+import unittest/*
+import time/* as time
 
 class StdlibTimeTest extends TestCase
 

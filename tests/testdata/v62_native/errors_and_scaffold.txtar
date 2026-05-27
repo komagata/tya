@@ -34,7 +34,7 @@ version = "0.1.0"
 broken_native = { path = "../broken_native" }
 
 -- missing_app/src/main.tya --
-import broken_native
+import broken_native/*
 
 print(BrokenNative.value())
 
@@ -62,7 +62,7 @@ dep_one = { path = "../dep_one" }
 dep_two = { path = "../dep_two" }
 
 -- dup_app/src/main.tya --
-import dep_one
+import dep_one/*
 
 print(DepOne.value())
 

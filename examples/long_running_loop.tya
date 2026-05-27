@@ -1,4 +1,4 @@
-import runtime
+import runtime/*
 
 # Demonstrates that the v0.41 GC keeps a long-running allocation loop's
 # resident set bounded.

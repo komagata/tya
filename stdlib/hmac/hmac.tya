@@ -1,6 +1,6 @@
-import base64 as base64
-import digest as digest
-import hex as hex
+import base64/* as base64
+import digest/* as digest
+import hex/* as hex
 
 # Hmac provides keyed message authentication helpers.
 class Hmac

@@ -11,7 +11,7 @@ stdout 'hash len: 64'
 -- data.txt --
 hello tya embed
 -- main.tya --
-import bytes as bytes
+import bytes/* as bytes
 
 embed "data.txt" as payload
 print(bytes.Bytes(payload).to_text())

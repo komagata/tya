@@ -12,7 +12,7 @@ import (
 
 func TestRunRegexCompileAndSearch(t *testing.T) {
 	out := runRegexProgram(t, strings.Join([]string{
-		"import regex as regex",
+		"import regex/* as regex",
 		"rx = regex.Regex(\"([a-z]+)([0-9]+)\").compile()",
 		"found = rx.find(\"xx abc123 yy\")",
 		"print(found[\"text\"])",
@@ -32,7 +32,7 @@ func TestRunRegexCompileAndSearch(t *testing.T) {
 
 func TestRunRegexFindAllSplitReplace(t *testing.T) {
 	out := runRegexProgram(t, strings.Join([]string{
-		"import regex as regex",
+		"import regex/* as regex",
 		"rx = regex.Regex(\"([a-z]+)=([0-9]+)\").compile()",
 		"matches = rx.find_all(\"a=1 b=22\")",
 		"print(matches.len())",
@@ -50,7 +50,7 @@ func TestRunRegexFindAllSplitReplace(t *testing.T) {
 
 func TestRunRegexUtf8RuneIndexes(t *testing.T) {
 	out := runRegexProgram(t, strings.Join([]string{
-		"import regex as regex",
+		"import regex/* as regex",
 		"found = regex.Regex(\"い.\").search(\"あいうえ\")",
 		"print(found[\"text\"])",
 		"print(found[\"start\"])",
@@ -76,7 +76,7 @@ func TestRunRegexInvalidPatternsAndOptionsRaiseStructuredErrors(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := runRegexProgramError(t, "import regex as regex\n"+tt.src+"\n")
+			err := runRegexProgramError(t, "import regex/* as regex\n"+tt.src+"\n")
 			if err == nil {
 				t.Fatal("expected error")
 			}

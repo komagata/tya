@@ -8,7 +8,7 @@ stdout 'helped:ok\n'
 ! stderr .
 
 -- main.tya --
-import pkg
+import pkg/*
 
 print(Util.run())
 

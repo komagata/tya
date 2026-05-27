@@ -1,6 +1,6 @@
-import base64 as base64
-import json as json
-import toml as toml
+import base64/* as base64
+import json/* as json
+import toml/* as toml
 
 # Serializable provides the serialization/Serializer standard library API.
 interface Serializable

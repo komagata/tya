@@ -16,7 +16,7 @@ stdout 'tya_fn_Lib_greet'
 ! stderr .
 
 -- main.tya --
-import lib
+import lib/*
 
 print(Lib.greet())
 

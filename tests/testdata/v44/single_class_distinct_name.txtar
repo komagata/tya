@@ -7,7 +7,7 @@ stdout 'helper used\n'
 ! stderr .
 
 -- main.tya --
-import tools
+import tools/*
 
 print(Helper.use())
 

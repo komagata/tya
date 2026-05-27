@@ -13,13 +13,13 @@ stdout 'true'
 stdout 'true'
 
 -- public_contract.tya --
-import regex as regex
-import time as time
-import hmac as hmac
-import file as file
-import dir as dir
-import os as os
-import process as process
+import regex/* as regex
+import time/* as time
+import hmac/* as hmac
+import file/* as file
+import dir/* as dir
+import os/* as os
+import process/* as process
 
 print(regex.Regex("[0-9]+").search("v1")["text"])
 print(time.Time().unix(0).format("unix"))

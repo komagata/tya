@@ -12,7 +12,7 @@ import (
 
 func TestRunJsonParseNonASCIIString(t *testing.T) {
 	out := runJsonProgram(t, strings.Join([]string{
-		"import json as json",
+		"import json/* as json",
 		"item = json.Json(\"{{\\\"name\\\":\\\"test_copies_learning_and_product_data_when_進捗コピー_button_is_clicked\\\",\\\"duration\\\":0}}\").parse()",
 		"print(item[\"name\"])",
 		"print(item[\"duration\"])",
@@ -26,7 +26,7 @@ func TestRunJsonParseNonASCIIString(t *testing.T) {
 
 func TestRunJsonParseUnicodeEscapeStringConcatenatesAsString(t *testing.T) {
 	out := runJsonProgram(t, strings.Join([]string{
-		"import json as json",
+		"import json/* as json",
 		"item = json.Json(\"{{\\\"name\\\":\\\"\\\\u9032\\\\u6357\\\\u30b3\\\\u30d4\\\\u30fc\\\"}}\").parse()",
 		"print(\"prefix:\" + item[\"name\"])",
 		"",

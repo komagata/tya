@@ -24,8 +24,8 @@ grep 'Content-Length: 6' $WORK/normal.out
 ! grep 'Transfer-Encoding: chunked' $WORK/normal.out
 
 -- main.tya --
-import net/http as http
-import channel as channel
+import net/http/* as http
+import channel/* as channel
 
 app = http.Server()
 

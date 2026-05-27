@@ -1,4 +1,4 @@
-import image as image
+import image/* as image
 
 src = args()[0]
 dst = args()[1]

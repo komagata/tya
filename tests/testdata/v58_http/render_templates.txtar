@@ -26,7 +26,7 @@ File {{ name }}
 Escaped {{ value }}
 
 -- main.tya --
-import net/http as http
+import net/http/* as http
 
 embed "embedded.html" as embedded_view
 

@@ -1,7 +1,7 @@
 # Parallel "fetch" using `scope`. Tasks spawned inside the block are
 # guaranteed to complete before control leaves it; a fake `fetch`
 # stands in for any blocking I/O.
-import time
+import time/*
 
 fetch = url ->
   time.Time().sleep(0.05)

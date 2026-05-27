@@ -8,19 +8,19 @@ cd $REPO
 stderr 'import cycle'
 
 -- main.tya --
-import a
+import a/*
 
 print(a.A.go())
 
 -- a/a.tya --
-import b
+import b/*
 
 class A
   static go: ->
     "via " + b.B.go()
 
 -- b/b.tya --
-import a
+import a/*
 
 class B
   static go: ->

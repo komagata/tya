@@ -27,7 +27,7 @@ exec go run ./cmd/tya check $WORK/standalone_bad/hello.tya
 stderr 'module not found: never_exists'
 
 -- good_entry/main.tya --
-import lib
+import lib/*
 
 print(Lib.greet())
 

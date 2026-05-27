@@ -1,5 +1,5 @@
-import unittest
-import serialization as serialization
+import unittest/*
+import serialization/* as serialization
 
 class SavePlayer
   initialize: name, score ->

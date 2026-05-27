@@ -4,8 +4,8 @@ exec go run ./cmd/tya run $WORK/each_line.tya
 stdout 'alpha\nbeta\n'
 
 -- each_line.tya --
-import io as io
-import file as file
+import io/* as io
+import file/* as file
 
 out = io.Io().stdout()
 collect = line -> out.write(line)

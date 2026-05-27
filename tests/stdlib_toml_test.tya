@@ -1,5 +1,5 @@
-import unittest
-import toml as toml
+import unittest/*
+import toml/* as toml
 
 class StdlibTomlTest extends TestCase
 

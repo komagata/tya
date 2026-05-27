@@ -1,5 +1,5 @@
-import unittest
-import matrix as matrix
+import unittest/*
+import matrix/* as matrix
 
 class StdlibMatrixTest extends TestCase
 

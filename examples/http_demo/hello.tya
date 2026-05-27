@@ -1,7 +1,7 @@
 # v0.58: minimal HTTP server.
 # Run: tya run examples/http_demo/hello.tya
 # Then in another shell: curl http://localhost:8080/
-import net/http
+import net/http/*
 
 app = http.Server()
 app.get("/", _req -> { status: 200, body: "Hello, Tya HTTP" })

@@ -1,5 +1,5 @@
-import unittest
-import net/http as http
+import unittest/*
+import net/http/* as http
 
 class StdlibHttpRoutingTest extends TestCase
 

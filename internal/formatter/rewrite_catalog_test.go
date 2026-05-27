@@ -261,7 +261,7 @@ func TestRewriteCatalog(t *testing.T) {
 		},
 		{
 			category: "imports",
-			name:     "stdlib imports sort before user imports",
+			name:     "multiple imports group and sort stdlib before user imports",
 			input: strings.Join([]string{
 				"import app",
 				"import file",
@@ -269,10 +269,33 @@ func TestRewriteCatalog(t *testing.T) {
 				"",
 			}, "\n"),
 			want: strings.Join([]string{
-				"import file",
-				"import app",
+				"import",
+				"  file",
+				"  app",
 				"",
 				"main = -> true",
+				"",
+			}, "\n"),
+		},
+		{
+			category: "imports",
+			name:     "single wildcard import stays one line",
+			input:    "import base64/* as b64\n",
+			want:     "import base64/* as b64\n",
+		},
+		{
+			category: "imports",
+			name:     "grouped imports accept wildcard and aliases",
+			input: strings.Join([]string{
+				"import",
+				"  net/http/client as client",
+				"  base64/*",
+				"",
+			}, "\n"),
+			want: strings.Join([]string{
+				"import",
+				"  base64/*",
+				"  net/http/client as client",
 				"",
 			}, "\n"),
 		},

@@ -1,4 +1,4 @@
-import random as random
+import random/* as random
 
 rng = random.Rng(42)
 loot = ["common", "rare", "legendary"]

@@ -12,7 +12,7 @@ stdout 'aliased!\n'
 ! stderr .
 
 -- main.tya --
-import lib/util as helper
+import lib/util/* as helper
 
 print(helper.Util.greet())
 

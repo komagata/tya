@@ -9,8 +9,8 @@ stdout 'fast: true'
 stdout 'after'
 
 -- sample.tya --
-import task as task
-import time as time
+import task/* as task
+import time/* as time
 
 cooperative_worker = () ->
   me = task.Task().current()

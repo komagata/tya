@@ -8,7 +8,7 @@ stderr ' error bad\n'
 ! stderr 'debug'
 
 -- default_stderr.tya --
-import log as log
+import log/* as log
 
 logger = log.Logger(nil).default()
 logger.debug("debug", {})

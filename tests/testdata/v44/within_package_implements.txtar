@@ -9,7 +9,7 @@ stdout 'json-encoded\n'
 ! stderr .
 
 -- main.tya --
-import codec
+import codec/*
 
 print(JsonEncoder().encode())
 

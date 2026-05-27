@@ -1,6 +1,6 @@
 # v0.44 edge cases for directory-as-package import.
 # Pin behavior we explicitly want stable:
-# - Three-level package nesting (foo/bar/baz) works; `import x/y/z`
+# - Three-level package nesting (foo/bar/baz) works; `import x/y/z/*`
 #   exposes Tag as a bare class.
 # - A package containing only one class file also exposes its public
 #   class bare.
@@ -18,9 +18,9 @@ stdout 'deep\nsolo\nGET /\n'
 stderr 'package mixed_pkg contains script file'
 
 -- main.tya --
-import x/y/z
-import solo
-import api/v2
+import x/y/z/*
+import solo/*
+import api/v2/*
 
 print(Tag.label())
 print(Solo.greet())
@@ -58,7 +58,7 @@ class Request
     "/"
 
 -- bad/bad_main.tya --
-import mixed_pkg
+import mixed_pkg/*
 
 print(Helper())
 

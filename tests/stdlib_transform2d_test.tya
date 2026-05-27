@@ -1,7 +1,7 @@
-import unittest
-import geometry as geo
-import matrix as matrix
-import transform2d as transform2d
+import unittest/*
+import geometry/* as geo
+import matrix/* as matrix
+import transform2d/* as transform2d
 
 class StdlibTransform2DTest extends TestCase
 

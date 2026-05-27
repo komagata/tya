@@ -1,4 +1,4 @@
-import net/http as http
+import net/http/* as http
 
 class Demo
   static middleware: req, next ->

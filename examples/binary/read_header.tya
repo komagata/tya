@@ -1,5 +1,5 @@
-import binary as binary
-import bytes as bytes
+import binary/* as binary
+import bytes/* as bytes
 
 data = b"Tya\x00\x02\x01"
 reader = binary.Reader(data)

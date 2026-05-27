@@ -807,6 +807,85 @@ func TestParseImportStatement(t *testing.T) {
 	}
 }
 
+func TestParseWildcardImportStatement(t *testing.T) {
+	toks, errs := lexer.Lex("import base64/* as b64\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	imp, ok := prog.Stmts[0].(*ast.ImportStmt)
+	if !ok {
+		t.Fatalf("got %T", prog.Stmts[0])
+	}
+	if imp.Name != "base64" || !imp.Wildcard || imp.Alias != "b64" {
+		t.Fatalf("got import %#v", imp)
+	}
+}
+
+func TestParseGroupedImportStatement(t *testing.T) {
+	toks, errs := lexer.Lex(strings.Join([]string{
+		"import",
+		"  base64/*",
+		"  net/http/client as client",
+		"",
+	}, "\n"))
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	block, ok := prog.Stmts[0].(*ast.ImportBlockStmt)
+	if !ok {
+		t.Fatalf("got %T", prog.Stmts[0])
+	}
+	if len(block.Imports) != 2 {
+		t.Fatalf("got %d imports", len(block.Imports))
+	}
+	if block.Imports[0].Name != "base64" || !block.Imports[0].Wildcard {
+		t.Fatalf("got first import %#v", block.Imports[0])
+	}
+	if block.Imports[1].Name != "net/http/client" || block.Imports[1].Alias != "client" {
+		t.Fatalf("got second import %#v", block.Imports[1])
+	}
+}
+
+func TestParseRejectsEmptyGroupedImportStatement(t *testing.T) {
+	toks, errs := lexer.Lex("import\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	_, _, err := Parse(toks)
+	if err == nil {
+		t.Fatal("expected empty import block error")
+	}
+	if !strings.Contains(err.Error(), "expected indented import block") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestParseRejectsInvalidWildcardImportStatements(t *testing.T) {
+	tests := []string{
+		"import *\n",
+		"import base64*\n",
+		"import base64/*/foo\n",
+		"import base64/**\n",
+	}
+	for _, src := range tests {
+		toks, errs := lexer.Lex(src)
+		if len(errs) != 0 {
+			t.Fatalf("lex errors for %q: %v", src, errs)
+		}
+		if _, _, err := Parse(toks); err == nil {
+			t.Fatalf("expected invalid wildcard import error for %q", src)
+		}
+	}
+}
+
 func TestParseRejectsImportInsideBlock(t *testing.T) {
 	toks, errs := lexer.Lex("if true\n  import greeting\n")
 	if len(errs) != 0 {

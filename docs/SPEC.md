@@ -310,7 +310,8 @@ The core formatted rules are:
   long conditions use the formatter-defined continuation forms;
 - trailing commas accepted in arrays, dictionaries, calls, and parameter lists
   are omitted;
-- imports are atomic and not line-wrapped;
+- one import stays on one line, while two or more consecutive imports are
+  formatted as an indented `import` block;
 - function and method bodies that consist of one expression, or one final
   `return` of a single value, are formatted as `-> expr` when the rendered line
   fits within the column limit and no attached comments require a block body;
@@ -1099,23 +1100,36 @@ Imports appear at top level before other declarations and statements.
 
 ```tya
 import greeting
-import net/http
-import net/http as http
+import net/http/client
+import net/http/* as http
+```
+
+When there are multiple imports, Formatted Syntax groups them under one
+`import` header:
+
+```tya
+import
+  greeting
+  net/http/client
+  net/http/* as http
 ```
 
 Import paths are slash-separated `snake_case` segments. Relative filesystem
 paths, absolute paths, empty segments, and non-snake_case segments are invalid.
+Package-wide imports use an explicit final `/*` suffix. `*` is only valid as the
+final segment in `path/*`; `*`, `base64*`, `base64/*/foo`, and `base64/**` are
+invalid.
 
 ### Directory Packages
 
 A directory package is a directory resolved by import path containing snake_case class/interface files. It must contain at least one class/interface file and must not contain script files at the package leaf.
 
-Unaliased directory imports expose public class and interface names directly.
+Unaliased wildcard directory imports expose public class and interface names directly.
 They do not create a lowercase namespace binding for the import path or terminal
 directory segment.
 
 ```tya
-import net/http
+import net/http/*
 
 server = Server()
 http = "local label"
@@ -1125,11 +1139,11 @@ In the example above, `http` is an ordinary local binding. `http.Server()` is
 invalid because unaliased directory imports do not expose a namespace object.
 If a namespace is desired, use an alias.
 
-Aliased directory imports expose a namespace binding and do not import public
+Aliased wildcard directory imports expose a namespace binding and do not import public
 names bare.
 
 ```tya
-import net/http as http
+import net/http/* as http
 
 server = http.Server()
 ```
@@ -1143,7 +1157,7 @@ two packages that expose the same public name is invalid. Importing the same
 path twice is invalid even when aliases differ.
 
 ```tya
-import net/http
+import net/http/*
 
 Request = -> "local" # invalid: Request is imported from net/http
 ```

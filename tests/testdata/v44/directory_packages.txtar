@@ -1,6 +1,6 @@
 # v0.44 directory-as-package import.
 # A directory containing snake_case class/interface files is an importable package.
-# Unaliased `import net/http` exposes public package classes as bare names.
+# Unaliased `import net/http/*` exposes public package classes as bare names.
 cd $REPO
 
 exec go run ./cmd/tya run $WORK/main.tya
@@ -20,7 +20,7 @@ stdout 'Hello, komagata\n'
 ! stderr .
 
 -- main.tya --
-import net/http
+import net/http/*
 
 request = Request("http://example.com")
 response = Response()
@@ -44,7 +44,7 @@ class Response
     self.status
 
 -- bad_pkg_main.tya --
-import bad_pkg
+import bad_pkg/*
 
 x = Helper()
 print(x)

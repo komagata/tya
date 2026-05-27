@@ -11,7 +11,7 @@ stdout 'GET / -> 200\n'
 ! stderr .
 
 -- main.tya --
-import api/v1
+import api/v1/*
 
 client = Client()
 print(client.fetch("/"))

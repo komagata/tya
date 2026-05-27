@@ -1,4 +1,4 @@
-import time as time
+import time/* as time
 
 # Logger provides the log/Logger standard library API.
 class Logger

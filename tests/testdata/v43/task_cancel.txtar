@@ -6,8 +6,8 @@ stdout 'before cancel: false'
 stdout 'iterations > 0: true'
 
 -- sample.tya --
-import task as task
-import time as time
+import task/* as task
+import time/* as time
 
 worker = () ->
   me = task.Task().current()

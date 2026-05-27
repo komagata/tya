@@ -1,4 +1,4 @@
-import file as file
+import file/* as file
 
 # Codec provides the image/Codec standard library API.
 class Codec

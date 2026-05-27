@@ -11,7 +11,7 @@ stdout 'Set-Cookie: prefs=dark; SameSite=Lax'
 stdout 'last,two,none'
 
 -- main.tya --
-import net/http as http
+import net/http/* as http
 
 app = http.Server()
 

@@ -27,7 +27,7 @@ stdout 'wrapped:hello\n'
 ! stderr .
 
 -- wrong_main.tya --
-import wrong_pkg
+import wrong_pkg/*
 
 print(WrongName())
 
@@ -37,7 +37,7 @@ class DifferentName
     self.x = 1
 
 -- empty_main.tya --
-import empty_pkg
+import empty_pkg/*
 
 print(EmptyClass())
 
@@ -48,7 +48,7 @@ interface Empty
   noop: ->
 
 -- stray_main.tya --
-import stray_pkg
+import stray_pkg/*
 
 print(Stray())
 
@@ -60,7 +60,7 @@ class Stray
 x = 1
 
 -- ok_main.tya --
-import ok_pkg
+import ok_pkg/*
 
 s = Server()
 print(s.run("hello"))

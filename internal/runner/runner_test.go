@@ -597,7 +597,7 @@ func TestLoadSourceImportsPackagePublicClassesBare(t *testing.T) {
 	writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  initialize: url ->\n    self.url = url\n")
 	writeFile(t, filepath.Join(pkgDir, "response.tya"), "class Response\n  initialize: status ->\n    self.status = status\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import net/http\nreq = Request(\"/ok\")\nprint(req.url)\n")
+	writeFile(t, main, "import net/http/*\nreq = Request(\"/ok\")\nprint(req.url)\n")
 
 	source, modules, err := LoadSourceWithModules(main)
 	if err != nil {
@@ -606,11 +606,30 @@ func TestLoadSourceImportsPackagePublicClassesBare(t *testing.T) {
 	if !strings.Contains(source, "class Request") || !strings.Contains(source, "req = Request(\"/ok\")") {
 		t.Fatalf("source does not expose bare package class:\n%s", source)
 	}
-	if strings.Contains(source, "http = {}") || strings.Contains(source, "import net/http") {
+	if strings.Contains(source, "http = {}") || strings.Contains(source, "import net/http/*") {
 		t.Fatalf("source should not create unaliased package namespace:\n%s", source)
 	}
 	if len(modules) != 0 {
 		t.Fatalf("unaliased package import should not bind a module, got %v", modules)
+	}
+}
+
+func TestLoadSourceRejectsDirectoryPackageImportWithoutWildcard(t *testing.T) {
+	dir := t.TempDir()
+	pkgDir := filepath.Join(dir, "net", "http")
+	if err := os.MkdirAll(pkgDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  initialize: url ->\n    self.url = url\n")
+	main := filepath.Join(dir, "main.tya")
+	writeFile(t, main, "import net/http\nreq = Request(\"/ok\")\nprint(req.url)\n")
+
+	_, _, err := LoadSourceWithModules(main)
+	if err == nil {
+		t.Fatal("expected directory package import without wildcard to fail")
+	}
+	if !strings.Contains(err.Error(), "module not found") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
@@ -622,7 +641,7 @@ func TestLoadSourceImportsAliasedPackageAsNamespace(t *testing.T) {
 	}
 	writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  initialize: url ->\n    self.url = url\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import net/http as http\nreq = http.Request(\"/ok\")\nprint(req.url)\n")
+	writeFile(t, main, "import net/http/* as http\nreq = http.Request(\"/ok\")\nprint(req.url)\n")
 
 	source, modules, err := LoadSourceWithModules(main)
 	if err != nil {
@@ -644,7 +663,7 @@ func TestLoadSourceRejectsAliasedPackageBareClassUse(t *testing.T) {
 	}
 	writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  initialize: url ->\n    self.url = url\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import net/http as http\nreq = Request(\"/ok\")\n")
+	writeFile(t, main, "import net/http/* as http\nreq = Request(\"/ok\")\n")
 
 	_, err := LoadSource(main)
 	if err == nil {
@@ -663,7 +682,7 @@ func TestLoadSourceRejectsBarePackageNamespaceUse(t *testing.T) {
 	}
 	writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  initialize: url ->\n    self.url = url\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import net/http\nreq = http.Request(\"/ok\")\n")
+	writeFile(t, main, "import net/http/*\nreq = http.Request(\"/ok\")\n")
 
 	_, err := LoadSource(main)
 	if err == nil {
@@ -684,7 +703,7 @@ func TestLoadSourceRejectsBarePackageImportNameConflict(t *testing.T) {
 		writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  initialize: ->\n    self.path = \"\"\n")
 	}
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import api\nimport web\n")
+	writeFile(t, main, "import api/*\nimport web/*\n")
 
 	_, err := LoadSource(main)
 	if err == nil {
@@ -703,7 +722,7 @@ func TestLoadSourceRejectsLocalBarePackageImportNameConflict(t *testing.T) {
 	}
 	writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  initialize: ->\n    self.path = \"\"\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import api\nRequest = -> \"local\"\n")
+	writeFile(t, main, "import api/*\nRequest = -> \"local\"\n")
 
 	_, err := LoadSource(main)
 	if err == nil {

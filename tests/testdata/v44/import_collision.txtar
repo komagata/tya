@@ -13,14 +13,14 @@ stderr 'package name conflict.*module net'
 stderr 'package name conflict.*module net'
 
 -- main.tya --
-import a/net
-import b/net
+import a/net/*
+import b/net/*
 
 print("unreachable")
 
 -- aliased.tya --
-import a/net as a_net
-import b/net as b_net
+import a/net/* as a_net
+import b/net/* as b_net
 
 print("unreachable")
 

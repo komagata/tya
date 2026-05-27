@@ -1,5 +1,5 @@
-import unittest
-import net/ip as ip
+import unittest/*
+import net/ip/* as ip
 
 class StdlibNetIpTest extends TestCase
 

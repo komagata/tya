@@ -174,7 +174,7 @@ func CheckClassFileStructure(prog *ast.Program, path string) error {
 	inDeclarations := false
 	for _, stmt := range prog.Stmts {
 		switch n := stmt.(type) {
-		case *ast.ImportStmt:
+		case *ast.ImportStmt, *ast.ImportBlockStmt:
 			if inDeclarations {
 				return fmt.Errorf("[TYA-E0403] class file %s imports must precede class and interface declarations", base)
 			}
@@ -234,7 +234,7 @@ func CheckModuleFile(prog *ast.Program, path string) error {
 	seenModule := false
 	for _, stmt := range prog.Stmts {
 		switch n := stmt.(type) {
-		case *ast.ImportStmt:
+		case *ast.ImportStmt, *ast.ImportBlockStmt:
 			if seenModule {
 				return fmt.Errorf("%s may only contain imports before its module declaration", filepath.Base(path))
 			}
@@ -710,26 +710,27 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 	}
 	imports := map[string]token.Token{}
 	for _, stmt := range stmts {
-		switch n := stmt.(type) {
-		case *ast.ImportStmt:
-			if first, ok := imports[n.Name]; ok {
-				return fmt.Errorf("%d:%d: duplicate import %s first imported at %d:%d", n.NameTok.Line, n.NameTok.Col, n.Name, first.Line, first.Col)
+		for _, imp := range checkerImports(stmt) {
+			if first, ok := imports[importCheckerKey(imp)]; ok {
+				return fmt.Errorf("%d:%d: duplicate import %s first imported at %d:%d", imp.NameTok.Line, imp.NameTok.Col, importCheckerKey(imp), first.Line, first.Col)
 			}
-			imports[n.Name] = n.NameTok
-			for _, segment := range strings.Split(n.Name, "/") {
+			imports[importCheckerKey(imp)] = imp.NameTok
+			for _, segment := range strings.Split(imp.Name, "/") {
 				if !valueNameRE.MatchString(segment) || strings.HasPrefix(segment, "_") {
-					return fmt.Errorf("%d:%d: invalid module name %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+					return fmt.Errorf("%d:%d: invalid module name %s", imp.NameTok.Line, imp.NameTok.Col, imp.Name)
 				}
 			}
-			binding := n.BindingName()
-			tok := n.NameTok
-			if n.Alias != "" {
-				tok = n.AliasTok
+			binding := imp.BindingName()
+			tok := imp.NameTok
+			if imp.Alias != "" {
+				tok = imp.AliasTok
 			}
 			if !valueNameRE.MatchString(binding) || strings.HasPrefix(binding, "_") {
 				return fmt.Errorf("%d:%d: invalid import binding %s", tok.Line, tok.Col, binding)
 			}
 			scope.define(binding, kindModule)
+		}
+		switch n := stmt.(type) {
 		case *ast.EmbedStmt:
 			if !valueNameRE.MatchString(n.Name) {
 				return fmt.Errorf("%d:%d: invalid embed binding %s", n.NameTok.Line, n.NameTok.Col, n.Name)
@@ -1284,6 +1285,25 @@ func collectPrivateAssignments(info *classInfo, fn *ast.FuncLit) {
 	if fn.Expr != nil {
 		walkExpr(fn.Expr, false)
 	}
+}
+
+func checkerImports(stmt ast.Stmt) []*ast.ImportStmt {
+	switch n := stmt.(type) {
+	case *ast.ImportStmt:
+		return []*ast.ImportStmt{n}
+	case *ast.ImportBlockStmt:
+		return n.Imports
+	default:
+		return nil
+	}
+}
+
+func importCheckerKey(imp *ast.ImportStmt) string {
+	key := imp.Name
+	if imp.Wildcard {
+		key += "/*"
+	}
+	return key
 }
 
 func checkExpr(expr ast.Expr, scope *scope) error {

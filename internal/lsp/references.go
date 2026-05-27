@@ -11,7 +11,7 @@ import (
 // References answers textDocument/references. Scope analysis
 // drives the behaviour:
 //   - top-level binding  → workspace-wide scan (when a Workspace is
-//                          supplied; otherwise same-file only)
+//     supplied; otherwise same-file only)
 //   - local / param      → enclosing FuncLit body only
 //   - unknown            → no references
 func References(ctx DefinitionContext, line, character int, includeDecl bool) ([]Location, error) {

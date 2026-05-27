@@ -18,7 +18,7 @@ body {
 }
 
 -- main.tya --
-import net/http as http
+import net/http/* as http
 
 embed "static/**" as assets with { hash: true, minify: true, gzip: true }
 

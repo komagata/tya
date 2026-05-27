@@ -43,8 +43,8 @@ stdout 'true'
 stderr 'process.run: string command requires shell option'
 
 -- environment_process.tya --
-import os as os
-import process as process
+import os/* as os
+import process/* as process
 
 os.Os().setenv("TYA_V1_ENV_PROCESS", "one")
 print(os.Os().env("TYA_V1_ENV_PROCESS"))
@@ -74,6 +74,6 @@ piped = process.Process(["cat"]).run({ stdin: "pipe" })
 print(piped["stdout"] == "pipe")
 
 -- invalid_process.tya --
-import process as process
+import process/* as process
 
 process.Process("printf nope").run({})

@@ -22,7 +22,7 @@ exec go run ./cmd/tya build $WORK/non_bool_return.tya -o $WORK/non_bool_return
 stderr 'name\? must return boolean'
 
 -- predicates.tya --
-import value as value
+import value/* as value
 
 empty? = values -> values.len() == 0
 has_name? = user -> user.has("name")

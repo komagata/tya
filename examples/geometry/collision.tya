@@ -1,4 +1,4 @@
-import geometry as geo
+import geometry/* as geo
 
 player = geo.Circle(8, 8, 4)
 wall = geo.Rect(10, 0, 8, 20)

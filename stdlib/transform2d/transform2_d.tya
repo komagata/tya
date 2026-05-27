@@ -1,5 +1,5 @@
-import matrix as matrix
-import geometry as geo
+import matrix/* as matrix
+import geometry/* as geo
 
 # Transform2D provides the transform2d/Transform2D standard library API.
 class Transform2D

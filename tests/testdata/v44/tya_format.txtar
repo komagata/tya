@@ -16,7 +16,7 @@ stdout 'greet: ->'
 ! stderr .
 
 exec go run ./cmd/tya format $WORK/main.tya
-stdout 'import lib'
+stdout 'import lib/*'
 stdout 'lib.Lib.greet'
 ! stderr .
 
@@ -29,7 +29,7 @@ class Greeter
     "Hello, {self.name}"
 
 -- main.tya --
-import lib
+import lib/*
 
 print(lib.Lib.greet())
 

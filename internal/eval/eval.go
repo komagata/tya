@@ -1094,15 +1094,17 @@ func evalStmts(stmts []ast.Stmt, env *Env) (Value, error) {
 func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 	switch n := s.(type) {
 	case *ast.ImportStmt:
-		if n.Alias != "" {
-			value, ok := env.get(n.ModuleName())
-			if !ok {
-				return nil, fmt.Errorf("undefined imported module %s", n.ModuleName())
+		return evalImportStmt(n, env)
+	case *ast.ImportBlockStmt:
+		var last Value
+		for _, imp := range n.Imports {
+			value, err := evalImportStmt(imp, env)
+			if err != nil {
+				return nil, err
 			}
-			env.set(n.Alias, value)
-			return value, nil
+			last = value
 		}
-		return nil, nil
+		return last, nil
 	case *ast.AssignStmt:
 		values, err := evalValues(n.Values, env)
 		if err != nil {
@@ -1411,6 +1413,18 @@ func matchPattern(pattern ast.Expr, value Value, bindings map[string]Value) bool
 	default:
 		return false
 	}
+}
+
+func evalImportStmt(n *ast.ImportStmt, env *Env) (Value, error) {
+	if n.Alias != "" {
+		value, ok := env.get(n.ModuleName())
+		if !ok {
+			return nil, fmt.Errorf("undefined imported module %s", n.ModuleName())
+		}
+		env.set(n.Alias, value)
+		return value, nil
+	}
+	return nil, nil
 }
 
 func evalValues(exprs []ast.Expr, env *Env) ([]Value, error) {

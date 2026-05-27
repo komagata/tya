@@ -24,7 +24,7 @@ stdout 'bytes.index_of: byte must be 0..255'
 stdout 'bytes.index_of: byte must be exactly one byte'
 
 -- bytes_helpers.tya --
-import bytes as bytes
+import bytes/* as bytes
 
 print(bytes.Bytes.len("Tya"))
 print(bytes.Bytes.len(b"Tya"))

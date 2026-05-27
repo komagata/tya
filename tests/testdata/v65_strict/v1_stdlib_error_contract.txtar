@@ -12,10 +12,10 @@ stdout 'process'
 stdout 'serialization'
 
 -- stdlib_errors.tya --
-import file as file
-import json as json
-import process as process
-import serialization as serialization
+import file/* as file
+import json/* as json
+import process/* as process
+import serialization/* as serialization
 
 try
   file.File("__missing__.txt").stat()

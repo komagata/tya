@@ -41,8 +41,8 @@ stdout 'closed'
 stderr 'invalid UTF-8'
 
 -- runtime_boundaries.tya --
-import channel as channel
-import bytes as bytes
+import channel/* as channel
+import bytes/* as bytes
 
 print(1 == 1.0)
 print(5 / 2)
@@ -84,6 +84,6 @@ if state["closed"]
   print("closed")
 
 -- invalid_utf8_text.tya --
-import bytes as bytes
+import bytes/* as bytes
 
 print(bytes.Bytes().to_text(bytes.Bytes([255]).from_array()))

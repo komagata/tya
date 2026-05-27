@@ -7,7 +7,7 @@ stderr 'TYA-E0406'
 stderr 'private class'
 
 -- main.tya --
-import pkg
+import pkg/*
 
 print(Util.run())
 

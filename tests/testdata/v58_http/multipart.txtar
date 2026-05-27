@@ -19,7 +19,7 @@ stdout '400'
 hello file!
 
 -- main.tya --
-import net/http as http
+import net/http/* as http
 
 app = http.Server()
 

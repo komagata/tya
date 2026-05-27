@@ -349,6 +349,8 @@ func stmtPos(stmt ast.Stmt) (line, indent int) {
 		return n.Tok.Line, n.Tok.Col - 1
 	case *ast.ImportStmt:
 		return n.NameTok.Line, n.NameTok.Col - 1
+	case *ast.ImportBlockStmt:
+		return n.Tok.Line, n.Tok.Col - 1
 	case *ast.EmbedStmt:
 		return n.NameTok.Line, n.NameTok.Col - 1
 	case *ast.ModuleDecl:
@@ -538,13 +540,57 @@ func (p *Parser) skipRemovedModuleDecl() {
 }
 
 func (p *Parser) importStmt() (ast.Stmt, error) {
-	p.next()
+	tok := p.next()
+	if p.match(token.NEWLINE) {
+		if !p.match(token.INDENT) {
+			return nil, p.err("expected indented import block")
+		}
+		imports := []*ast.ImportStmt{}
+		for !p.at(token.DEDENT) && !p.at(token.EOF) {
+			if p.at(token.NEWLINE) {
+				p.next()
+				continue
+			}
+			imp, err := p.importEntry()
+			if err != nil {
+				return nil, err
+			}
+			imports = append(imports, imp)
+			if !p.at(token.NEWLINE) && !p.at(token.DEDENT) && !p.at(token.EOF) {
+				return nil, p.err("expected newline after import")
+			}
+			p.match(token.NEWLINE)
+		}
+		if len(imports) == 0 {
+			return nil, p.err("import block requires at least one entry")
+		}
+		if !p.match(token.DEDENT) {
+			return nil, p.err("expected dedent after import block")
+		}
+		return &ast.ImportBlockStmt{Imports: imports, Tok: tok}, nil
+	}
+	imp, err := p.importEntry()
+	if err != nil {
+		return nil, err
+	}
+	if !p.at(token.NEWLINE) && !p.at(token.DEDENT) && !p.at(token.EOF) {
+		return nil, p.err("expected newline after import")
+	}
+	return imp, nil
+}
+
+func (p *Parser) importEntry() (*ast.ImportStmt, error) {
 	name, err := p.expectName("expected module name after import")
 	if err != nil {
 		return nil, err
 	}
 	parts := []string{name.Lexeme}
+	wildcard := false
 	for p.match(token.SLASH) {
+		if p.match(token.STAR) {
+			wildcard = true
+			break
+		}
 		seg, err := p.expectName("expected module path segment after '/'")
 		if err != nil {
 			return nil, err
@@ -562,10 +608,7 @@ func (p *Parser) importStmt() (ast.Stmt, error) {
 		alias = tok.Lexeme
 		aliasTok = tok
 	}
-	if !p.at(token.NEWLINE) && !p.at(token.DEDENT) && !p.at(token.EOF) {
-		return nil, p.err("expected newline after import")
-	}
-	return &ast.ImportStmt{Name: strings.Join(parts, "/"), NameTok: name, Alias: alias, AliasTok: aliasTok}, nil
+	return &ast.ImportStmt{Name: strings.Join(parts, "/"), NameTok: name, Alias: alias, AliasTok: aliasTok, Wildcard: wildcard}, nil
 }
 
 func (p *Parser) embedStmt() (ast.Stmt, error) {

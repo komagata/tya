@@ -1,4 +1,4 @@
-import color as color
+import color/* as color
 
 base = color.Color().hex("#0066ff")
 accent = base.lighten(0.35)

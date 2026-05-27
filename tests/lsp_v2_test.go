@@ -534,7 +534,7 @@ func TestLSPPolishProviders(t *testing.T) {
 	p := initLSP(t)
 	defer p.close()
 	uri := fileURI("/tmp/lsp_polish.tya")
-	src := "# [docs](https://example.com)\nimport unittest\n\nclass SampleTest extends TestCase\n\n  test_one: ->\n    println(\"ok\")\n"
+	src := "# [docs](https://example.com)\nimport unittest/*\n\nclass SampleTest extends TestCase\n\n  test_one: ->\n    println(\"ok\")\n"
 	p.notify("textDocument/didOpen", map[string]any{
 		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
 	})

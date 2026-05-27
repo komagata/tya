@@ -1,5 +1,5 @@
-import unittest
-import log as log
+import unittest/*
+import log/* as log
 
 class StdlibLogTest extends TestCase
 

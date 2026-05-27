@@ -9,7 +9,7 @@ stdout 'GET /\n'
 ! stderr .
 
 -- main.tya --
-import api/web
+import api/web/*
 
 req = Request("GET", "/")
 print(req.summary())

@@ -9,7 +9,7 @@ stdout 'animal:dog\n'
 ! stderr .
 
 -- main.tya --
-import zoo
+import zoo/*
 
 d = Dog()
 print(d.describe())

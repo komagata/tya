@@ -14,7 +14,7 @@ exec go run ./cmd/tya build $WORK/concurrent_server.tya -o $WORK/concurrent_serv
 exec sh -c '$WORK/concurrent_server & pid=$!; (i=0; while [ $i -lt 20 ]; do curl -s -m 2 http://localhost:18092/slow >/tmp/tya-slow-$$ && exit 0; sleep 0.25; i=$((i + 1)); done; exit 1) & slow=$!; sleep 0.1; fast=""; fast_status=1; i=0; while [ $i -lt 20 ]; do fast=$(curl -s -m 0.4 http://localhost:18092/fast); fast_status=$?; [ "$fast_status" -eq 0 ] && break; sleep 0.25; i=$((i + 1)); done; wait $slow; slow_status=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; test "$fast" = fast && exit $((fast_status + slow_status))'
 
 -- client_server.tya --
-import net/socket as socket
+import net/socket/* as socket
 
 class HttpText
   static cr: ->
@@ -48,7 +48,7 @@ conn.close()
 server.close()
 
 -- client.tya --
-import net/http as http
+import net/http/* as http
 
 posted = http.Client("http://127.0.0.1:18091/submit").post("payload")
 print(posted["status"])
@@ -58,8 +58,8 @@ chunked = http.Client("http://127.0.0.1:18091/chunked").get()
 print(chunked["body"])
 
 -- concurrent_server.tya --
-import net/http as http
-import time as time
+import net/http/* as http
+import time/* as time
 
 app = http.Server()
 slow = _req ->

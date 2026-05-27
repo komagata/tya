@@ -1,5 +1,5 @@
-import unittest
-import geometry as geo
+import unittest/*
+import geometry/* as geo
 
 class StdlibGeometryTest extends TestCase
 

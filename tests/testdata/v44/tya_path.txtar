@@ -23,7 +23,7 @@ stdout 'b\n'
 ! stderr .
 
 -- main.tya --
-import shared
+import shared/*
 
 print(Shared.label())
 
@@ -33,7 +33,7 @@ class Shared
     "from-lib"
 
 -- which.tya --
-import overlay
+import overlay/*
 
 print(Overlay.tag())
 

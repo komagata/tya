@@ -13,7 +13,7 @@ stdout 'Content-Type: text/css'
 body { color: blue; }
 
 -- main.tya --
-import net/http as http
+import net/http/* as http
 
 embed "static/**" as assets
 

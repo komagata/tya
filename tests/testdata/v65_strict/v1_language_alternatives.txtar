@@ -68,7 +68,7 @@ if left.same?(right)
 print(left.value)
 
 -- package_api.tya --
-import pkg
+import pkg/*
 
 greeter = Greeter("Tya")
 print(greeter.greet())
@@ -82,7 +82,7 @@ class Greeter
     "Hello, {self.name}"
 
 -- concurrency.tya --
-import channel as channel
+import channel/* as channel
 
 work = -> "task"
 task = spawn work()

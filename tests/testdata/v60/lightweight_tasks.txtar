@@ -14,7 +14,7 @@ exec go run ./cmd/tya run $WORK/fairness.tya
 stdout 'ready'
 
 -- c10k_receive.tya --
-import channel as channel
+import channel/* as channel
 
 ch = channel.Channel(1)
 tasks = []
@@ -53,7 +53,7 @@ for task in tasks
 print("done: " + done.to_s())
 
 -- c10k_timer.tya --
-import time as time
+import time/* as time
 
 tasks = []
 
@@ -73,7 +73,7 @@ for task in tasks
 print("done: " + done.to_s())
 
 -- fairness.tya --
-import channel as channel
+import channel/* as channel
 
 ch = channel.Channel(1)
 

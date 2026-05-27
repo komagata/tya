@@ -6,7 +6,7 @@ cd $REPO
 stderr 'package empty_pkg contains no class files'
 
 -- main.tya --
-import empty_pkg
+import empty_pkg/*
 
 print("unreachable")
 

@@ -31,7 +31,7 @@ stdout '<p>&lt;div&gt;escaped&lt;/div&gt;</p>'
 stdout '<div>escaped</div>'
 
 -- sample.tya --
-import markdown as markdown
+import markdown/* as markdown
 
 src = """
 # Hello
@@ -55,7 +55,7 @@ line <html>
 print(markdown.Markdown(src).to_html())
 
 -- extended.tya --
-import markdown as markdown
+import markdown/* as markdown
 
 src = """
 Setext

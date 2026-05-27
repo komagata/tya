@@ -54,9 +54,17 @@ type ImportStmt struct {
 	NameTok  token.Token
 	Alias    string
 	AliasTok token.Token
+	Wildcard bool
 }
 
 func (*ImportStmt) stmt() {}
+
+type ImportBlockStmt struct {
+	Imports []*ImportStmt
+	Tok     token.Token
+}
+
+func (*ImportBlockStmt) stmt() {}
 
 func (s *ImportStmt) ModuleName() string {
 	if i := strings.LastIndex(s.Name, "/"); i >= 0 {

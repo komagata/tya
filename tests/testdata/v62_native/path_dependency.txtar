@@ -52,13 +52,13 @@ version = "0.1.0"
 native_dep = { path = "../native_dep" }
 
 -- app/src/main.tya --
-import native_dep
+import native_dep/*
 
 print(NativeDep.version())
 
 -- app/tests/native_dep_test.tya --
-import native_dep
-import unittest
+import native_dep/*
+import unittest/*
 
 class NativeDepTest extends TestCase
   test_version: ->
@@ -113,7 +113,7 @@ version = "0.1.0"
 git_dep = { git = "../git_dep", tag = "v0.1.0" }
 
 -- git_app/src/main.tya --
-import git_dep
+import git_dep/*
 
 print(GitDep.version())
 

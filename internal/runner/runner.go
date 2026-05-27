@@ -398,25 +398,28 @@ func loadSource(path string, state *loadState, module bool, packageNamespace boo
 	visibleImports := map[string]bool{}
 	for i := range imports {
 		imp := &imports[i]
-		modPath, err := resolveModulePath(path, imp.path)
-		isPackage := false
-		if err != nil {
-			// v0.44 fallback: try directory-as-package resolution.
+		var modPath string
+		isPackage := imp.packageDir
+		if imp.packageDir {
 			pkgDir, classFiles, perr := resolvePackageDir(path, imp.path)
 			if perr != nil {
 				return "", nil, perr
 			}
 			if pkgDir == "" {
-				return "", nil, err
+				return "", nil, fmt.Errorf("[TYA-E0854] package import %s/* not found", imp.path)
 			}
 			modPath = pkgDir
-			isPackage = true
-			imp.packageDir = true
 			names, err := publicPackageNames(classFiles)
 			if err != nil {
 				return "", nil, err
 			}
 			imp.publicNames = names
+		} else {
+			var err error
+			modPath, err = resolveModulePath(path, imp.path)
+			if err != nil {
+				return "", nil, err
+			}
 		}
 		modSrc, importedModules, err := loadSource(modPath, state, true, isPackage && imp.stmt.Alias != "")
 		if err != nil {
@@ -489,24 +492,28 @@ func loadSource(path string, state *loadState, module bool, packageNamespace boo
 				if visibleImports[imp.binding] {
 					continue
 				}
-				modPath, err := resolveModulePath(sib, imp.path)
-				isPackage := false
-				if err != nil {
+				var modPath string
+				isPackage := imp.packageDir
+				if imp.packageDir {
 					pkgDir, classFiles, perr := resolvePackageDir(sib, imp.path)
 					if perr != nil {
 						return "", nil, perr
 					}
 					if pkgDir == "" {
-						return "", nil, err
+						return "", nil, fmt.Errorf("[TYA-E0854] package import %s/* not found", imp.path)
 					}
 					modPath = pkgDir
-					isPackage = true
-					imp.packageDir = true
 					names, err := publicPackageNames(classFiles)
 					if err != nil {
 						return "", nil, err
 					}
 					imp.publicNames = names
+				} else {
+					var err error
+					modPath, err = resolveModulePath(sib, imp.path)
+					if err != nil {
+						return "", nil, err
+					}
 				}
 				modSrc, importedModules, err := loadSource(modPath, state, true, isPackage && imp.stmt.Alias != "")
 				if err != nil {
@@ -817,26 +824,35 @@ func parseSource(src string) (*ast.Program, error) {
 func collectImports(prog *ast.Program) ([]importSpec, error) {
 	imports := []importSpec{}
 	for _, stmt := range prog.Stmts {
-		imp, ok := stmt.(*ast.ImportStmt)
-		if !ok {
-			continue
+		for _, imp := range flattenImports(stmt) {
+			if err := validateImportPath(imp.Name); err != nil {
+				return nil, err
+			}
+			if isRemovedPrimitiveModule(imp.Name) {
+				return nil, runnerError(codeRemovedPrimitiveModule, fmt.Sprintf("module %s was removed in v0.59; methods now live on the wrapper class", imp.Name), imp.NameTok.Line, imp.NameTok.Col)
+			}
+			binding := imp.BindingName()
+			if !moduleNameRE.MatchString(binding) {
+				return nil, fmt.Errorf("invalid import binding: %s", binding)
+			}
+			if strings.HasPrefix(binding, "_") {
+				return nil, fmt.Errorf("invalid import binding: %s", binding)
+			}
+			imports = append(imports, importSpec{stmt: imp, path: imp.Name, binding: binding, packageDir: imp.Wildcard})
 		}
-		if err := validateImportPath(imp.Name); err != nil {
-			return nil, err
-		}
-		if isRemovedPrimitiveModule(imp.Name) {
-			return nil, runnerError(codeRemovedPrimitiveModule, fmt.Sprintf("module %s was removed in v0.59; methods now live on the wrapper class", imp.Name), imp.NameTok.Line, imp.NameTok.Col)
-		}
-		binding := imp.BindingName()
-		if !moduleNameRE.MatchString(binding) {
-			return nil, fmt.Errorf("invalid import binding: %s", binding)
-		}
-		if strings.HasPrefix(binding, "_") {
-			return nil, fmt.Errorf("invalid import binding: %s", binding)
-		}
-		imports = append(imports, importSpec{stmt: imp, path: imp.Name, binding: binding})
 	}
 	return imports, nil
+}
+
+func flattenImports(stmt ast.Stmt) []*ast.ImportStmt {
+	switch n := stmt.(type) {
+	case *ast.ImportStmt:
+		return []*ast.ImportStmt{n}
+	case *ast.ImportBlockStmt:
+		return n.Imports
+	default:
+		return nil
+	}
 }
 
 func isRemovedPrimitiveModule(name string) bool {
@@ -1014,8 +1030,16 @@ func hasTopLevelImports(prog *ast.Program) bool {
 // imports do not appear in the final program.
 func stripTopLevelImports(src string) string {
 	var out strings.Builder
-	for _, line := range strings.Split(src, "\n") {
-		if strings.HasPrefix(line, "import ") || line == "import" {
+	lines := strings.Split(src, "\n")
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
+		if strings.HasPrefix(line, "import ") {
+			continue
+		}
+		if line == "import" {
+			for i+1 < len(lines) && (strings.HasPrefix(lines[i+1], "  ") || lines[i+1] == "") {
+				i++
+			}
 			continue
 		}
 		out.WriteString(line)
@@ -1028,22 +1052,55 @@ func stripBarePackageImports(src string, imports []importSpec) string {
 	strip := map[string]bool{}
 	for _, imp := range imports {
 		if imp.packageDir && imp.stmt.Alias == "" {
-			strip[imp.path] = true
+			strip[importSourceKey(imp.stmt)] = true
 		}
 	}
 	if len(strip) == 0 {
 		return src
 	}
 	var out strings.Builder
-	for _, line := range strings.Split(src, "\n") {
+	lines := strings.Split(src, "\n")
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
 		trimmed := strings.TrimSpace(line)
 		if strings.HasPrefix(line, "import ") && strip[strings.TrimPrefix(trimmed, "import ")] {
+			continue
+		}
+		if line == "import" {
+			entries := []string{}
+			for i+1 < len(lines) && (strings.HasPrefix(lines[i+1], "  ") || lines[i+1] == "") {
+				i++
+				entry := strings.TrimSpace(lines[i])
+				if entry == "" || strip[entry] {
+					continue
+				}
+				entries = append(entries, lines[i])
+			}
+			if len(entries) == 0 {
+				continue
+			}
+			out.WriteString("import\n")
+			for _, entry := range entries {
+				out.WriteString(entry)
+				out.WriteString("\n")
+			}
 			continue
 		}
 		out.WriteString(line)
 		out.WriteString("\n")
 	}
 	return strings.TrimRight(out.String(), "\n") + "\n"
+}
+
+func importSourceKey(imp *ast.ImportStmt) string {
+	key := imp.Name
+	if imp.Wildcard {
+		key += "/*"
+	}
+	if imp.Alias != "" {
+		key += " as " + imp.Alias
+	}
+	return key
 }
 
 func dedupeTopLevelImports(src string) string {
@@ -1101,8 +1158,9 @@ func synthesizePackageSource(classFiles []string, pkgName string, includeNamespa
 		return "", nil, fmt.Errorf("invalid package name: %s", pkgName)
 	}
 	type importKey struct {
-		path  string
-		alias string
+		path     string
+		alias    string
+		wildcard bool
 	}
 	var orderedImports []*ast.ImportStmt
 	seenImports := map[importKey]bool{}
@@ -1127,14 +1185,15 @@ func synthesizePackageSource(classFiles []string, pkgName string, includeNamespa
 		}
 		relName := filepath.Base(file)
 		for _, stmt := range prog.Stmts {
-			switch n := stmt.(type) {
-			case *ast.ImportStmt:
-				key := importKey{path: n.Name, alias: n.Alias}
+			for _, n := range flattenImports(stmt) {
+				key := importKey{path: n.Name, alias: n.Alias, wildcard: n.Wildcard}
 				if seenImports[key] {
 					continue
 				}
 				seenImports[key] = true
 				orderedImports = append(orderedImports, n)
+			}
+			switch n := stmt.(type) {
 			case *ast.ClassDecl:
 				packageSymbols[n.Name] = true
 				if _, dup := origins[n.Name]; !dup {
@@ -1149,34 +1208,13 @@ func synthesizePackageSource(classFiles []string, pkgName string, includeNamespa
 				publicInterfaces[n.Name] = true
 			}
 		}
-		// Strip top-level import lines from the source text.
-		var body strings.Builder
-		for _, line := range strings.Split(text, "\n") {
-			trimmed := strings.TrimLeft(line, " \t")
-			if strings.HasPrefix(trimmed, "import ") || trimmed == "import" {
-				// Only strip when at column zero (top-level import).
-				if !strings.HasPrefix(line, " ") && !strings.HasPrefix(line, "\t") {
-					continue
-				}
-			}
-			if strings.TrimSpace(line) == "" {
-				body.WriteString("\n")
-				continue
-			}
-			body.WriteString(line)
-			body.WriteString("\n")
-		}
-		bodies = append(bodies, body.String())
+		bodies = append(bodies, stripTopLevelImports(text))
 	}
 
 	var out strings.Builder
 	for _, imp := range orderedImports {
 		out.WriteString("import ")
-		out.WriteString(imp.Name)
-		if imp.Alias != "" {
-			out.WriteString(" as ")
-			out.WriteString(imp.Alias)
-		}
+		out.WriteString(importSourceKey(imp))
 		out.WriteString("\n")
 	}
 	names := make([]string, 0, len(publicSymbols))

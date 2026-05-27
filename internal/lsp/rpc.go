@@ -33,12 +33,12 @@ const (
 // Notification (no ID). The presence of Method distinguishes a
 // Request/Notification from a Response.
 type Message struct {
-	JSONRPC string          `json:"jsonrpc"`
+	JSONRPC string           `json:"jsonrpc"`
 	ID      *json.RawMessage `json:"id,omitempty"`
-	Method  string          `json:"method,omitempty"`
-	Params  json.RawMessage `json:"params,omitempty"`
-	Result  json.RawMessage `json:"result,omitempty"`
-	Error   *RPCError       `json:"error,omitempty"`
+	Method  string           `json:"method,omitempty"`
+	Params  json.RawMessage  `json:"params,omitempty"`
+	Result  json.RawMessage  `json:"result,omitempty"`
+	Error   *RPCError        `json:"error,omitempty"`
 }
 
 // RPCError is the standard JSON-RPC 2.0 error object.

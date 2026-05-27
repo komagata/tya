@@ -12,14 +12,14 @@ stdout 'trusted:secure'
 stdout 'insecure:secure'
 
 -- server.tya --
-import net/http as http
+import net/http/* as http
 
 app = http.Server()
 app.get("/", _req -> { status: 200, body: "secure" })
 app.run_tls(18098, "cert.pem", "key.pem", { host: "127.0.0.1" })
 
 -- client.tya --
-import net/http as http
+import net/http/* as http
 
 url = "https://127.0.0.1:18098/"
 try

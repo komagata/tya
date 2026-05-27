@@ -13,13 +13,13 @@ func TestV1StdlibBlockersImplemented(t *testing.T) {
 	dir := t.TempDir()
 	main := filepath.Join(dir, "main.tya")
 	src := strings.Join([]string{
-		"import regex as regex",
-		"import file as file",
-		"import dir as dir",
-		"import time as time",
-		"import os as os",
-		"import process as process",
-		"import hmac as hmac",
+		"import regex/* as regex",
+		"import file/* as file",
+		"import dir/* as dir",
+		"import time/* as time",
+		"import os/* as os",
+		"import process/* as process",
+		"import hmac/* as hmac",
 		"print(regex.Regex(\"[0-9]+\").search(\"v1\")[\"text\"])",
 		"tmp = file.File().temp(\"tya-v1\", \".txt\")",
 		"print(file.File(tmp).exists?())",
@@ -51,8 +51,8 @@ func TestPlatformDependentStdlibImportsEverywhere(t *testing.T) {
 	dir := t.TempDir()
 	main := filepath.Join(dir, "main.tya")
 	src := strings.Join([]string{
-		"import net/socket as socket",
-		"import process as process",
+		"import net/socket/* as socket",
+		"import process/* as process",
 		"print(true)",
 		"",
 	}, "\n")

@@ -306,18 +306,11 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		g.sourceLine(n.NameTok.Line)
 		return g.emitEmbed(n)
 	case *ast.ImportStmt:
-		g.sourceLine(n.NameTok.Line)
-		if n.Alias != "" {
-			target := cName(n.Alias)
-			source := cName(n.ModuleName())
-			if g.vars[n.Alias] {
-				g.line(fmt.Sprintf("%s = %s;", target, source))
-			} else {
-				g.vars[n.Alias] = true
-				g.line(fmt.Sprintf("TyaValue %s = %s;", target, source))
-			}
-		} else {
-			g.line("/* import resolved by runner */")
+		g.emitImportStmt(n)
+		return nil
+	case *ast.ImportBlockStmt:
+		for _, imp := range n.Imports {
+			g.emitImportStmt(imp)
 		}
 		return nil
 	case *ast.ModuleDecl:
@@ -643,6 +636,22 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 	return nil
 }
 
+func (g *cgen) emitImportStmt(n *ast.ImportStmt) {
+	g.sourceLine(n.NameTok.Line)
+	if n.Alias != "" {
+		target := cName(n.Alias)
+		source := cName(n.ModuleName())
+		if g.vars[n.Alias] {
+			g.line(fmt.Sprintf("%s = %s;", target, source))
+		} else {
+			g.vars[n.Alias] = true
+			g.line(fmt.Sprintf("TyaValue %s = %s;", target, source))
+		}
+	} else {
+		g.line("/* import resolved by runner */")
+	}
+}
+
 func (g *cgen) assignInterfaceDecl(name string) error {
 	target := cName(name)
 	if g.vars[name] {
@@ -670,6 +679,8 @@ func stmtPos(stmt ast.Stmt) (line, col int, ok bool) {
 		return n.Tok.Line, n.Tok.Col, n.Tok.Line > 0
 	case *ast.ImportStmt:
 		return n.NameTok.Line, n.NameTok.Col, n.NameTok.Line > 0
+	case *ast.ImportBlockStmt:
+		return n.Tok.Line, n.Tok.Col, n.Tok.Line > 0
 	case *ast.ModuleDecl:
 		return n.NameTok.Line, n.NameTok.Col, n.NameTok.Line > 0
 	case *ast.ClassDecl:
@@ -3390,6 +3401,13 @@ func assignedNames(stmts []ast.Stmt) []string {
 				if n.Alias != "" && !seen[n.Alias] {
 					seen[n.Alias] = true
 					names = append(names, n.Alias)
+				}
+			case *ast.ImportBlockStmt:
+				for _, imp := range n.Imports {
+					if imp.Alias != "" && !seen[imp.Alias] {
+						seen[imp.Alias] = true
+						names = append(names, imp.Alias)
+					}
 				}
 			case *ast.EmbedStmt:
 				if !seen[n.Name] {
