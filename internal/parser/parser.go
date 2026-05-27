@@ -18,6 +18,7 @@ type Parser struct {
 	loopDepth     int
 	functionDepth int
 	classDepth    int
+	continuedLine bool
 
 	// errs accumulates structured diagnostics during a multi-error
 	// parse run. Populated by newDiag (see diagnostic.go) and
@@ -1447,10 +1448,12 @@ func (p *Parser) exprLine() (ast.Expr, error) {
 	if err != nil {
 		return nil, err
 	}
+	continuedLine := p.continuedLine
+	p.continuedLine = false
 	if _, ok := ex.(*ast.FuncLit); ok {
 		return ex, nil
 	}
-	if p.startsExpr() {
+	if !continuedLine && p.startsExpr() {
 		return nil, p.err("no-paren calls are not in Tya; use parentheses")
 	}
 	return ex, nil
@@ -1889,7 +1892,15 @@ func (p *Parser) call() (ast.Expr, error) {
 	if err != nil {
 		return nil, err
 	}
+	continuationIndents := 0
 	for {
+		if p.at(token.NEWLINE) && (p.peekN(1).Type == token.DOT || (p.peekN(1).Type == token.INDENT && p.peekN(2).Type == token.DOT)) {
+			p.next()
+			if p.at(token.INDENT) {
+				p.next()
+				continuationIndents++
+			}
+		}
 		if p.match(token.DOT) {
 			name, err := p.expectCallableIdent("expected property name")
 			if err != nil {
@@ -1948,6 +1959,12 @@ func (p *Parser) call() (ast.Expr, error) {
 			continue
 		}
 		break
+	}
+	for continuationIndents > 0 && p.at(token.NEWLINE) && p.peekN(1).Type == token.DEDENT {
+		p.next()
+		p.next()
+		continuationIndents--
+		p.continuedLine = true
 	}
 	return ex, nil
 }

@@ -7,21 +7,21 @@ interface Comparable
   # lt? provides the comparable API operation.
   # @param other Any other value.
   # @return Boolean the resulting value.
-  lt?: other -> compare(other) < 0
+  lt?: other -> self.compare(other) < 0
   # lte? provides the comparable API operation.
   # @param other Any other value.
   # @return Boolean the resulting value.
-  lte?: other -> compare(other) <= 0
+  lte?: other -> self.compare(other) <= 0
   # gt? provides the comparable API operation.
   # @param other Any other value.
   # @return Boolean the resulting value.
-  gt?: other -> compare(other) > 0
+  gt?: other -> self.compare(other) > 0
   # gte? provides the comparable API operation.
   # @param other Any other value.
   # @return Boolean the resulting value.
-  gte?: other -> compare(other) >= 0
+  gte?: other -> self.compare(other) >= 0
   # between? provides the comparable API operation.
   # @param min Int min value.
   # @param max Int max value.
   # @return Boolean the resulting value.
-  between?: min, max -> gte?(min) and lte?(max)
+  between?: min, max -> self.gte?(min) and self.lte?(max)

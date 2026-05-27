@@ -3,7 +3,7 @@
   "displayName": "Tya",
   "description": "Language support for the tya programming language (compiler + LSP).",
   "publisher": "komagata",
-  "version": "0.71.0",
+  "version": "0.71.1",
   "icon": "icon.png",
   "license": "MIT",
   "repository": {

@@ -4,7 +4,7 @@ cd $REPO
 
 # version
 exec go run ./cmd/tya version
-stdout '0.71.0\n'
+stdout '0.71.1\n'
 
 # tya cover without a profile errors cleanly.
 ! exec go run ./cmd/tya cover --profile $WORK/missing.cov
@@ -32,7 +32,7 @@ stdout '%'
 # tya cover --format=json renders JSON with the documented top-level keys.
 exec go run ./cmd/tya cover --profile $WORK/profile.cov --format=json
 stdout '"tool": "tya"'
-stdout '"version": "0.71.0"'
+stdout '"version": "0.71.1"'
 stdout '"format": 1'
 stdout '"totals":'
 

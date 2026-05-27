@@ -308,6 +308,9 @@ func (u *unparser) stmt(s ast.Stmt) error {
 		// Wrap a top-level CallExpr if the single-line form
 		// exceeds the column limit.
 		if call, ok := n.Expr.(*ast.CallExpr); ok && !u.fitsInline(ex) {
+			if u.isWrappedCallChain(call) {
+				return u.emitWrappedCallChain(s, "", call)
+			}
 			return u.emitWrappedCall(s, "", call)
 		}
 		u.emitStmtLine(s, ex)
@@ -912,6 +915,9 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 	if len(n.Values) == 1 {
 		switch v := n.Values[0].(type) {
 		case *ast.CallExpr:
+			if u.isWrappedCallChain(v) {
+				return u.emitWrappedCallChain(n, strings.Join(targets, ", ")+" = ", v)
+			}
 			return u.emitWrappedCall(n, strings.Join(targets, ", ")+" = ", v)
 		case *ast.ArrayLit:
 			return u.emitWrappedArray(n, strings.Join(targets, ", ")+" = ", v)
@@ -950,6 +956,71 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 		}
 	}
 	u.emitStmtLine(n, body)
+	return nil
+}
+
+type callChainStep struct {
+	name string
+	args []ast.Expr
+}
+
+func (u *unparser) isWrappedCallChain(call *ast.CallExpr) bool {
+	_, steps, ok := u.callChain(call)
+	return ok && len(steps) >= 2
+}
+
+func (u *unparser) callChain(call *ast.CallExpr) (ast.Expr, []callChainStep, bool) {
+	var reversed []callChainStep
+	var current ast.Expr = call
+	for {
+		c, ok := current.(*ast.CallExpr)
+		if !ok {
+			break
+		}
+		member, ok := c.Callee.(*ast.MemberExpr)
+		if !ok {
+			break
+		}
+		reversed = append(reversed, callChainStep{name: member.Name, args: c.Args})
+		current = member.Target
+	}
+	if len(reversed) == 0 {
+		return nil, nil, false
+	}
+	steps := make([]callChainStep, len(reversed))
+	for i := range reversed {
+		steps[len(reversed)-1-i] = reversed[i]
+	}
+	return current, steps, true
+}
+
+func (u *unparser) emitWrappedCallChain(stmt ast.Stmt, prefix string, call *ast.CallExpr) error {
+	base, steps, ok := u.callChain(call)
+	if !ok {
+		return u.emitWrappedCall(stmt, prefix, call)
+	}
+	baseText, err := u.expr(base)
+	if err != nil {
+		return err
+	}
+	u.line(prefix + baseText)
+	u.indent++
+	for _, step := range steps {
+		args := make([]string, 0, len(step.args))
+		for _, arg := range step.args {
+			text, err := u.expr(arg)
+			if err != nil {
+				u.indent--
+				return err
+			}
+			args = append(args, text)
+		}
+		u.line("." + step.name + "(" + strings.Join(args, ", ") + ")")
+	}
+	u.indent--
+	if t := u.trailingFor(stmt); t != "" {
+		u.line("#" + t)
+	}
 	return nil
 }
 

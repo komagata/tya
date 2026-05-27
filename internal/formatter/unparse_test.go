@@ -486,6 +486,25 @@ func TestUnparseWrapsLongCall(t *testing.T) {
 	}
 }
 
+func TestUnparseWrapsLongCallChain(t *testing.T) {
+	src := "value = validation.Validation.number(value, name, \"color.channel\").integer().between(0, 255).validate!()\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "value = validation.Validation\n  .number(value, name, \"color.channel\")\n  .integer()\n  .between(0, 255)\n  .validate!()\n"
+	if got != want {
+		t.Errorf("wrap mismatch\nwant:\n%s\ngot:\n%s", want, got)
+	}
+	again, err := unparseSource(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again != got {
+		t.Fatalf("not idempotent:\n%s", again)
+	}
+}
+
 func TestUnparseWrapsLongArray(t *testing.T) {
 	src := "items = [first_item_name, second_item_name, third_item_name, fourth_item_name, fifth_item_name]\n"
 	got, err := unparseSource(t, src)
@@ -661,6 +680,8 @@ func TestUnparseSortsClassMembers(t *testing.T) {
 		"",
 		"  private SECRET: 9",
 		"",
+		"  ready: false",
+		"",
 		"  initialize: ->",
 		"    self.ready = true",
 		"",
@@ -687,6 +708,8 @@ func TestUnparseSortsClassMembers(t *testing.T) {
 		"  private static hidden_count: 0",
 		"",
 		"  name: \"\"",
+		"",
+		"  ready: false",
 		"",
 		"  zed: 0",
 		"",
