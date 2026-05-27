@@ -867,6 +867,8 @@ func TestCLIBuildUsesDefaultOutputPath(t *testing.T) {
 }
 
 func TestCLIBuildNativeTargetWritesExecutable(t *testing.T) {
+	skipShort(t, "native build integration is covered by the release gate")
+
 	dir := t.TempDir()
 	path := filepath.Join(dir, "hello.tya")
 	if err := os.WriteFile(path, []byte("print(\"native target\")\n"), 0644); err != nil {
@@ -890,6 +892,8 @@ func TestCLIBuildNativeTargetWritesExecutable(t *testing.T) {
 }
 
 func TestCLIBuildWasmTargets(t *testing.T) {
+	skipShort(t, "WASM build integration is covered by the release gate")
+
 	if _, err := exec.LookPath("zig"); err != nil {
 		t.Skip("zig not installed")
 	}
@@ -924,6 +928,8 @@ func TestCLIBuildWasmTargets(t *testing.T) {
 }
 
 func TestCLIBuildBrowserWasmSupportsBasicRuntimeValues(t *testing.T) {
+	skipShort(t, "WASM runtime integration is covered by the release gate")
+
 	if _, err := exec.LookPath("zig"); err != nil {
 		t.Skip("zig not installed")
 	}
@@ -977,6 +983,8 @@ const fs = require('fs');
 }
 
 func TestCLIBuildWasiSupportsArgsAndBasicFiles(t *testing.T) {
+	skipShort(t, "WASI runtime integration is covered by the release gate")
+
 	if _, err := exec.LookPath("zig"); err != nil {
 		t.Skip("zig not installed")
 	}
@@ -1024,6 +1032,8 @@ const fs = require('fs');
 }
 
 func TestCLIBuildRejectsBadWasmInputs(t *testing.T) {
+	skipShort(t, "WASM target validation is covered by the release gate")
+
 	dir := t.TempDir()
 	path := filepath.Join(dir, "hello.tya")
 	if err := os.WriteFile(path, []byte("print(\"bad\")\n"), 0644); err != nil {
@@ -1054,6 +1064,8 @@ func TestCLIBuildRejectsBadWasmInputs(t *testing.T) {
 }
 
 func TestCLIDoctorWasm(t *testing.T) {
+	skipShort(t, "WASM doctor integration is covered by the release gate")
+
 	if _, err := exec.LookPath("zig"); err != nil {
 		t.Skip("zig not installed")
 	}

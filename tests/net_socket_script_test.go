@@ -9,6 +9,7 @@ import (
 
 func TestNetSocketScripts(t *testing.T) {
 	t.Parallel()
+	skipShort(t, "socket integration txtar suite is covered by the release gate")
 
 	repo, err := filepath.Abs("..")
 	if err != nil {

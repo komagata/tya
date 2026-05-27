@@ -10,6 +10,7 @@ import (
 
 func TestV62Scripts(t *testing.T) {
 	t.Parallel()
+	skipShort(t, "native package integration txtar suite is covered by the release gate")
 
 	repo, err := filepath.Abs("..")
 	if err != nil {

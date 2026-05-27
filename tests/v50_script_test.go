@@ -9,6 +9,7 @@ import (
 
 func TestV50Scripts(t *testing.T) {
 	t.Parallel()
+	skipShort(t, "task CLI txtar suite is covered by the release gate")
 
 	repo, err := filepath.Abs("..")
 	if err != nil {
