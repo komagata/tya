@@ -9,7 +9,7 @@ TextMate syntax highlighting plus a LSP-based language client that talks to
 - VS Code 1.75 or later
 - `tya` v0.52 or later on `PATH` (or configure `tya.executable`)
 
-## Features (v0.70.0)
+## Features (v0.71.0)
 
 - LSP diagnostics on save / on change, covering `tya check`-style errors and
   `tya lint`-style warnings
@@ -31,14 +31,14 @@ Install Tya from the Visual Studio Marketplace or Open VSX.
 
 ## Manual install
 
-Download `tya-0.70.0.vsix` from:
+Download `tya-0.71.0.vsix` from:
 
-https://github.com/komagata/tya/releases/tag/editors-vscode-v0.70.0
+https://github.com/komagata/tya/releases/tag/editors-vscode-v0.71.0
 
 Then install it:
 
 ```sh
-code --install-extension tya-0.70.0.vsix
+code --install-extension tya-0.71.0.vsix
 ```
 
 Or build it locally:
@@ -48,7 +48,7 @@ cd editors/vscode
 npm install
 npm run compile
 npx vsce package
-code --install-extension tya-0.70.0.vsix
+code --install-extension tya-0.71.0.vsix
 ```
 
 ## Settings
