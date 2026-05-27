@@ -311,6 +311,9 @@ The core formatted rules are:
 - trailing commas accepted in arrays, dictionaries, calls, and parameter lists
   are omitted;
 - imports are atomic and not line-wrapped;
+- function and method bodies that consist of one expression, or one final
+  `return` of a single value, are formatted as `-> expr` when the rendered line
+  fits within the column limit and no attached comments require a block body;
 - class bodies are ordered by member category, then static/instance,
   public/private, and member name, with `initialize` first among public
   instance methods;
@@ -431,6 +434,16 @@ double = value ->
   result = value * 2
   result
 ```
+
+Formatted Syntax prefers the one-line form for a single-expression body:
+
+```tya
+answer = -> 42
+```
+
+A block containing only `return value` also formats to `-> value`. Multi-statement
+bodies, bodies with attached comments, and one-line renderings that exceed the
+column limit stay block-bodied.
 
 Calls always use parentheses.
 

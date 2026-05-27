@@ -20,11 +20,7 @@ func TestRewriteCatalog(t *testing.T) {
 				"  return true",
 				"",
 			}, "\n"),
-			want: strings.Join([]string{
-				"main = ->",
-				"  true",
-				"",
-			}, "\n"),
+			want: "main = -> true\n",
 		},
 		{
 			category: "function-head",
@@ -57,6 +53,55 @@ func TestRewriteCatalog(t *testing.T) {
 				"    self.value = value",
 				"",
 				"  encode: value = nil, padded = true -> value",
+				"",
+			}, "\n"),
+		},
+		{
+			category: "function-body",
+			name:     "single expression block function becomes one line",
+			input: strings.Join([]string{
+				"foo = ->",
+				"  \"aaa\"",
+				"",
+			}, "\n"),
+			want: "foo = -> \"aaa\"\n",
+		},
+		{
+			category: "function-body",
+			name:     "final return block function becomes one line",
+			input: strings.Join([]string{
+				"foo = ->",
+				"  return \"aaa\"",
+				"",
+			}, "\n"),
+			want: "foo = -> \"aaa\"\n",
+		},
+		{
+			category: "function-body",
+			name:     "multi statement function stays block bodied",
+			input: strings.Join([]string{
+				"foo = ->",
+				"  value = \"aaa\"",
+				"  return value",
+				"",
+			}, "\n"),
+			want: strings.Join([]string{
+				"foo = ->",
+				"  value = \"aaa\"",
+				"  value",
+				"",
+			}, "\n"),
+		},
+		{
+			category: "function-body",
+			name:     "long single expression function stays block bodied",
+			input: strings.Join([]string{
+				"foo = -> \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"",
+				"",
+			}, "\n"),
+			want: strings.Join([]string{
+				"foo = ->",
+				"  \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"",
 				"",
 			}, "\n"),
 		},
@@ -101,8 +146,7 @@ func TestRewriteCatalog(t *testing.T) {
 			}, "\n"),
 			want: strings.Join([]string{
 				"class Admin extends User",
-				"  initialize: ->",
-				"    super()",
+				"  initialize: -> super()",
 				"",
 			}, "\n"),
 		},
@@ -117,6 +161,83 @@ func TestRewriteCatalog(t *testing.T) {
 			want: strings.Join([]string{
 				"class Box",
 				"  static build: -> Self.new()",
+				"",
+			}, "\n"),
+		},
+		{
+			category: "class",
+			name:     "single expression class method becomes one line",
+			input: strings.Join([]string{
+				"class Foo",
+				"  foo: ->",
+				"    \"aaa\"",
+				"",
+			}, "\n"),
+			want: strings.Join([]string{
+				"class Foo",
+				"  foo: -> \"aaa\"",
+				"",
+			}, "\n"),
+		},
+		{
+			category: "class",
+			name:     "final return class method becomes one line",
+			input: strings.Join([]string{
+				"class Foo",
+				"  foo: ->",
+				"    return \"aaa\"",
+				"",
+			}, "\n"),
+			want: strings.Join([]string{
+				"class Foo",
+				"  foo: -> \"aaa\"",
+				"",
+			}, "\n"),
+		},
+		{
+			category: "class",
+			name:     "single expression static method becomes one line",
+			input: strings.Join([]string{
+				"class Foo",
+				"  static foo: ->",
+				"    \"aaa\"",
+				"",
+			}, "\n"),
+			want: strings.Join([]string{
+				"class Foo",
+				"  static foo: -> \"aaa\"",
+				"",
+			}, "\n"),
+		},
+		{
+			category: "class",
+			name:     "single expression constructor becomes one line",
+			input: strings.Join([]string{
+				"class Foo",
+				"  initialize: ->",
+				"    \"aaa\"",
+				"",
+			}, "\n"),
+			want: strings.Join([]string{
+				"class Foo",
+				"  initialize: -> \"aaa\"",
+				"",
+			}, "\n"),
+		},
+		{
+			category: "interface",
+			name:     "body free requirement stays body free and default becomes one line",
+			input: strings.Join([]string{
+				"interface Named",
+				"  name: ->",
+				"  fallback: ->",
+				"    \"default\"",
+				"",
+			}, "\n"),
+			want: strings.Join([]string{
+				"interface Named",
+				"  name: ->",
+				"  fallback: -> \"default\"",
 				"",
 			}, "\n"),
 		},

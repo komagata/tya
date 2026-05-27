@@ -477,7 +477,21 @@ func (u *unparser) moduleMember(m ast.ModuleMember) error {
 		if err != nil {
 			return err
 		}
-		u.line(m.Name + " = " + defArrow(head))
+		prefix := m.Name + " = " + defArrow(head)
+		if expr, ok, err := u.singleExprBody(fn.Body); err != nil {
+			return err
+		} else if ok {
+			body, err := u.expr(expr)
+			if err != nil {
+				return err
+			}
+			line := prefix + " " + body
+			if u.fitsInline(line) {
+				u.line(line)
+				return nil
+			}
+		}
+		u.line(prefix)
 		return u.funcBlock(fn.Body)
 	}
 	val, err := u.expr(m.Value)
@@ -680,10 +694,34 @@ func (u *unparser) classMethod(m ast.ClassMethod) error {
 		if err != nil {
 			return err
 		}
-		u.line(prefix + m.Name + ": " + defArrow(head) + " " + body)
+		line := prefix + m.Name + ": " + defArrow(head) + " " + body
+		if u.fitsInline(line) {
+			u.line(line)
+			return nil
+		}
+		u.line(prefix + m.Name + ": " + defArrow(head))
+		u.indent++
+		u.line(body)
+		u.indent--
 		return nil
 	}
-	u.line(prefix + m.Name + ": " + defArrow(head))
+	linePrefix := prefix + m.Name + ": " + defArrow(head)
+	if fn.Expr == nil {
+		if expr, ok, err := u.singleExprBody(fn.Body); err != nil {
+			return err
+		} else if ok {
+			body, err := u.expr(expr)
+			if err != nil {
+				return err
+			}
+			line := linePrefix + " " + body
+			if u.fitsInline(line) {
+				u.line(line)
+				return nil
+			}
+		}
+	}
+	u.line(linePrefix)
 	return u.funcBlock(fn.Body)
 }
 
@@ -719,8 +757,31 @@ func (u *unparser) interfaceDecl(n *ast.InterfaceDecl) error {
 			if err != nil {
 				return err
 			}
-			u.line(head + " " + body)
+			line := head + " " + body
+			if u.fitsInline(line) {
+				u.line(line)
+				continue
+			}
+			u.line(head)
+			u.indent++
+			u.line(body)
+			u.indent--
 			continue
+		}
+		if m.Func.Expr == nil {
+			if expr, ok, err := u.singleExprBody(m.Func.Body); err != nil {
+				return err
+			} else if ok {
+				body, err := u.expr(expr)
+				if err != nil {
+					return err
+				}
+				line := head + " " + body
+				if u.fitsInline(line) {
+					u.line(line)
+					continue
+				}
+			}
 		}
 		u.line(head)
 		if err := u.block(m.Func.Body); err != nil {
@@ -757,18 +818,32 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 			if err != nil {
 				return err
 			}
+			prefix := strings.Join(targets, ", ") + " = " + defArrow(head)
 			if fn.Expr != nil {
 				body, err := u.expr(fn.Expr)
 				if err != nil {
 					return err
 				}
-				line := strings.Join(targets, ", ") + " = " + defArrow(head) + " " + body
+				line := prefix + " " + body
 				if u.fitsInline(line) {
 					u.emitStmtLine(n, line)
 					return nil
 				}
 			} else if len(fn.Body) > 0 {
-				u.line(strings.Join(targets, ", ") + " = " + defArrow(head))
+				if expr, ok, err := u.singleExprBody(fn.Body); err != nil {
+					return err
+				} else if ok {
+					body, err := u.expr(expr)
+					if err != nil {
+						return err
+					}
+					line := prefix + " " + body
+					if u.fitsInline(line) {
+						u.emitStmtLine(n, line)
+						return nil
+					}
+				}
+				u.line(prefix)
 				return u.funcBlock(fn.Body)
 			}
 		}
@@ -1191,6 +1266,31 @@ func (u *unparser) hasLeadingComments(s ast.Stmt) bool {
 	return ok && len(sc.Leading) > 0
 }
 
+func (u *unparser) hasAnyComments(s ast.Stmt) bool {
+	if u.comments == nil {
+		return false
+	}
+	sc, ok := u.comments[s]
+	return ok && (len(sc.Leading) > 0 || sc.LineEnd != "")
+}
+
+func (u *unparser) singleExprBody(stmts []ast.Stmt) (ast.Expr, bool, error) {
+	if len(stmts) != 1 || u.hasAnyComments(stmts[0]) {
+		return nil, false, nil
+	}
+	switch n := stmts[0].(type) {
+	case *ast.ExprStmt:
+		return n.Expr, true, nil
+	case *ast.ReturnStmt:
+		if len(n.Values) != 1 {
+			return nil, false, nil
+		}
+		return n.Values[0], true, nil
+	default:
+		return nil, false, nil
+	}
+}
+
 func (u *unparser) blockBody(stmts []ast.Stmt) error {
 	return u.block(stmts)
 }
@@ -1215,6 +1315,9 @@ func (u *unparser) funcTailStmt(st ast.Stmt) error {
 	switch n := st.(type) {
 	case *ast.ReturnStmt:
 		if len(n.Values) != 1 {
+			return u.stmt(st)
+		}
+		if u.hasAnyComments(st) {
 			return u.stmt(st)
 		}
 		ex, err := u.expr(n.Values[0])

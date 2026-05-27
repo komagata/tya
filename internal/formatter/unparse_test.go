@@ -44,6 +44,35 @@ func TestUnparseEmitsHeaderAndStmtComments(t *testing.T) {
 	}
 }
 
+func TestUnparseKeepsCommentedFunctionBodyBlockBodied(t *testing.T) {
+	src := strings.Join([]string{
+		"foo = ->",
+		"  # value docs.",
+		"  return \"aaa\"",
+		"",
+	}, "\n")
+	got, err := unparseSourceWithComments(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := strings.Join([]string{
+		"foo = ->",
+		"  # value docs.",
+		"  return \"aaa\"",
+		"",
+	}, "\n")
+	if got != want {
+		t.Fatalf("got:\n%swant:\n%s", got, want)
+	}
+	again, err := unparseSourceWithComments(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again != got {
+		t.Fatalf("not idempotent:\nfirst:\n%s\nsecond:\n%s", got, again)
+	}
+}
+
 func unparseSource(t *testing.T, src string) (string, error) {
 	t.Helper()
 	toks, errs := lexer.Lex(src)
@@ -167,7 +196,7 @@ func TestUnparseSingleQuotedStringPreservesLiteralValue(t *testing.T) {
 
 func TestUnparseSelfAndSuperExpressions(t *testing.T) {
 	src := "class Box\n  static get: ->\n    return Self.wrap(self.value + super.value)\n"
-	want := "class Box\n  static get: ->\n    Self.wrap(self.value + super.value)\n"
+	want := "class Box\n  static get: -> Self.wrap(self.value + super.value)\n"
 	got, err := unparseSource(t, src)
 	if err != nil {
 		t.Fatal(err)
@@ -194,8 +223,7 @@ func TestUnparseZeroArgFunctionDefinitionsUseShortArrow(t *testing.T) {
 		"",
 	}, "\n")
 	want := strings.Join([]string{
-		"helper = ->",
-		"  true",
+		"helper = -> true",
 		"",
 		"inline = -> true",
 		"",
@@ -454,7 +482,7 @@ func TestUnparseClass(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"class Dog", "  bark: ->", "    \"woof\""} {
+	for _, want := range []string{"class Dog", "  bark: -> \"woof\""} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in:\n%s", want, got)
 		}
@@ -522,8 +550,7 @@ func TestUnparseOmitsFinalReturnInFunctionBodies(t *testing.T) {
 		"    else",
 		"      3",
 		"",
-		"  value: ->",
-		"    1",
+		"  value: -> 1",
 	}, "\n") + "\n"
 	if got != want {
 		t.Fatalf("got:\n%swant:\n%s", got, want)
