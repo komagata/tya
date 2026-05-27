@@ -197,6 +197,45 @@ func TestExtractReportFollowsReexportsAndReportsDiagnostics(t *testing.T) {
 	}
 }
 
+func TestExtractReportFollowsWildcardReexports(t *testing.T) {
+	dir := t.TempDir()
+	pkg := filepath.Join(dir, "validation")
+	if err := os.MkdirAll(pkg, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	api := filepath.Join(dir, "validation.tya")
+	number := filepath.Join(pkg, "number_validator.tya")
+	stringValidator := filepath.Join(pkg, "string_validator.tya")
+	if err := os.WriteFile(api, []byte("import validation/*\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(number, []byte("# Number validator docs\nclass NumberValidator\n  value: nil\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(stringValidator, []byte("# String validator docs\nclass StringValidator\n  value: nil\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	report, err := ExtractReport([]string{api})
+	if err != nil {
+		t.Fatal(err)
+	}
+	names := map[string]bool{}
+	for _, item := range report.Items {
+		if item.ReexportedFrom == api {
+			names[item.Name] = true
+		}
+	}
+	if !names["NumberValidator"] || !names["StringValidator"] {
+		t.Fatalf("expected wildcard re-exported validators, got %#v", report.Items)
+	}
+	for _, diag := range report.Diagnostics {
+		if diag.Code == "TYADOC0004" {
+			t.Fatalf("wildcard package surface should not produce import cycle: %#v", report.Diagnostics)
+		}
+	}
+}
+
 func TestExtractReportDuplicateAndMarkdownDiagnostics(t *testing.T) {
 	dir := t.TempDir()
 	a := filepath.Join(dir, "a.tya")

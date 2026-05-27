@@ -1693,6 +1693,8 @@ unittest/TestCase          test case base class
 unittest/TestRunner        test runner
 unittest/TestSuite         test suite
 url/Url                    URL parse/build helpers
+validation/NumberValidator numeric validation helpers
+validation/StringValidator string validation helpers
 value/Value                value introspection helpers
 xml/Xml                    XML parse/generate helpers
 xml/Document               XML document node

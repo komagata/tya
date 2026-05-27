@@ -1,0 +1,119 @@
+# StringValidator provides chainable string validation helpers.
+class StringValidator
+  # StringValidator.context stores instance state.
+  # @type String
+  context: ""
+
+  # StringValidator.errors stores validation errors.
+  # @type Array
+  errors: []
+
+  # StringValidator.max_value stores an inclusive maximum length.
+  # @type Any
+  max_value: nil
+
+  # StringValidator.min_value stores an inclusive minimum length.
+  # @type Any
+  min_value: nil
+
+  # StringValidator.name stores the value name for error messages.
+  # @type String
+  name: "value"
+
+  # StringValidator.ok stores the latest validation result.
+  # @type Boolean
+  ok: false
+
+  # StringValidator.require_present stores whether presence validation is enabled.
+  # @type Boolean
+  require_present: false
+
+  # StringValidator.value stores the input value.
+  # @type Any
+  value: nil
+
+  # StringValidator.initialize stores validation input and labels.
+  # @param value Any value value.
+  # @param name String name value.
+  # @param context String context value.
+  # @return Self the initialized object.
+  initialize: value, name = "value", context = "" ->
+    self.value = value
+    self.name = name
+    self.context = context
+    self.errors = []
+    self.ok = false
+
+  # StringValidator.between requires an inclusive length range.
+  # @param min Number min value.
+  # @param max Number max value.
+  # @return Self the current validator.
+  between: min, max ->
+    self.min_value = min
+    self.max_value = max
+    self
+
+  # StringValidator.error_message formats an error message.
+  # @param detail String detail value.
+  # @return String the error message.
+  error_message: detail ->
+    message = self.name + " " + detail
+    if self.context != ""
+      return self.context + ": " + message
+    message
+
+  # StringValidator.max requires a maximum string length.
+  # @param n Number n value.
+  # @return Self the current validator.
+  max: n ->
+    self.max_value = n
+    self
+
+  # StringValidator.min requires a minimum string length.
+  # @param n Number n value.
+  # @return Self the current validator.
+  min: n ->
+    self.min_value = n
+    self
+
+  # StringValidator.present requires a non-blank string.
+  # @return Self the current validator.
+  present: ->
+    self.require_present = true
+    self
+
+  # StringValidator.valid? reports the latest validation result.
+  # @return Boolean whether validation passed.
+  valid?: -> self.ok
+
+  # StringValidator.validate runs validation and returns the validator.
+  # @return Self the current validator.
+  validate: ->
+    self.errors = []
+    self.ok = false
+    if self.value.class != String
+      self.errors.push(self.error_message("must be a string"))
+      return self
+    if self.require_present and self.value.blank?()
+      self.errors.push(self.error_message("must be present"))
+      return self
+    if self.min_value != nil and self.value.len() < self.min_value
+      self.errors.push(
+        self.error_message("must be at least " + self.min_value.to_s() + " characters")
+      )
+      return self
+    if self.max_value != nil and self.value.len() > self.max_value
+      self.errors.push(
+        self.error_message("must be at most " + self.max_value.to_s() + " characters")
+      )
+      return self
+    self.ok = true
+    self
+
+  # StringValidator.validate! raises the first validation error.
+  # @return String the validated value.
+  validate!: ->
+    self.validate()
+    if not self.valid?()
+      raise error(self.errors[0])
+    self.value

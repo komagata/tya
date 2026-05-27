@@ -1,0 +1,175 @@
+# NumberValidator provides chainable numeric validation helpers.
+class NumberValidator
+  # NumberValidator.between_max stores an inclusive upper range bound.
+  # @type Any
+  between_max: nil
+
+  # NumberValidator.between_min stores an inclusive lower range bound.
+  # @type Any
+  between_min: nil
+
+  # NumberValidator.context stores instance state.
+  # @type String
+  context: ""
+
+  # NumberValidator.errors stores validation errors.
+  # @type Array
+  errors: []
+
+  # NumberValidator.gt_value stores an exclusive lower bound.
+  # @type Any
+  gt_value: nil
+
+  # NumberValidator.gte_value stores an inclusive lower bound.
+  # @type Any
+  gte_value: nil
+
+  # NumberValidator.lt_value stores an exclusive upper bound.
+  # @type Any
+  lt_value: nil
+
+  # NumberValidator.lte_value stores an inclusive upper bound.
+  # @type Any
+  lte_value: nil
+
+  # NumberValidator.name stores the value name for error messages.
+  # @type String
+  name: "value"
+
+  # NumberValidator.ok stores the latest validation result.
+  # @type Boolean
+  ok: false
+
+  # NumberValidator.require_integer stores whether integer validation is enabled.
+  # @type Boolean
+  require_integer: false
+
+  # NumberValidator.value stores the input value.
+  # @type Any
+  value: nil
+
+  # NumberValidator.initialize stores validation input and labels.
+  # @param value Any value value.
+  # @param name String name value.
+  # @param context String context value.
+  # @return Self the initialized object.
+  initialize: value, name = "value", context = "" ->
+    self.value = value
+    self.name = name
+    self.context = context
+    self.errors = []
+    self.ok = false
+
+  # NumberValidator.between requires an inclusive numeric range.
+  # @param min Number min value.
+  # @param max Number max value.
+  # @return Self the current validator.
+  between: min, max ->
+    self.between_min = min
+    self.between_max = max
+    self
+
+  # NumberValidator.error_message formats an error message.
+  # @param detail String detail value.
+  # @return String the error message.
+  error_message: detail ->
+    message = self.name + " " + detail
+    if self.context != ""
+      return self.context + ": " + message
+    message
+
+  # NumberValidator.gt requires a value greater than n.
+  # @param n Number n value.
+  # @return Self the current validator.
+  gt: n ->
+    self.gt_value = n
+    self
+
+  # NumberValidator.gte requires a value greater than or equal to n.
+  # @param n Number n value.
+  # @return Self the current validator.
+  gte: n ->
+    self.gte_value = n
+    self
+
+  # NumberValidator.integer requires an integer value.
+  # @return Self the current validator.
+  integer: ->
+    self.require_integer = true
+    self
+
+  # NumberValidator.lt requires a value less than n.
+  # @param n Number n value.
+  # @return Self the current validator.
+  lt: n ->
+    self.lt_value = n
+    self
+
+  # NumberValidator.lte requires a value less than or equal to n.
+  # @param n Number n value.
+  # @return Self the current validator.
+  lte: n ->
+    self.lte_value = n
+    self
+
+  # NumberValidator.non_negative requires a value greater than or equal to zero.
+  # @return Self the current validator.
+  non_negative: -> self.gte(0)
+
+  # NumberValidator.positive requires a value greater than zero.
+  # @return Self the current validator.
+  positive: -> self.gt(0)
+
+  # NumberValidator.valid? reports the latest validation result.
+  # @return Boolean whether validation passed.
+  valid?: -> self.ok
+
+  # NumberValidator.validate runs validation and returns the validator.
+  # @return Self the current validator.
+  validate: ->
+    self.errors = []
+    self.ok = false
+    if self.value.class != Number
+      self.errors.push(self.error_message("must be a number"))
+      return self
+    if self.require_integer and self.value != self.value.to_i()
+      self.errors.push(self.error_message("must be an integer"))
+      return self
+    if self.between_min != nil and self.between_max != nil
+      if self.value < self.between_min or self.value > self.between_max
+        self.errors.push(
+          self.error_message("must be between " + self.between_min.to_s() + " and " + self.between_max.to_s())
+        )
+        return self
+    if self.gt_value != nil and self.value <= self.gt_value
+      self.errors.push(
+        self.error_message("must be greater than " + self.gt_value.to_s())
+      )
+      return self
+    if self.gte_value != nil and self.value < self.gte_value
+      self.errors.push(
+        self.error_message("must be at least " + self.gte_value.to_s())
+      )
+      return self
+    if self.lt_value != nil and self.value >= self.lt_value
+      self.errors.push(
+        self.error_message("must be less than " + self.lt_value.to_s())
+      )
+      return self
+    if self.lte_value != nil and self.value > self.lte_value
+      self.errors.push(
+        self.error_message("must be at most " + self.lte_value.to_s())
+      )
+      return self
+    self.ok = true
+    self
+
+  # NumberValidator.validate! raises the first validation error.
+  # @return Number the validated value.
+  validate!: ->
+    self.validate()
+    if not self.valid?()
+      raise error(self.errors[0])
+    if self.require_integer
+      return self.value.to_i()
+    self.value

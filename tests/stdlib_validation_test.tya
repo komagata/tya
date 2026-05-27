@@ -1,0 +1,86 @@
+import unittest/*
+import validation/number_validator
+import validation/string_validator
+import validation/*
+
+class StdlibValidationTest extends TestCase
+  assert_error_message: body, message, desc ->
+    try
+      body()
+      self.fail("expected error")
+    catch err
+      self.assert_equal(message, err["message"], desc)
+
+  test_individual_imports: ->
+    self.assert_equal(
+      number_validator.NumberValidator(1).validate!(),
+      NumberValidator(1).validate!(),
+      "number import"
+    )
+    self.assert_equal(
+      string_validator.StringValidator("x").validate!(),
+      StringValidator("x").validate!(),
+      "string import"
+    )
+
+  test_number_validator_errors: ->
+    self.assert_error_message(
+      () -> NumberValidator(12.5, "r", "color.channel").integer().validate!(),
+      "color.channel: r must be an integer",
+      "integer error"
+    )
+    self.assert_error_message(
+      () -> NumberValidator(256, "r", "color.channel").integer().between(0, 255).validate!(),
+      "color.channel: r must be between 0 and 255",
+      "range error"
+    )
+
+  test_number_validator_positive_and_non_negative: ->
+    self.assert_equal(
+      1,
+      NumberValidator(1).positive().lt(25).validate!(),
+      "positive"
+    )
+    self.assert_error_message(
+      () -> NumberValidator(0).positive().validate!(),
+      "value must be greater than 0",
+      "positive error"
+    )
+    self.assert_equal(
+      0,
+      NumberValidator(0).non_negative().validate!(),
+      "non_negative"
+    )
+
+  test_number_validator_success: ->
+    value = NumberValidator(12, "r", "color.channel").integer().between(0, 255).validate!(
+    )
+    self.assert_equal(12, value, "integer range")
+
+  test_string_validator_errors: ->
+    self.assert_error_message(
+      () -> StringValidator("", "name", "user").present().validate!(),
+      "user: name must be present",
+      "present error"
+    )
+    self.assert_error_message(
+      () -> StringValidator("toolong", "name", "user").max(3).validate!(),
+      "user: name must be at most 3 characters",
+      "max error"
+    )
+
+  test_string_validator_success: ->
+    value = StringValidator("tya", "name", "user").present().min(2).max(10).validate!(
+    )
+    self.assert_equal("tya", value, "string")
+
+  test_validate_returns_instance: ->
+    validator = NumberValidator(12.5, "r", "color.channel").integer().validate()
+    self.assert_equal(NumberValidator, validator.class, "class")
+    self.assert_falsy(validator.valid?(), "valid")
+    self.assert_equal(
+      ["color.channel: r must be an integer"],
+      validator.errors,
+      "errors"
+    )
+    self.assert_equal(12.5, validator.value, "value")

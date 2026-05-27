@@ -2,7 +2,6 @@ import unittest/*
 import color
 
 class StdlibColorTest extends TestCase
-
   test_constructors_and_fields: ->
     c = color.Color(255, 0, 10, 255)
     self.assert_equal(color.Color, c.class, "class")
@@ -11,18 +10,6 @@ class StdlibColorTest extends TestCase
     self.assert_equal(10, c.b, "b")
     self.assert_equal(255, c.a, "a")
 
-  test_hex_forms: ->
-    self.assert_equal([255, 0, 170, 255], color.Color().hex("#f0a").to_array(), "short rgb")
-    self.assert_equal([255, 0, 170, 204], color.Color().hex("f0ac").to_array(), "short rgba")
-    self.assert_equal([0, 102, 255, 255], color.Color().hex("#0066ff").to_array(), "long rgb")
-    self.assert_equal([0, 102, 255, 128], color.Color().hex("0066ff80").to_array(), "long rgba")
-
-  test_css_and_named: ->
-    self.assert_equal([255, 0, 0, 255], color.Color().css("red").to_array(), "name")
-    self.assert_equal([0, 0, 0, 0], color.Color().css("transparent").to_array(), "transparent")
-    self.assert_equal([1, 2, 3, 255], color.Color().css("rgb(1, 2, 3)").to_array(), "rgb")
-    self.assert_equal([1, 2, 3, 4], color.Color().css("rgba(1, 2, 3, 4)").to_array(), "rgba")
-
   test_conversion_and_equality: ->
     c = color.Color(1, 2, 255, 128)
     self.assert_equal("#0102ff80", c.to_hex(true), "hex alpha")
@@ -30,17 +17,76 @@ class StdlibColorTest extends TestCase
     self.assert(c.equal?(color.Color().from_array([1, 2, 255, 128])), "equal")
     self.assert(c.nearly_equal?(color.Color(2, 3, 254, 129), 1), "nearly")
 
+  test_css_and_named: ->
+    self.assert_equal(
+      [255, 0, 0, 255],
+      color.Color().css("red").to_array(),
+      "name"
+    )
+    self.assert_equal(
+      [0, 0, 0, 0],
+      color.Color().css("transparent").to_array(),
+      "transparent"
+    )
+    self.assert_equal(
+      [1, 2, 3, 255],
+      color.Color().css("rgb(1, 2, 3)").to_array(),
+      "rgb"
+    )
+    self.assert_equal(
+      [1, 2, 3, 4],
+      color.Color().css("rgba(1, 2, 3, 4)").to_array(),
+      "rgba"
+    )
+
+  test_errors: ->
+    self.assert_raises(() -> color.Color(256, 0, 0, 255), "channel")
+    self.assert_raises(() -> color.Color().hex("xyz"), "hex")
+    self.assert_raises(
+      () -> color.Color.black().blend(color.Color.white(), 2),
+      "ratio"
+    )
+
+  test_hex_forms: ->
+    self.assert_equal(
+      [255, 0, 170, 255],
+      color.Color().hex("#f0a").to_array(),
+      "short rgb"
+    )
+    self.assert_equal(
+      [255, 0, 170, 204],
+      color.Color().hex("f0ac").to_array(),
+      "short rgba"
+    )
+    self.assert_equal(
+      [0, 102, 255, 255],
+      color.Color().hex("#0066ff").to_array(),
+      "long rgb"
+    )
+    self.assert_equal(
+      [0, 102, 255, 128],
+      color.Color().hex("0066ff80").to_array(),
+      "long rgba"
+    )
+
   test_operations: ->
     a = color.Color(0, 0, 0, 255)
     b = color.Color(100, 200, 50, 255)
     self.assert_equal([50, 100, 25, 255], a.blend(b, 0.5).to_array(), "blend")
     self.assert_equal([155, 55, 205, 255], b.invert().to_array(), "invert")
-    self.assert_equal([255, 255, 255, 128], color.Color().white().with_alpha(128).to_array(), "alpha")
-    self.assert_equal([128, 128, 128, 255], a.lighten(0.5).to_array(), "lighten")
+    self.assert_equal(
+      [255, 255, 255, 128],
+      color.Color.white().with_alpha(128).to_array(),
+      "alpha"
+    )
+    self.assert_equal(
+      [128, 128, 128, 255],
+      a.lighten(0.5).to_array(),
+      "lighten"
+    )
     self.assert_equal([50, 100, 25, 255], b.darken(0.5).to_array(), "darken")
-    self.assert_equal(21, color.Color().black().contrast_ratio(color.Color().white()).round(), "contrast")
-
-  test_errors: ->
-    self.assert_raises(-> color.Color(256, 0, 0, 255), "channel")
-    self.assert_raises(-> color.Color().hex("xyz"), "hex")
-    self.assert_raises(-> color.Color().black().blend(color.Color().white(), 2), "ratio")
+    self.assert_equal(
+      21,
+      color.Color.black().contrast_ratio(color.Color.white()).round(),
+      "contrast"
+    )

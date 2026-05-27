@@ -186,9 +186,10 @@ type parsedFile struct {
 }
 
 type importInfo struct {
-	name string
-	line int
-	col  int
+	name     string
+	line     int
+	col      int
+	wildcard bool
 }
 
 func parseFile(path string) (*parsedFile, error) {
@@ -219,9 +220,10 @@ func parseFile(path string) (*parsedFile, error) {
 	for _, stmt := range prog.Stmts {
 		if imp, ok := stmt.(*ast.ImportStmt); ok {
 			file.imports = append(file.imports, importInfo{
-				name: imp.Name,
-				line: imp.NameTok.Line,
-				col:  imp.NameTok.Col,
+				name:     imp.Name,
+				line:     imp.NameTok.Line,
+				col:      imp.NameTok.Col,
+				wildcard: imp.Wildcard,
 			})
 		}
 	}
@@ -331,11 +333,9 @@ func collectReexports(paths []string, parsed map[string]*parsedFile, root map[st
 		}
 		stack := map[string]bool{p: true}
 		for _, imp := range file.imports {
-			target := resolveImportPath(imp.name, p, moduleIndex)
-			if target == "" {
-				continue
+			for _, target := range resolveImportPaths(imp.name, imp.wildcard, p, parsed, moduleIndex) {
+				out = append(out, reexportsFrom(target, p, parsed, moduleIndex, root, report, stack, seen)...)
 			}
-			out = append(out, reexportsFrom(target, p, parsed, moduleIndex, root, report, stack, seen)...)
 		}
 	}
 	return out
@@ -378,12 +378,38 @@ func reexportsFrom(path, reexporter string, parsed map[string]*parsedFile, modul
 		}
 	}
 	for _, imp := range file.imports {
-		target := resolveImportPath(imp.name, path, moduleIndex)
-		if target == "" {
-			continue
+		for _, target := range resolveImportPaths(imp.name, imp.wildcard, path, parsed, moduleIndex) {
+			out = append(out, reexportsFrom(target, reexporter, parsed, moduleIndex, root, report, stack, seen)...)
 		}
-		out = append(out, reexportsFrom(target, reexporter, parsed, moduleIndex, root, report, stack, seen)...)
 	}
+	return out
+}
+
+func resolveImportPaths(name string, wildcard bool, importer string, parsed map[string]*parsedFile, moduleIndex map[string]string) []string {
+	if !wildcard {
+		if path := resolveImportPath(name, importer, moduleIndex); path != "" {
+			return []string{path}
+		}
+		return nil
+	}
+	dir := filepath.Join(filepath.Dir(importer), filepath.FromSlash(name))
+	paths := map[string]bool{}
+	for path := range parsed {
+		if filepath.Dir(path) == dir {
+			paths[path] = true
+		}
+	}
+	matches, _ := filepath.Glob(filepath.Join(dir, "*.tya"))
+	for _, path := range matches {
+		paths[path] = true
+	}
+	out := make([]string, 0, len(paths))
+	for path := range paths {
+		if path != importer {
+			out = append(out, path)
+		}
+	}
+	sort.Strings(out)
 	return out
 }
 
