@@ -1,0 +1,55 @@
+import option_parser
+import unittest/*
+
+class StdlibOptionParserTest extends TestCase
+  spec: ->
+    options = {}
+    options["verbose"] = { type: "bool", alias: "v" }
+    options["output"] = { type: "string", alias: "o", required: true }
+    options["count"] = { type: "int", default: 1 }
+    options["ratio"] = { type: "float" }
+    options["tag"] = { type: "array", alias: "t" }
+    options["color"] = { type: "bool", default: true }
+    out =
+      options: options
+      positionals: ["input"]
+      stop_at_double_dash: true
+    out
+
+  test_allow_unknown: ->
+    spec = spec()
+    spec["allow_unknown"] = true
+    result = option_parser.OptionParser(["--other", "-o", "out"]).parse(spec)
+    assert_equal(["--other"], result["rest"], "rest")
+    assert_equal([], result["errors"], "errors")
+
+  test_long_and_equals: ->
+    result = option_parser
+      .OptionParser(["--verbose", "--output=dist", "--count", "3", "src"])
+      .parse(spec())
+    assert_equal(true, result["options"]["verbose"], "verbose")
+    assert_equal("dist", result["options"]["output"], "output")
+    assert_equal(3, result["options"]["count"], "count")
+    assert_equal(["src"], result["positionals"], "positionals")
+    assert_equal([], result["errors"], "errors")
+
+  test_no_flag_and_double_dash: ->
+    result = option_parser
+      .OptionParser(["--no-color", "-o", "out", "--", "--literal", "x"])
+      .parse(spec())
+    assert_equal(false, result["options"]["color"], "color")
+    assert_equal(["--literal", "x"], result["rest"], "rest")
+
+  test_required_and_unknown_errors: ->
+    result = option_parser.OptionParser(["--missing"]).parse(spec())
+    assert_equal(2, result["errors"].len(), "error count")
+    assert_equal("unknown_option", result["errors"][0]["kind"], "unknown")
+    assert_equal("required", result["errors"][1]["kind"], "required")
+
+  test_short_grouped_bool_and_value: ->
+    result = option_parser
+      .OptionParser(["-v", "-t", "one", "-ttwo", "-o", "out"])
+      .parse(spec())
+    assert_equal(true, result["options"]["verbose"], "verbose")
+    assert_equal("out", result["options"]["output"], "output")
+    assert_equal(["one", "two"], result["options"]["tag"], "tag")

@@ -89,7 +89,7 @@ func TestEmitCFilesystemUtilitiesProgram(t *testing.T) {
 	root := filepath.Join(dir, "root")
 	src := filepath.Join(root, "src.bin")
 	dst := filepath.Join(root, "dst.bin")
-	code := "import file\nimport dir\nimport bytes\ndir.Dir(\"" + root + "\").mkdir_all()\nfile.File(\"" + src + "\").write_bytes(bytes.Bytes([0, 255, 65]).from_array())\nfile.File(\"" + src + "\").copy(\"" + dst + "\", {})\nprint(bytes.Bytes(file.File(\"" + dst + "\").read_bytes()).to_array()[1])\nseen = []\nrecord = entry -> seen.push(entry[\"name\"])\ndir.Dir(\"" + root + "\").walk(record, {})\nprint(seen.len() >= 0)\ntmp = file.File().temp(\"tya-cg\", \".tmp\")\nprint(file.File(tmp).exists?())\nfile.File(tmp).remove()\ndir.Dir(\"" + root + "\").remove_all()\nprint(file.File(\"" + root + "\").exists?())\n"
+	code := "import file\nimport dir\nimport bytes\ndir.Dir(\"" + root + "\").mkdir_all()\nfile.File(\"" + src + "\").write_bytes(b\"\\x00\\xffA\")\nfile.File(\"" + src + "\").copy(\"" + dst + "\", {})\nprint(bytes.Bytes(file.File(\"" + dst + "\").read_bytes()).to_array()[1])\nseen = []\nrecord = entry -> seen.push(entry[\"name\"])\ndir.Dir(\"" + root + "\").walk(record, {})\nprint(seen.len() >= 0)\ntmp = file.File().temp(\"tya-cg\", \".tmp\")\nprint(file.File(tmp).exists?())\nfile.File(tmp).remove()\ndir.Dir(\"" + root + "\").remove_all()\nprint(file.File(\"" + root + "\").exists?())\n"
 	main := filepath.Join(dir, "main.tya")
 	if err := os.WriteFile(main, []byte(code), 0644); err != nil {
 		t.Fatal(err)
@@ -429,7 +429,7 @@ func TestEmitCCompilesStringInterpolationProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesDictProgram(t *testing.T) {
-	src := "user =\n  name: \"komagata\"\n  age: 20\nprint(user[\"name\"])\nprint(user.len())\nuser[\"city\"] = \"Tokyo\"\nprint(user[\"city\"])\nprint(user.update({ name: \"Tya\", lang: \"tya\" }))\nprint(user[\"name\"])\nprint(user[\"lang\"])\n"
+	src := "user =\n  name: \"komagata\"\n  age: 20\nprint(user[\"name\"])\nprint(user.len())\nuser[\"city\"] = \"Tokyo\"\nprint(user[\"city\"])\nprint(user.merge!({ name: \"Tya\", lang: \"tya\" }))\nprint(user[\"name\"])\nprint(user[\"lang\"])\n"
 	out := compileAndRun(t, src)
 	if string(out) != "komagata\n2\nTokyo\nnil\nTya\ntya\n" {
 		t.Fatalf("got %q", out)

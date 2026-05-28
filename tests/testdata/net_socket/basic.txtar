@@ -59,7 +59,7 @@ client = socket.Socket(nil, false).connect("127.0.0.1", 18181, { mode: "binary" 
 client.write(b"abc")
 data = client.read(3)
 print(data.len())
-print(bytes.Bytes().to_text(data))
+print(bytes.Bytes(data).to_string())
 client.close()
 
 -- timeout_server.tya --

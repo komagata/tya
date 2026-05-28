@@ -12,7 +12,7 @@ class Csv
   # @type Dict
   # @option options.separator String field separator.
   # @option options.header Boolean whether the first row is a header.
-  options: { separator: Self.SEPARATOR, header: false }
+  options: { separator: SEPARATOR, header: false }
 
   # Csv.rows stores the CSV rows held by this object.
   # @type Array
@@ -115,7 +115,7 @@ class Csv
   private apply_options: options_arg ->
     if options_arg == nil
       return nil
-    self.options.update(options_arg)
+    self.options.merge!(options_arg)
 
   private dump_array_rows: ->
     out = ""
@@ -136,9 +136,9 @@ class Csv
 
   private escape_field: field ->
     separator = self.options["separator"]
-    needs_quote = field.sequence().any?(
-      c -> c == separator or c == "\"" or c == "\n" or c == chr(13)
-    )
+    needs_quote = field
+      .sequence()
+      .any?(c -> c == separator or c == "\"" or c == "\n" or c == chr(13))
     if not needs_quote
       return field
     "\"" + field.replace("\"", "\"\"") + "\""
@@ -169,25 +169,23 @@ class Csv
         elseif c == "\""
           in_quote = true
           i = i + 1
+        elseif c == self.options["separator"]
+          row.push(field)
+          field = ""
+          i = i + 1
+        elseif c == "\n"
+          row.push(field)
+          i = i + 1
+          ended = true
+        elseif c == cr
+          row.push(field)
+          i = i + 1
+          if i < n and text[i] == "\n"
+            i = i + 1
+          ended = true
         else
-          if c == self.options["separator"]
-            row.push(field)
-            field = ""
-            i = i + 1
-          elseif c == "\n"
-            row.push(field)
-            i = i + 1
-            ended = true
-          else
-            if c == cr
-              row.push(field)
-              i = i + 1
-              if i < n and text[i] == "\n"
-                i = i + 1
-              ended = true
-            else
-              field = field + c
-              i = i + 1
+          field = field + c
+          i = i + 1
       if in_quote
         raise error("csv.parse: unterminated quoted field")
       if not ended

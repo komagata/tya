@@ -209,11 +209,11 @@ func TestLSPRenameClassDoesNotRenameImportedPackageClass(t *testing.T) {
 	p := initLSP(t)
 	defer p.close()
 	dir := writeWorkspace(t, map[string]string{
-		"tya.toml":    "name = \"demo\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n",
-		"src/cli.tya": "import cli\n\nclass Cli\n  static parse: args ->\n    cli.Cli(args).parse_or_exit(Self.option_spec())\n  static option_spec: () -> {}\n",
+		"tya.toml":             "name = \"demo\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n",
+		"src/command_line.tya": "import option_parser\n\nclass CommandLine\n  static parse: args ->\n    option_parser.OptionParser(args).parse(Self.option_spec())\n  static option_spec: () -> {}\n",
 	})
-	uri := fileURI(filepath.Join(dir, "src", "cli.tya"))
-	src, _ := os.ReadFile(filepath.Join(dir, "src", "cli.tya"))
+	uri := fileURI(filepath.Join(dir, "src", "command_line.tya"))
+	src, _ := os.ReadFile(filepath.Join(dir, "src", "command_line.tya"))
 	p.notify("textDocument/didOpen", map[string]any{
 		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": string(src)},
 	})
@@ -237,7 +237,7 @@ func TestLSPRenameClassDoesNotRenameImportedPackageClass(t *testing.T) {
 	}
 	for _, textEdit := range edit.Changes[uri] {
 		if textEdit.Range.Start.Line == 4 {
-			t.Fatalf("imported package class cli.Cli was renamed: %s", res)
+			t.Fatalf("imported package class option_parser.OptionParser was renamed: %s", res)
 		}
 	}
 }

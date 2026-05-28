@@ -1161,7 +1161,7 @@ func TestRunDictionaryStringLiteralKeys(t *testing.T) {
 }
 
 func TestRunCollectionMutationReturnValues(t *testing.T) {
-	src := "items = []\nprint(items.push(1))\nprint(items.pop())\nprint(items.pop())\ndict = {}\nprint(dict.set(\"name\", \"Tya\"))\nprint(dict[\"name\"])\nprint(dict.update({ name: \"Tya2\", lang: \"tya\" }))\nprint(dict[\"name\"])\nprint(dict[\"lang\"])\nprint(dict.delete(\"name\"))\nprint(dict[\"name\"])\n"
+	src := "items = []\nprint(items.push(1))\nprint(items.pop())\nprint(items.pop())\ndict = {}\nprint(dict.set(\"name\", \"Tya\"))\nprint(dict[\"name\"])\nprint(dict.merge!({ name: \"Tya2\", lang: \"tya\" }))\nprint(dict[\"name\"])\nprint(dict[\"lang\"])\nprint(dict.delete(\"name\"))\nprint(dict[\"name\"])\n"
 	out := runEval(t, src)
 	want := "nil\n1\nnil\nnil\nTya\nnil\nTya2\ntya\nnil\nnil\n"
 	if out != want {

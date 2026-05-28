@@ -1,5 +1,5 @@
 # v0.58 POST with a Content-Length body: the request body bytes
-# are exposed via `req["body"]`; `bytes.Bytes.text` recovers UTF-8.
+# are exposed via `req["body"]`; `bytes.Bytes.to_string` recovers UTF-8.
 [!exec:curl] skip 'curl not on PATH'
 [!exec:sh] skip 'sh not on PATH'
 cd $REPO
@@ -12,7 +12,7 @@ stdout 'got: hello v58'
 import bytes
 import net/http/* as http
 
-handle = req -> { status: 201, body: "got: " + bytes.Bytes(req["body"]).to_text() }
+handle = req -> { status: 201, body: "got: " + bytes.Bytes(req["body"]).to_string() }
 
 app = http.Server()
 app.post("/echo", handle)

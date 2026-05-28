@@ -253,7 +253,7 @@ static TyaValue tya_method_keys(TyaValue receiver, TyaValue a, TyaValue b, TyaVa
 static TyaValue tya_method_values(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_entries(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_merge(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
-static TyaValue tya_method_update(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_merge_bang(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_channel_send(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_channel_receive(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_channel_receive_timeout(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
@@ -1344,7 +1344,7 @@ TyaValue tya_dict_merge(TyaValue left, TyaValue right) {
   return out;
 }
 
-TyaValue tya_dict_update(TyaValue left, TyaValue right) {
+TyaValue tya_dict_merge_bang(TyaValue left, TyaValue right) {
   if (left.kind == TYA_DICT && left.dict != NULL && right.kind == TYA_DICT && right.dict != NULL) {
     for (int i = 0; i < right.dict->len; i++) {
       if (right.dict->entries[i].key != NULL) {
@@ -4157,7 +4157,7 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
     if (strcmp(key, "values") == 0) return tya_bind_method(receiver, tya_method_values);
     if (strcmp(key, "entries") == 0) return tya_bind_method(receiver, tya_method_entries);
     if (strcmp(key, "merge") == 0) return tya_bind_method(receiver, tya_method_merge);
-    if (strcmp(key, "update") == 0) return tya_bind_method(receiver, tya_method_update);
+    if (strcmp(key, "merge!") == 0) return tya_bind_method(receiver, tya_method_merge_bang);
     if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
     if (strcmp(key, "equal?") == 0) return tya_bind_method(receiver, tya_method_equal_p);
     if (strcmp(key, "iter") == 0) return tya_bind_method(receiver, tya_method_iter);
@@ -4279,7 +4279,7 @@ static TyaValue tya_method_keys(TyaValue receiver, TyaValue a, TyaValue b, TyaVa
 static TyaValue tya_method_values(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_values(receiver); }
 static TyaValue tya_method_entries(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_dict_entries(receiver); }
 static TyaValue tya_method_merge(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_dict_merge(receiver, a); }
-static TyaValue tya_method_update(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_dict_update(receiver, a); }
+static TyaValue tya_method_merge_bang(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_dict_merge_bang(receiver, a); }
 static TyaValue tya_method_channel_send(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_channel_send(receiver, a); }
 static TyaValue tya_method_channel_receive(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_channel_receive(receiver); }
 static TyaValue tya_method_channel_receive_timeout(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_channel_receive_timeout(receiver, a); }

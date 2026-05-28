@@ -388,10 +388,10 @@ var removedTopLevelPrimitiveBuiltins = map[string]string{
 	"socket_remote_address":            "socket.remote_address()",
 	"socket_server_close":              "server.close()",
 	"socket_server_local_address":      "server.local_address()",
-	"bytes":                            "Bytes().from_array(array)",
-	"bytes_of":                         "Bytes().from_text(string)",
-	"bytes_text":                       "bytes.text()",
-	"bytes_array":                      "bytes.array()",
+	"bytes":                            "Bytes.from_array(array)",
+	"bytes_of":                         "Bytes.from_string(string)",
+	"bytes_text":                       "bytes.to_string()",
+	"bytes_array":                      "bytes.to_array()",
 	"bytes_concat":                     "left.concat(right)",
 	"bytes_slice":                      "bytes.slice(start, end)",
 	"file_read_bytes":                  "File().read_bytes(path)",
@@ -553,8 +553,8 @@ func removedPrimitiveModuleCallError(member *ast.MemberExpr, scope *scope) error
 			replacement = "dict.entries()"
 		case "merge":
 			replacement = "dict.merge(other)"
-		case "update":
-			replacement = "dict.update(other)"
+		case "merge!":
+			replacement = "dict.merge!(other)"
 		}
 	case "value":
 		if member.Name == "nil?" {
@@ -3594,7 +3594,7 @@ func isNegativeNumberLiteral(expr ast.Expr) bool {
 
 func isDictMethodName(name string) bool {
 	switch name {
-	case "class", "len", "empty?", "has", "has?", "get", "set", "delete", "keys", "values", "entries", "merge", "update", "to_s", "equal?", "iter", "sequence":
+	case "class", "len", "empty?", "has", "has?", "get", "set", "delete", "keys", "values", "entries", "merge", "merge!", "to_s", "equal?", "iter", "sequence":
 		return true
 	default:
 		return false

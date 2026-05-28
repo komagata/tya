@@ -1886,7 +1886,7 @@ func isStandardArrayCall(name string) bool {
 
 func isStandardDictCall(name string) bool {
 	switch name {
-	case "len", "has", "has?", "get", "set", "delete", "keys", "values", "merge", "update":
+	case "len", "has", "has?", "get", "set", "delete", "keys", "values", "merge", "merge!":
 		return true
 	default:
 		return false
@@ -2233,17 +2233,17 @@ func evalDictModuleCall(name string, args []Value, env *Env) (Value, error) {
 			out[key] = value
 		}
 		return out, nil
-	case "update":
+	case "merge!":
 		if len(args) != 2 {
-			return nil, fmt.Errorf("dict.update expects 2 arguments")
+			return nil, fmt.Errorf("dict.merge! expects 2 arguments")
 		}
 		left, ok := args[0].(Dict)
 		if !ok {
-			return nil, fmt.Errorf("dict.update expects dictionary left")
+			return nil, fmt.Errorf("dict.merge! expects dictionary left")
 		}
 		right, ok := args[1].(Dict)
 		if !ok {
-			return nil, fmt.Errorf("dict.update expects dictionary right")
+			return nil, fmt.Errorf("dict.merge! expects dictionary right")
 		}
 		for key, value := range right {
 			left[key] = value

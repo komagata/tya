@@ -10,7 +10,7 @@ var stdlibModules = []string{
 	"binary",
 	"bytes",
 	"channel",
-	"cli",
+	"option_parser",
 	"collections",
 	"color",
 	"comparable",

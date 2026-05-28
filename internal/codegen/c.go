@@ -3963,9 +3963,9 @@ func standardDictCall(name string, args []string) string {
 		if len(args) == 2 {
 			return fmt.Sprintf("tya_dict_merge(%s, %s)", args[0], args[1])
 		}
-	case "update":
+	case "merge!":
 		if len(args) == 2 {
-			return fmt.Sprintf("tya_dict_update(%s, %s)", args[0], args[1])
+			return fmt.Sprintf("tya_dict_merge_bang(%s, %s)", args[0], args[1])
 		}
 	case "entries":
 		if len(args) == 1 {

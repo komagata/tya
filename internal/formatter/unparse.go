@@ -146,6 +146,7 @@ var stdlibModules = map[string]bool{
 	"markdown":      true,
 	"math":          true,
 	"os":            true,
+	"option_parser": true,
 	"path":          true,
 	"process":       true,
 	"random":        true,

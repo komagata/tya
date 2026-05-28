@@ -38,9 +38,9 @@ import bytes
 
 root = dir.Dir(nil).temp_dir("tya-fs")
 dir.Dir("{root}/nested").mkdir_all()
-file.File("{root}/a.txt").write_bytes(bytes.Bytes([0, 255]).from_array())
+file.File("{root}/a.txt").write_bytes(b"\x00\xff")
 file.File("{root}/a.txt").copy("{root}/b.txt", {})
-print(bytes.Bytes().to_array(file.File("{root}/b.txt").read_bytes())[1])
+print(bytes.Bytes(file.File("{root}/b.txt").read_bytes()).to_array()[1])
 file.File("{root}/b.txt").chmod(420)
 print(file.File("{root}/b.txt").stat()["mode"] == 420)
 

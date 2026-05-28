@@ -24,7 +24,7 @@ stderr 'raise expects error value'
 
 ! exec $WORK/tya check removed_helper.tya
 stderr 'TYA-E0812'
-stderr 'use bytes.array()'
+stderr 'use bytes.to_array()'
 
 ! exec $WORK/tya format defer.tya
 stderr 'defer syntax is not part of Tya v1.0.0'

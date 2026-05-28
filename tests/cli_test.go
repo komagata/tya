@@ -247,7 +247,7 @@ func TestCLIFormatAndCheckCollapsesImportBlankLines(t *testing.T) {
 	original := strings.Join([]string{
 		"import os",
 		"",
-		"import cli",
+		"import option_parser",
 		"",
 		"class Cli",
 		"  initialize: ->",
@@ -278,8 +278,8 @@ func TestCLIFormatAndCheckCollapsesImportBlankLines(t *testing.T) {
 		t.Fatal(readErr)
 	}
 	want := strings.Join([]string{
+		"import option_parser",
 		"import os",
-		"import cli",
 		"",
 		"class Cli",
 		"  initialize: ->",
@@ -1092,7 +1092,7 @@ func TestCLIVersionCommand(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v\n%s", err, out)
 	}
-	if string(out) != "0.71.2\n" {
+	if string(out) != "0.71.3\n" {
 		t.Fatalf("unexpected output: %s", out)
 	}
 }

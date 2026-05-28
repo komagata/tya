@@ -1628,7 +1628,7 @@ base64/Base64              Base64 encode/decode helpers
 binary/Reader              binary input reader
 binary/Writer              binary output writer
 channel/Channel            native channel value
-cli/Cli                    command-line option parser and usage formatter
+option_parser              GNU-style command-line option parser
 collections/Deque          double-ended queue
 collections/PriorityQueue  priority queue
 collections/Queue          FIFO queue

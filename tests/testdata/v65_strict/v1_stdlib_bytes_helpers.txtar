@@ -26,32 +26,32 @@ stdout 'bytes.index_of: byte must be exactly one byte'
 -- bytes_helpers.tya --
 import bytes
 
-print(bytes.Bytes.len("Tya"))
-print(bytes.Bytes.len(b"Tya"))
-print(bytes.Bytes.len("あ"))
-print(bytes.Bytes.at("Tya", 0))
-print(bytes.Bytes.at(b"Tya", 1))
-print(bytes.Bytes.at("あ", 0))
-print(bytes.Bytes.index_of("abc", 98))
-print(bytes.Bytes.index_of("abc", "b"))
-print(bytes.Bytes.index_of(b"abc", b"b"))
-print(bytes.Bytes.index_of("あ", 227))
-print(bytes.Bytes.index_of("abc", "x"))
-print(bytes.Bytes.index_of("abca", "a", 1))
+print(bytes.Bytes.from_string("Tya").len())
+print(bytes.Bytes(b"Tya").len())
+print(bytes.Bytes.from_string("あ").len())
+print(bytes.Bytes.from_string("Tya").at(0))
+print(bytes.Bytes(b"Tya").at(1))
+print(bytes.Bytes.from_string("あ").at(0))
+print(bytes.Bytes.index_of(bytes.Bytes.from_string("abc"), 98))
+print(bytes.Bytes.index_of(bytes.Bytes.from_string("abc"), bytes.Bytes.from_string("b")))
+print(bytes.Bytes.index_of(bytes.Bytes(b"abc"), bytes.Bytes(b"b")))
+print(bytes.Bytes.index_of(bytes.Bytes.from_string("あ"), 227))
+print(bytes.Bytes.index_of(bytes.Bytes.from_string("abc"), bytes.Bytes.from_string("x")))
+print(bytes.Bytes.index_of(bytes.Bytes.from_string("abca"), bytes.Bytes.from_string("a"), 1))
 
 try
-  bytes.Bytes.at("abc", 3)
+  bytes.Bytes.from_string("abc").at(3)
 catch e
   print(e["message"])
 try
-  bytes.Bytes.at("abc", 1.5)
+  bytes.Bytes.from_string("abc").at(1.5)
 catch e
   print(e["message"])
 try
-  bytes.Bytes.index_of("abc", 256)
+  bytes.Bytes.index_of(bytes.Bytes.from_string("abc"), 256)
 catch e
   print(e["message"])
 try
-  bytes.Bytes.index_of("abc", "ab")
+  bytes.Bytes.index_of(bytes.Bytes.from_string("abc"), bytes.Bytes.from_string("ab"))
 catch e
   print(e["message"])

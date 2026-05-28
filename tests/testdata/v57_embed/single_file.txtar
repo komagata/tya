@@ -1,5 +1,5 @@
 # v0.57 embed "path" as name reads the file at codegen time and
-# binds the bytes to the given name. bytes.Bytes.text recovers the
+# binds the bytes to the given name. bytes.Bytes.to_string recovers the
 # original text.
 cd $REPO
 exec go run ./cmd/tya run $WORK/main.tya
@@ -14,7 +14,7 @@ hello tya embed
 import bytes
 
 embed "data.txt" as payload
-print(bytes.Bytes(payload).to_text())
+print(bytes.Bytes(payload).to_string())
 
 embed "data.txt" as meta with { hash: true, gzip: true }
 print(meta["path"])
