@@ -8,7 +8,7 @@ exec cp $SELFHOST_V02_STAGE1_C $WORK/stage1.c
 exec cp $SELFHOST_V02_STAGE1_BIN $WORK/stage1
 
 exec $WORK/stage1 --ast $WORK/imports.tya
-stdout '1: import greeting\n2: import net/http\n3: import net/http as http\n4: assign name = string\n'
+stdout '1: import greeting\n2: import net/http\n3: import net/http\n4: assign name = string\n'
 ! stderr .
 
 ! exec $WORK/stage1 --ast $WORK/reserved.tya
