@@ -4,7 +4,7 @@ import bytes
 data = b"Tya\x00\x02\x01"
 reader = binary.Reader(data)
 
-magic = bytes.Bytes(nil).to_text(reader.read_bytes(3))
+magic = bytes.Bytes(reader.read_bytes(3)).to_string()
 reader.skip(1)
 major = reader.read_u8()
 minor = reader.read_u8()

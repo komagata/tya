@@ -238,7 +238,7 @@ class Server
       template_options["escape"] = "html"
     source = tmpl
     if tmpl.class != String
-      source = bytes.Bytes(tmpl).to_text()
+      source = bytes.Bytes(tmpl).to_string()
     body = ""
     if tmpl.class == String and file.File(tmpl).exists?()
       body = template.Template(tmpl).render_file(data, template_options)

@@ -1,4 +1,5 @@
 import unittest/*
+import bytes
 
 class BytesTypeTest extends TestCase
 
@@ -37,3 +38,20 @@ class BytesTypeTest extends TestCase
     self.assert_equal("hello", bytes_text(b), "slice 0..5")
     b = bytes_slice(b"hello world", 6, 11)
     self.assert_equal("world", bytes_text(b), "slice 6..11")
+  test_bytes_class_wraps_native_bytes: ->
+    b = bytes.Bytes(b"Tya")
+    self.assert_equal("Bytes", b.class.name, "wrapper class")
+    self.assert_equal([84, 121, 97], b.to_array(), "array")
+    self.assert_equal("Tya", b.to_string(), "text")
+    self.assert_equal(3, b.len(), "len")
+    self.assert_equal(84, b.at(0), "at")
+  test_bytes_class_builds_from_array_and_text: ->
+    from_array = bytes.Bytes.from_array([65, 66, 67])
+    from_string = bytes.Bytes.from_string("ABC")
+    self.assert_equal("Bytes", from_array.class.name, "array wrapper")
+    self.assert_equal("ABC", from_array.to_string(), "array text")
+    self.assert_equal([65, 66, 67], from_string.to_array(), "string array")
+  test_bytes_class_concat_and_slice_return_wrappers: ->
+    b = bytes.Bytes.from_string("hello").concat(bytes.Bytes.from_string(" world")).slice(0, 5)
+    self.assert_equal("Bytes", b.class.name, "wrapper")
+    self.assert_equal("hello", b.to_string(), "slice")
