@@ -34,8 +34,15 @@ func TestCheckAllowsSelfClassConstantInFieldInitializer(t *testing.T) {
 	}
 }
 
+func TestCheckAllowsBareClassConstantInClassBody(t *testing.T) {
+	prog := parse(t, "class Palette\n  RED: \"red\"\n\n  label: -> RED\n  static default: -> RED\n")
+	if err := Check(prog); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestCheckAllowsImplicitSelfAndSelfMethodCalls(t *testing.T) {
-	src := "interface Named\n  summary: ->\n    self.name()\n\nclass Base\n  static prefix: -> \"base\"\n\n  base_label: -> \"base\"\n\nclass User extends Base implements Named\n  name_value: nil\n\n  initialize: value ->\n    self.name_value = value\n\n  name: ->\n    self.name_value\n\n  label: ->\n    base_label() + \":\" + name() + \":\" + summary()\n\n  static label: ->\n    prefix()\n"
+	src := "interface Named\n  summary: ->\n    self.name()\n\nclass Base\n  static prefix: -> \"base\"\n\n  base_label: -> \"base\"\n\nclass User extends Base implements Named\n  name_value: nil\n\n  initialize: value ->\n    self.name_value = value\n\n  name: ->\n    self.name_value\n\n  label: ->\n    prefix() + \":\" + base_label() + \":\" + name() + \":\" + summary()\n\n  static label: ->\n    prefix()\n"
 	if err := Check(parse(t, src)); err != nil {
 		t.Fatal(err)
 	}
@@ -51,19 +58,10 @@ func TestCheckRejectsUndeclaredSelfFieldAssignment(t *testing.T) {
 	}
 }
 
-func TestCheckRejectsInstanceFieldNameCollisions(t *testing.T) {
-	tests := []string{
-		"class User\n  name: nil\n\n  initialize: name ->\n    self.name = name\n",
-		"class User\n  name: nil\n\n  set_name: value ->\n    name = value\n",
-	}
-	for _, src := range tests {
-		err := Check(parse(t, src))
-		if err == nil {
-			t.Fatalf("expected field collision error for %q", src)
-		}
-		if !strings.Contains(err.Error(), "conflicts with instance field name") {
-			t.Fatalf("unexpected error: %v", err)
-		}
+func TestCheckAllowsInstanceFieldNameShadowing(t *testing.T) {
+	src := "class User\n  name: nil\n\n  initialize: name ->\n    self.name = name\n\n  set_name: name ->\n    name = name.trim()\n    self.name = name\n"
+	if err := Check(parse(t, src)); err != nil {
+		t.Fatal(err)
 	}
 }
 

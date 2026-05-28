@@ -637,6 +637,26 @@ func TestRunIfElseTruthiness(t *testing.T) {
 	}
 }
 
+func TestRunControlFlowExpressions(t *testing.T) {
+	src := "if_value = if true\n  \"yes\"\nelse\n  \"no\"\nprint(if_value)\nmissing = if false\n  \"bad\"\nprint(missing)\ni = 0\nwhile_value = while i < 3\n  i = i + 1\n  i\nprint(while_value)\nfor_value = for item in [1, 2, 3]\n  item\nprint(for_value)\nmatch_value = match \"ok\"\n  case \"ok\"\n    \"matched\"\nprint(match_value)\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	want := "yes\nnil\n3\n3\nmatched\n"
+	if out.String() != want {
+		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
 func TestRunComparisonAndLogic(t *testing.T) {
 	src := "age = 20\nname = \"komagata\"\nif age >= 20 and name == \"komagata\"\n  print(\"match\")\nprint(nil or \"anonymous\")\nprint(\"fallback\" or false)\nprint(not false)\n"
 	toks, errs := lexer.Lex(src)

@@ -155,7 +155,7 @@ func TestRewriteCatalog(t *testing.T) {
 		},
 		{
 			category: "class",
-			name:     "declaring class receiver becomes Self",
+			name:     "declaring class receiver call becomes bare",
 			input: strings.Join([]string{
 				"class Box",
 				"  static build: () -> Box.new()",
@@ -163,7 +163,63 @@ func TestRewriteCatalog(t *testing.T) {
 			}, "\n"),
 			want: strings.Join([]string{
 				"class Box",
-				"  static build: -> Self.new()",
+				"  static build: -> new()",
+				"",
+			}, "\n"),
+		},
+		{
+			category: "class",
+			name:     "self and Self receiver calls become bare",
+			input: strings.Join([]string{
+				"class Box",
+				"  initialize: () ->",
+				"    self.reset()",
+				"  static build: () -> Self.new()",
+				"",
+			}, "\n"),
+			want: strings.Join([]string{
+				"class Box",
+				"  static build: -> new()",
+				"",
+				"  initialize: -> reset()",
+				"",
+			}, "\n"),
+		},
+		{
+			category: "class",
+			name:     "static receiver call becomes bare in instance method",
+			input: strings.Join([]string{
+				"class Box",
+				"  initialize: () ->",
+				"    self.value = Self.make()",
+				"    self.other = Box.make()",
+				"",
+			}, "\n"),
+			want: strings.Join([]string{
+				"class Box",
+				"  initialize: ->",
+				"    self.value = make()",
+				"    self.other = make()",
+				"",
+			}, "\n"),
+		},
+		{
+			category: "class",
+			name:     "same-class constant receiver becomes bare",
+			input: strings.Join([]string{
+				"class Palette",
+				"  RED: Color(255, 0, 0, 255)",
+				"  label: -> Self.RED.to_hex(false)",
+				"  static default: -> Palette.RED",
+				"",
+			}, "\n"),
+			want: strings.Join([]string{
+				"class Palette",
+				"  RED: Color(255, 0, 0, 255)",
+				"",
+				"  static default: -> RED",
+				"",
+				"  label: -> RED.to_hex(false)",
 				"",
 			}, "\n"),
 		},

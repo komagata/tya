@@ -1054,6 +1054,10 @@ func (p *Parser) classRef() (*ast.ClassRef, error) {
 
 func (p *Parser) ifStmt() (ast.Stmt, error) {
 	p.next()
+	return p.ifAfterKeyword()
+}
+
+func (p *Parser) ifAfterKeyword() (*ast.IfStmt, error) {
 	cond, err := p.exprLine()
 	if err != nil {
 		return nil, err
@@ -1082,6 +1086,10 @@ func (p *Parser) ifStmt() (ast.Stmt, error) {
 
 func (p *Parser) whileStmt() (ast.Stmt, error) {
 	p.next()
+	return p.whileAfterKeyword()
+}
+
+func (p *Parser) whileAfterKeyword() (*ast.WhileStmt, error) {
 	cond, err := p.exprLine()
 	if err != nil {
 		return nil, err
@@ -1194,6 +1202,10 @@ func (p *Parser) selectArm() (ast.SelectArm, error) {
 
 func (p *Parser) forStmt() (ast.Stmt, error) {
 	p.next()
+	return p.forAfterKeyword()
+}
+
+func (p *Parser) forAfterKeyword() (*ast.ForInStmt, error) {
 	valueTok, err := p.expectName("expected loop variable")
 	if err != nil {
 		return nil, err
@@ -1304,6 +1316,10 @@ func (p *Parser) tryCatchStmt() (ast.Stmt, error) {
 
 func (p *Parser) matchStmt() (ast.Stmt, error) {
 	tok := p.next()
+	return p.matchAfterKeyword(tok)
+}
+
+func (p *Parser) matchAfterKeyword(tok token.Token) (*ast.MatchStmt, error) {
 	if p.at(token.NEWLINE) || p.at(token.DEDENT) || p.at(token.EOF) {
 		return nil, p.errAt(tok, "match requires a value expression")
 	}
@@ -1451,6 +1467,10 @@ func (p *Parser) exprLine() (ast.Expr, error) {
 	continuedLine := p.continuedLine
 	p.continuedLine = false
 	if _, ok := ex.(*ast.FuncLit); ok {
+		return ex, nil
+	}
+	switch ex.(type) {
+	case *ast.IfStmt, *ast.WhileStmt, *ast.ForInStmt, *ast.MatchStmt:
 		return ex, nil
 	}
 	if !continuedLine && p.startsExpr() {
@@ -1987,6 +2007,16 @@ func (p *Parser) primary() (ast.Expr, error) {
 		}
 		return &ast.InstanceFieldExpr{Name: name.Lexeme, NameTok: name}, nil
 	case token.IDENT:
+		switch tok.Lexeme {
+		case "if":
+			return p.ifAfterKeyword()
+		case "while":
+			return p.whileAfterKeyword()
+		case "for":
+			return p.forAfterKeyword()
+		case "match":
+			return p.matchAfterKeyword(tok)
+		}
 		if p.peek().Type == token.QUESTION || p.peek().Type == token.BANG {
 			p.next()
 			tok.Lexeme += p.prev().Lexeme

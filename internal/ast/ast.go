@@ -103,6 +103,7 @@ type IfStmt struct {
 }
 
 func (*IfStmt) stmt() {}
+func (*IfStmt) expr() {}
 
 type WhileStmt struct {
 	Cond Expr
@@ -110,6 +111,7 @@ type WhileStmt struct {
 }
 
 func (*WhileStmt) stmt() {}
+func (*WhileStmt) expr() {}
 
 type ForInStmt struct {
 	ValueName string
@@ -122,6 +124,7 @@ type ForInStmt struct {
 }
 
 func (*ForInStmt) stmt() {}
+func (*ForInStmt) expr() {}
 
 type BreakStmt struct{ Tok token.Token }
 
@@ -163,6 +166,7 @@ type MatchStmt struct {
 }
 
 func (*MatchStmt) stmt() {}
+func (*MatchStmt) expr() {}
 
 type MatchCase struct {
 	Pattern Expr

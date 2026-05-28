@@ -766,9 +766,6 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 					}
 					continue
 				}
-				if scope.inInstanceMethod && scope.currentClass != "" && effectiveInstanceField(name.Name, scope.currentClass, scope) {
-					return fmt.Errorf("%d:%d: binding %s conflicts with instance field %s", name.Tok.Line, name.Tok.Col, name.Name, name.Name)
-				}
 				if isPredicateName(name.Name) || isBangName(name.Name) {
 					if len(n.Targets) != 1 || len(n.Values) != 1 {
 						if isPredicateName(name.Name) {
@@ -1346,6 +1343,11 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			}
 		}
 		if !scope.defined(n.Name) {
+			if scope.currentClass != "" {
+				if info, ok := scope.classes[scope.currentClass]; ok && info.classConstants[n.Name] {
+					return nil
+				}
+			}
 			// v0.44 within-package fallback: inside a module's class
 			// method body, an unqualified PascalCase reference resolves
 			// to <currentModule>.<Name> when that key names a sibling
@@ -1418,9 +1420,6 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			if err := checkBindingName(param, line, col); err != nil {
 				return err
 			}
-			if scope.inInstanceMethod && scope.currentClass != "" && effectiveInstanceField(param, scope.currentClass, scope) {
-				return fmt.Errorf("%d:%d: parameter %s conflicts with instance field %s", line, col, param, param)
-			}
 			if seen[param] && param != "_" {
 				if line > 0 {
 					return fmt.Errorf("%d:%d: duplicate function parameter %s", line, col, param)
@@ -1478,6 +1477,50 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		return checkExpr(n.Expr, scope)
 	case *ast.TryExpr:
 		return checkExpr(n.Expr, scope)
+	case *ast.IfStmt:
+		if err := checkExpr(n.Cond, scope); err != nil {
+			return err
+		}
+		if err := checkStmts(n.Then, map[string]bool{}, newScope(scope)); err != nil {
+			return err
+		}
+		return checkStmts(n.Else, map[string]bool{}, newScope(scope))
+	case *ast.WhileStmt:
+		if err := checkExpr(n.Cond, scope); err != nil {
+			return err
+		}
+		return checkStmts(n.Body, map[string]bool{}, newScope(scope))
+	case *ast.ForInStmt:
+		if err := checkBindingName(n.ValueName, n.ValueTok.Line, n.ValueTok.Col); err != nil {
+			return err
+		}
+		if n.IndexName != "" {
+			if err := checkBindingName(n.IndexName, n.IndexTok.Line, n.IndexTok.Col); err != nil {
+				return err
+			}
+		}
+		if err := checkExpr(n.Iterable, scope); err != nil {
+			return err
+		}
+		child := newScope(scope)
+		child.define(n.ValueName, kindUnknown)
+		if n.IndexName != "" {
+			child.define(n.IndexName, kindUnknown)
+		}
+		return checkStmts(n.Body, map[string]bool{}, child)
+	case *ast.MatchStmt:
+		if err := checkExpr(n.Value, scope); err != nil {
+			return err
+		}
+		for _, c := range n.Cases {
+			caseScope := newScope(scope)
+			if err := checkPattern(c.Pattern, caseScope); err != nil {
+				return err
+			}
+			if err := checkStmts(c.Body, map[string]bool{}, caseScope); err != nil {
+				return err
+			}
+		}
 	case *ast.SuperExpr:
 		return fmt.Errorf("%d:%d: super must be called inside init, an instance method, or a class method", n.Tok.Line, n.Tok.Col)
 	case *ast.SelfExpr:
@@ -1651,6 +1694,11 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 						return fmt.Errorf("%d:%d: method %s expects %d arguments", id.Tok.Line, id.Tok.Col, id.Name, arity)
 					}
 					n.ImplicitSelf = true
+				} else if arity, found := effectiveClassMethodArity(scope.currentClass, id.Name, scope); found {
+					if len(n.Args) != arity {
+						return fmt.Errorf("%d:%d: class method %s expects %d arguments", id.Tok.Line, id.Tok.Col, id.Name, arity)
+					}
+					n.ImplicitClass = true
 				}
 			} else if scope.inClassMethod {
 				if arity, found := effectiveClassMethodArity(scope.currentClass, id.Name, scope); found {
@@ -1909,15 +1957,6 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 			child.inClassMethod = true
 		} else {
 			child.inInstanceMethod = true
-			for i, param := range method.Func.Params {
-				line, col := method.Tok.Line, method.Tok.Col
-				if i < len(method.Func.ParamToks) {
-					line, col = method.Func.ParamToks[i].Line, method.Func.ParamToks[i].Col
-				}
-				if effectiveInstanceField(param, key, scope) {
-					return fmt.Errorf("%d:%d: parameter %s conflicts with instance field %s", line, col, param, param)
-				}
-			}
 		}
 		if err := checkExpr(method.Func, child); err != nil {
 			return err

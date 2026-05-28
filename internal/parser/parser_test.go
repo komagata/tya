@@ -1046,6 +1046,50 @@ func TestParseIfElseifElse(t *testing.T) {
 	}
 }
 
+func TestParseControlFlowExpressions(t *testing.T) {
+	tests := []struct {
+		name string
+		src  string
+		want any
+	}{
+		{"if", "value = if true\n  1\nelse\n  2\n", (*ast.IfStmt)(nil)},
+		{"while", "value = while false\n  1\n", (*ast.WhileStmt)(nil)},
+		{"for", "value = for item in [1]\n  item\n", (*ast.ForInStmt)(nil)},
+		{"match", "value = match \"ok\"\n  case \"ok\"\n    1\n", (*ast.MatchStmt)(nil)},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			toks, errs := lexer.Lex(tt.src)
+			if len(errs) != 0 {
+				t.Fatalf("lex errors: %v", errs)
+			}
+			prog, _, err := Parse(toks)
+			if err != nil {
+				t.Fatal(err)
+			}
+			assign := prog.Stmts[0].(*ast.AssignStmt)
+			switch tt.want.(type) {
+			case *ast.IfStmt:
+				if _, ok := assign.Values[0].(*ast.IfStmt); !ok {
+					t.Fatalf("got %T", assign.Values[0])
+				}
+			case *ast.WhileStmt:
+				if _, ok := assign.Values[0].(*ast.WhileStmt); !ok {
+					t.Fatalf("got %T", assign.Values[0])
+				}
+			case *ast.ForInStmt:
+				if _, ok := assign.Values[0].(*ast.ForInStmt); !ok {
+					t.Fatalf("got %T", assign.Values[0])
+				}
+			case *ast.MatchStmt:
+				if _, ok := assign.Values[0].(*ast.MatchStmt); !ok {
+					t.Fatalf("got %T", assign.Values[0])
+				}
+			}
+		})
+	}
+}
+
 func TestParseZeroParamFunction(t *testing.T) {
 	toks, errs := lexer.Lex("value = -> \"ok\"\nother = () -> \"ok\"\n")
 	if len(errs) != 0 {

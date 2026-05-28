@@ -20,12 +20,15 @@ package formatter
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 
 	"tya/internal/ast"
 )
+
+var constNameRE = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
 
 // Unparse renders prog as formatted Tya source. When prog was
 // produced by parser.ParseWithComments, header and per-statement
@@ -203,9 +206,10 @@ type unparser struct {
 	indent   int
 	comments map[ast.Stmt]ast.StmtComments
 	// v0.48 G6: name of the class currently being unparsed, used to
-	// rewrite `<DeclaringClass>.foo` → `Self.foo` inside its own body.
+	// canonicalize same-class receiver method calls inside its own body.
 	// Empty outside class bodies.
-	currentClass string
+	currentClass       string
+	currentClassMethod bool
 }
 
 // columnLimit is the canonical wrap target (CANONICAL §5.1).
@@ -319,6 +323,9 @@ func (u *unparser) stmt(s ast.Stmt) error {
 		if len(n.Values) == 0 {
 			u.emitStmtLine(s, "return")
 			return nil
+		}
+		if len(n.Values) == 1 && u.isControlExpr(n.Values[0]) {
+			return u.controlExpr("return ", n.Values[0])
 		}
 		parts := make([]string, 0, len(n.Values))
 		for _, v := range n.Values {
@@ -539,8 +546,8 @@ func (u *unparser) moduleMember(m ast.ModuleMember) error {
 }
 
 func (u *unparser) classDecl(n *ast.ClassDecl) error {
-	// v0.48 G6: track the declaring class so MemberExpr unparse can
-	// rewrite `<n.Name>.foo` → `Self.foo` inside its own body.
+	// v0.48 G6: track the declaring class so same-class receiver calls
+	// can be canonicalized inside their own body.
 	prevClass := u.currentClass
 	u.currentClass = n.Name
 	defer func() { u.currentClass = prevClass }()
@@ -693,6 +700,10 @@ func (u *unparser) classConst(c ast.ClassConst) error {
 
 func (u *unparser) classMethod(m ast.ClassMethod) error {
 	u.leadingComments(m.Comments)
+	prevClassMethod := u.currentClassMethod
+	u.currentClassMethod = m.Class
+	defer func() { u.currentClassMethod = prevClassMethod }()
+
 	// v0.46+ canonical: keyword modifiers in canonical order
 	// (`private static abstract|override`). Legacy `@@` is removed.
 	parts := []string{}
@@ -854,6 +865,9 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 	// FuncLit value with a block body needs special handling: we
 	// emit `name = params -> ...` and recurse into the block.
 	if len(n.Values) == 1 {
+		if u.isControlExpr(n.Values[0]) {
+			return u.controlExpr(strings.Join(targets, ", ")+" = ", n.Values[0])
+		}
 		if fn, ok := n.Values[0].(*ast.FuncLit); ok {
 			head, err := u.funcDefHead(fn)
 			if err != nil {
@@ -1297,11 +1311,15 @@ func (u *unparser) emitWrappedArray(stmt ast.Stmt, prefix string, arr *ast.Array
 }
 
 func (u *unparser) ifStmt(n *ast.IfStmt) error {
+	return u.ifStmtWithPrefix("", n)
+}
+
+func (u *unparser) ifStmtWithPrefix(prefix string, n *ast.IfStmt) error {
 	cond, err := u.expr(n.Cond)
 	if err != nil {
 		return err
 	}
-	u.emitCondHeader("if", cond)
+	u.emitCondHeader(prefix+"if", cond)
 	if err := u.block(n.Then); err != nil {
 		return err
 	}
@@ -1328,6 +1346,66 @@ func (u *unparser) ifStmt(n *ast.IfStmt) error {
 	}
 	u.line("else")
 	return u.blockBody(n.Else)
+}
+
+func (u *unparser) isControlExpr(e ast.Expr) bool {
+	switch e.(type) {
+	case *ast.IfStmt, *ast.WhileStmt, *ast.ForInStmt, *ast.MatchStmt:
+		return true
+	default:
+		return false
+	}
+}
+
+func (u *unparser) controlExpr(prefix string, e ast.Expr) error {
+	switch n := e.(type) {
+	case *ast.IfStmt:
+		return u.ifStmtWithPrefix(prefix, n)
+	case *ast.WhileStmt:
+		cond, err := u.expr(n.Cond)
+		if err != nil {
+			return err
+		}
+		u.emitCondHeader(prefix+"while", cond)
+		return u.block(n.Body)
+	case *ast.ForInStmt:
+		iter, err := u.expr(n.Iterable)
+		if err != nil {
+			return err
+		}
+		head := prefix + "for " + n.ValueName
+		if n.IndexName != "" {
+			head += ", " + n.IndexName
+		}
+		kind := n.Kind
+		if kind == "" {
+			kind = "in"
+		}
+		u.emitCondHeader(head+" "+kind, iter)
+		return u.block(n.Body)
+	case *ast.MatchStmt:
+		value, err := u.expr(n.Value)
+		if err != nil {
+			return err
+		}
+		u.line(prefix + "match " + value)
+		u.indent++
+		for _, c := range n.Cases {
+			pat, err := u.expr(c.Pattern)
+			if err != nil {
+				return err
+			}
+			u.line("case " + pat)
+			if err := u.block(c.Body); err != nil {
+				u.indent--
+				return err
+			}
+		}
+		u.indent--
+		return nil
+	default:
+		return fmt.Errorf("formatter.Unparse: unsupported control expression %T", e)
+	}
 }
 
 // emitCondHeader writes `keyword cond` on a single line, falling
@@ -1601,6 +1679,17 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 		}
 		return op + inner, nil
 	case *ast.CallExpr:
+		if name, ok := u.bareSameClassCallName(n.Callee); ok {
+			args := make([]string, 0, len(n.Args))
+			for _, a := range n.Args {
+				s, err := u.expr(a)
+				if err != nil {
+					return "", err
+				}
+				args = append(args, s)
+			}
+			return name + "(" + strings.Join(args, ", ") + ")", nil
+		}
 		callee, err := u.postfixTarget(n.Callee)
 		if err != nil {
 			return "", err
@@ -1615,8 +1704,12 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 		}
 		return callee + "(" + strings.Join(args, ", ") + ")", nil
 	case *ast.MemberExpr:
+		if name, ok := u.bareSameClassConstantName(n); ok {
+			return name, nil
+		}
 		// v0.48 G6 canonical receiver: `<DeclaringClass>.foo` inside
-		// its own class body is rewritten to `Self.foo`.
+		// its own class body is rewritten to `Self.foo` for non-constant
+		// non-call member expressions.
 		if u.currentClass != "" {
 			if ident, ok := n.Target.(*ast.Ident); ok && ident.Name == u.currentClass {
 				return "Self." + n.Name, nil
@@ -1681,6 +1774,45 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 		return "", fmt.Errorf("formatter.Unparse: block-bodied function expression at expr position not supported in v0.37")
 	}
 	return "", fmt.Errorf("formatter.Unparse: expr %T not supported in v0.37", e)
+}
+
+func (u *unparser) bareSameClassCallName(e ast.Expr) (string, bool) {
+	member, ok := e.(*ast.MemberExpr)
+	if !ok || u.currentClass == "" {
+		return "", false
+	}
+	switch target := member.Target.(type) {
+	case *ast.SelfExpr:
+		if target.Class {
+			return member.Name, true
+		}
+		return member.Name, !u.currentClassMethod
+	case *ast.Ident:
+		if target.Name == "self" {
+			return member.Name, !u.currentClassMethod
+		}
+		if target.Name == "Self" || target.Name == u.currentClass {
+			return member.Name, true
+		}
+	}
+	return "", false
+}
+
+func (u *unparser) bareSameClassConstantName(e *ast.MemberExpr) (string, bool) {
+	if u.currentClass == "" || !constNameRE.MatchString(e.Name) {
+		return "", false
+	}
+	switch target := e.Target.(type) {
+	case *ast.SelfExpr:
+		if target.Class {
+			return e.Name, true
+		}
+	case *ast.Ident:
+		if target.Name == "Self" || target.Name == u.currentClass {
+			return e.Name, true
+		}
+	}
+	return "", false
 }
 
 func (u *unparser) postfixTarget(e ast.Expr) (string, error) {

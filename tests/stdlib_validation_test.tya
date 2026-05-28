@@ -62,6 +62,11 @@ class StdlibValidationTest extends TestCase
     )
     self.assert_equal(12, value, "facade integer range")
 
+  test_validation_string_facade: ->
+    value = validation.Validation.string("tya", "name", "user").present().min(2).max(10).validate!(
+    )
+    self.assert_equal("tya", value, "facade string")
+
   test_string_validator_errors: ->
     self.assert_error_message(
       () -> StringValidator("", "name", "user").present().validate!(),

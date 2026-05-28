@@ -3,8 +3,15 @@ import validation/*
 # Validation provides facade helpers for the validation standard library.
 class Validation
   # Validation.number creates a chainable number validator.
-  # @param value Any value value.
+  # @param value Number value value.
   # @param name String name value.
   # @param context String context value.
   # @return NumberValidator the number validator.
   static number: value, name = "value", context = "" -> NumberValidator(value, name, context)
+
+  # Validation.string creates a chainable string validator.
+  # @param value String value value.
+  # @param name String name value.
+  # @param context String context value.
+  # @return StringValidator the string validator.
+  static string: value, name = "value", context = "" -> StringValidator(value, name, context)

@@ -1,11 +1,11 @@
 # NumberValidator provides chainable numeric validation helpers.
 class NumberValidator
   # NumberValidator.between_max stores an inclusive upper range bound.
-  # @type Any
+  # @type Number?
   between_max: nil
 
   # NumberValidator.between_min stores an inclusive lower range bound.
-  # @type Any
+  # @type Number?
   between_min: nil
 
   # NumberValidator.context stores instance state.
@@ -17,19 +17,19 @@ class NumberValidator
   errors: []
 
   # NumberValidator.gt_value stores an exclusive lower bound.
-  # @type Any
+  # @type Number?
   gt_value: nil
 
   # NumberValidator.gte_value stores an inclusive lower bound.
-  # @type Any
+  # @type Number?
   gte_value: nil
 
   # NumberValidator.lt_value stores an exclusive upper bound.
-  # @type Any
+  # @type Number?
   lt_value: nil
 
   # NumberValidator.lte_value stores an inclusive upper bound.
-  # @type Any
+  # @type Number?
   lte_value: nil
 
   # NumberValidator.name stores the value name for error messages.
@@ -45,11 +45,11 @@ class NumberValidator
   require_integer: false
 
   # NumberValidator.value stores the input value.
-  # @type Any
+  # @type Number
   value: nil
 
   # NumberValidator.initialize stores validation input and labels.
-  # @param value Any value value.
+  # @param value Number value value.
   # @param name String name value.
   # @param context String context value.
   # @return Self the initialized object.

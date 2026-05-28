@@ -2,195 +2,120 @@ import validation
 
 # Color provides the color/Color standard library API.
 class Color
-  # Color.a stores instance state.
-  # @type Int
+  # Color.BLACK is opaque black.
+  # @type Color
+  BLACK: Color(0, 0, 0, 255)
+
+  # Color.BLUE is opaque blue.
+  # @type Color
+  BLUE: Color(0, 0, 255, 255)
+
+  # Color.CYAN is opaque cyan.
+  # @type Color
+  CYAN: Color(0, 255, 255, 255)
+
+  # Color.GREEN is opaque green.
+  # @type Color
+  GREEN: Color(0, 128, 0, 255)
+
+  # Color.MAGENTA is opaque magenta.
+  # @type Color
+  MAGENTA: Color(255, 0, 255, 255)
+
+  # Color.RED is opaque red.
+  # @type Color
+  RED: Color(255, 0, 0, 255)
+
+  # Color.TRANSPARENT is fully transparent black.
+  # @type Color
+  TRANSPARENT: Color(0, 0, 0, 0)
+
+  # Color.WHITE is opaque white.
+  # @type Color
+  WHITE: Color(255, 255, 255, 255)
+
+  # Color.YELLOW is opaque yellow.
+  # @type Color
+  YELLOW: Color(255, 255, 0, 255)
+
+  # Color.a stores the alpha channel.
+  # @type Number
   a: nil
 
-  # Color.b stores instance state.
-  # @type Int
+  # Color.b stores the blue channel.
+  # @type Number
   b: nil
 
-  # Color.g stores instance state.
-  # @type Int
+  # Color.g stores the green channel.
+  # @type Number
   g: nil
 
-  # Color.r stores instance state.
-  # @type Int
+  # Color.r stores the red channel.
+  # @type Number
   r: nil
 
-  # Color.black provides the color/Color standard library operation.
-  # @return Any the resulting value.
-  static black: -> Color(0, 0, 0, 255)
-
-  # Color.blue provides the color/Color standard library operation.
-  # @return Any the resulting value.
-  static blue: -> Color(0, 0, 255, 255)
-
-  # Color.channel provides the color/Color standard library operation.
-  # @param value Any value value.
-  # @param name String name value.
-  # @return Any the resulting value.
+  # Color.channel validates a color channel as an integer in 0..255.
+  # @param value Number channel value.
+  # @param name String channel name for error messages.
+  # @return Number the validated integer channel.
   static channel: value, name ->
-    validation.Validation
+    Validation
       .number(value, name, "color.channel")
       .integer()
       .between(0, 255)
       .validate!()
 
-  # Color.cyan provides the color/Color standard library operation.
-  # @return Any the resulting value.
-  static cyan: -> Color(0, 255, 255, 255)
-
-  # Color.gray50 provides the color/Color standard library operation.
-  # @return Any the resulting value.
-  static gray50: -> Color(128, 128, 128, 255)
-
-  # Color.green provides the color/Color standard library operation.
-  # @return Any the resulting value.
-  static green: -> Color(0, 128, 0, 255)
-
-  # Color.magenta provides the color/Color standard library operation.
-  # @return Any the resulting value.
-  static magenta: -> Color(255, 0, 255, 255)
-
-  # Color.red provides the color/Color standard library operation.
-  # @return Any the resulting value.
-  static red: -> Color(255, 0, 0, 255)
-
-  # Color.rgb provides the color/Color standard library operation.
-  # @param r Int r value.
-  # @param g Int g value.
-  # @param b Int b value.
-  # @return Any the resulting value.
-  static rgb: r, g, b -> Color(r, g, b, 255)
-
-  # Color.rgba provides the color/Color standard library operation.
-  # @param r Int r value.
-  # @param g Int g value.
-  # @param b Int b value.
-  # @param a Int a value.
-  # @return Any the resulting value.
-  static rgba: r, g, b, a -> Color(r, g, b, a)
-
-  # Color.transparent provides the color/Color standard library operation.
-  # @return Any the resulting value.
-  static transparent: -> Color(0, 0, 0, 0)
-
-  # Color.white provides the color/Color standard library operation.
-  # @return Any the resulting value.
-  static white: -> Color(255, 255, 255, 255)
-
-  # Color.yellow provides the color/Color standard library operation.
-  # @return Any the resulting value.
-  static yellow: -> Color(255, 255, 0, 255)
-
-  # Color.initialize provides the color/Color standard library operation.
-  # @param r Int r value.
-  # @param g Int g value.
-  # @param b Int b value.
-  # @param a Int a value.
-  # @return Self the initialized object.
-  initialize: r_arg = nil, g_arg = nil, b_arg = nil, a_arg = nil ->
-    if r_arg == nil
-      r_arg = 0
-    if g_arg == nil
-      g_arg = 0
-    if b_arg == nil
-      b_arg = 0
-    if a_arg == nil
-      a_arg = 0
-    self.r = Self.channel(r_arg, "r_arg")
-    self.g = Self.channel(g_arg, "g_arg")
-    self.b = Self.channel(b_arg, "b_arg")
-    self.a = Self.channel(a_arg, "a_arg")
-
-  # Color.abs provides the color/Color standard library operation.
-  # @param value String value value.
-  # @return Any the resulting value.
-  abs: value ->
-    if value < 0
-      return 0 - value
-    value
-
-  # Color.blend provides the color/Color standard library operation.
-  # @param a Int a value.
-  # @param b Int b value.
-  # @param t Any t value.
-  # @return Any the resulting value.
-  blend: a_arg, b_arg, t = nil ->
-    if t == nil
-      t = b_arg
-      b_arg = a_arg
-      a_arg = self
-    ratio(t, "color.blend")
-    Self.rgba(
-      mix_channel(a_arg.r, b_arg.r, t),
-      mix_channel(a_arg.g, b_arg.g, t),
-      mix_channel(a_arg.b, b_arg.b, t),
-      mix_channel(a_arg.a, b_arg.a, t)
-    )
-
-  # Color.contrast_ratio provides the color/Color standard library operation.
-  # @param a_arg Int a_arg value.
-  # @param b_arg Int b_arg value.
-  # @return Any the resulting value.
-  contrast_ratio: a_arg, b_arg = nil ->
-    if b_arg == nil
-      b_arg = a_arg
-      a_arg = self
-    color_la = luminance(a_arg)
-    color_lb = luminance(b_arg)
-    if color_la < color_lb
-      color_tmp = color_la
-      color_la = color_lb
-      color_lb = color_tmp
-    (color_la + 0.05) / (color_lb + 0.05)
-
-  # Color.css provides the color/Color standard library operation.
-  # @param text String text value.
-  # @return String the resulting value.
-  css: text ->
+  # Color.css parses a CSS-like color string.
+  # @param text String color text.
+  # @return Color the parsed color.
+  static css: text ->
     if text.class != String
       raise error("color.css: text must be a string")
     color_raw = text.trim().lower()
     if color_raw == "black"
-      return Self.black()
-    if color_raw == "white"
-      return Self.white()
-    if color_raw == "red"
-      return Self.red()
-    if color_raw == "green"
-      return Self.green()
-    if color_raw == "blue"
-      return Self.blue()
-    if color_raw == "yellow"
-      return Self.yellow()
-    if color_raw == "cyan"
-      return Self.cyan()
-    if color_raw == "magenta"
-      return Self.magenta()
-    if color_raw == "transparent"
-      return Self.transparent()
-    if color_raw.starts_with("#")
-      return hex(color_raw)
-    if color_raw.starts_with("rgb(") and color_raw.ends_with(")")
-      return css_rgb(color_raw, 4, false)
-    if color_raw.starts_with("rgba(") and color_raw.ends_with(")")
-      return css_rgb(color_raw, 5, true)
-    hex(color_raw)
+      BLACK
+    elseif color_raw == "white"
+      WHITE
+    else
+      if color_raw == "red"
+        RED
+      elseif color_raw == "green"
+        GREEN
+      else
+        if color_raw == "blue"
+          BLUE
+        elseif color_raw == "yellow"
+          YELLOW
+        else
+          if color_raw == "cyan"
+            CYAN
+          elseif color_raw == "magenta"
+            MAGENTA
+          else
+            if color_raw == "transparent"
+              TRANSPARENT
+            elseif color_raw.starts_with("#")
+              hex(color_raw)
+            else
+              if color_raw.starts_with("rgb(") and color_raw.ends_with(")")
+                css_rgb(color_raw, 4, false)
+              elseif color_raw.starts_with("rgba(") and color_raw.ends_with(")")
+                css_rgb(color_raw, 5, true)
+              else
+                hex(color_raw)
 
-  # Color.css_rgb provides the color/Color standard library operation.
-  # @param text String text value.
-  # @param start Int start value.
-  # @param has_alpha Any has alpha value.
-  # @return Any the resulting value.
-  css_rgb: text, start, has_alpha ->
+  # Color.css_rgb parses an rgb(...) or rgba(...) function body.
+  # @param text String CSS function text.
+  # @param start Number index after the function prefix.
+  # @param has_alpha Boolean whether an alpha channel is expected.
+  # @return Color the parsed color.
+  static css_rgb: text, start, has_alpha ->
     color_body = text.slice(start, text.len() - 1)
     color_parts = color_body.split(",")
     if has_alpha
       if color_parts.len() != 4
         raise error("color.css: rgba() expects 4 channels")
-      return Self.rgba(color_parts[0].trim().to_i(), color_parts[1].trim().to_i(), color_parts[2].trim().to_i(), color_parts[3].trim().to_i())
+      return rgba(color_parts[0].trim().to_i(), color_parts[1].trim().to_i(), color_parts[2].trim().to_i(), color_parts[3].trim().to_i())
     if color_parts.len() != 3
       raise error("color.css: rgb() expects 3 channels")
     Self.rgb(
@@ -199,71 +124,30 @@ class Color
       color_parts[2].trim().to_i()
     )
 
-  # Color.darken provides the color/Color standard library operation.
-  # @param color Any color value.
-  # @param amount Any amount value.
-  # @return Any the resulting value.
-  darken: color, amount = nil ->
-    if amount == nil
-      amount = color
-      color = self
-    ratio(amount, "color.darken")
-    blend(color, Self.black(), amount)
-
-  # Color.digit_char provides the color/Color standard library operation.
-  # @param value String value value.
-  # @return Any the resulting value.
-  digit_char: value ->
+  # Color.digit_char converts a 0..15 nibble to a lowercase hex digit.
+  # @param value Number nibble value.
+  # @return String one hex digit.
+  static digit_char: value ->
     if value < 10
       return chr(48 + value)
     chr(87 + value)
 
-  # Color.equal? provides the color/Color standard library operation.
-  # @param a Int a value.
-  # @param b Int b value.
-  # @return Boolean whether the condition is true.
-  equal?: a_arg, b_arg = nil ->
-    if b_arg == nil
-      b_arg = a_arg
-      a_arg = self
-    a_arg.r == b_arg.r and a_arg.g == b_arg.g and a_arg.b == b_arg.b and a_arg.a == b_arg.a
-
-  # Color.from_array provides the color/Color standard library operation.
-  # @param values Array values value.
-  # @return Array the resulting value.
-  from_array: values ->
+  # Color.from_array creates a color from [r, g, b] or [r, g, b, a].
+  # @param values Array channel values.
+  # @return Color the created color.
+  static from_array: values ->
     if values.class != Array
       raise error("color.from_array: values must be an array")
     if values.len() == 3
-      return Self.rgb(values[0], values[1], values[2])
+      return rgb(values[0], values[1], values[2])
     if values.len() == 4
-      return Self.rgba(values[0], values[1], values[2], values[3])
+      return rgba(values[0], values[1], values[2], values[3])
     raise error("color.from_array: expected 3 or 4 channels")
 
-  # Color.gray provides the color/Color standard library operation.
-  # @param value String value value.
-  # @param alpha Any alpha value.
-  # @return Any the resulting value.
-  gray: value, alpha ->
-    if alpha == nil
-      alpha = 255
-    Color(value, value, value, alpha)
-
-  # Color.grayscale provides the color/Color standard library operation.
-  # @param color Any color value.
-  # @return Any the resulting value.
-  grayscale: color = nil ->
-    if color == nil
-      color = self
-    color_value = round(
-      0.299 * color.r + 0.587 * color.g + 0.114 * color.b
-    )
-    Self.rgba(color_value, color_value, color_value, color.a)
-
-  # Color.hex provides the color/Color standard library operation.
-  # @param text String text value.
-  # @return String the resulting value.
-  hex: text ->
+  # Color.hex parses #rgb, #rgba, #rrggbb, or #rrggbbaa color text.
+  # @param text String hex color text.
+  # @return Color the parsed color.
+  static hex: text ->
     if text.class != String
       raise error("color.hex: text must be a string")
     color_raw = text
@@ -277,7 +161,7 @@ class Color
       color_a = 255
       if color_len == 4
         color_a = hex_pair(color_raw[3], color_raw[3])
-      return Self.rgba(color_r, color_g, color_b, color_a)
+      return rgba(color_r, color_g, color_b, color_a)
     if color_len == 6 or color_len == 8
       color_r = hex_pair(color_raw[0], color_raw[1])
       color_g = hex_pair(color_raw[2], color_raw[3])
@@ -285,21 +169,21 @@ class Color
       color_a = 255
       if color_len == 8
         color_a = hex_pair(color_raw[6], color_raw[7])
-      return Self.rgba(color_r, color_g, color_b, color_a)
+      return rgba(color_r, color_g, color_b, color_a)
     raise error("color.hex: invalid hex color")
 
-  # Color.hex_byte provides the color/Color standard library operation.
-  # @param value String value value.
-  # @return Any the resulting value.
-  hex_byte: value ->
+  # Color.hex_byte formats one channel as two lowercase hex digits.
+  # @param value Number channel value.
+  # @return String two hex digits.
+  static hex_byte: value ->
     color_hi = value / 16.to_i()
     color_lo = value % 16
     digit_char(color_hi) + digit_char(color_lo)
 
-  # Color.hex_digit provides the color/Color standard library operation.
-  # @param c Any c value.
-  # @return Any the resulting value.
-  hex_digit: c ->
+  # Color.hex_digit converts one hex digit to a number.
+  # @param c String one hex digit.
+  # @return Number the digit value.
+  static hex_digit: c ->
     color_code = ord(c)
     if color_code >= 48 and color_code <= 57
       return color_code - 48
@@ -309,43 +193,154 @@ class Color
       return color_code - 87
     raise error("color.hex: invalid hex digit")
 
-  # Color.hex_pair provides the color/Color standard library operation.
-  # @param hi Any hi value.
-  # @param lo Any lo value.
-  # @return Any the resulting value.
-  hex_pair: hi, lo -> hex_digit(hi) * 16 + hex_digit(lo)
+  # Color.hex_pair converts two hex digits to one channel value.
+  # @param hi String high hex digit.
+  # @param lo String low hex digit.
+  # @return Number the channel value.
+  static hex_pair: hi, lo -> hex_digit(hi) * 16 + hex_digit(lo)
 
-  # Color.invert provides the color/Color standard library operation.
-  # @param color Any color value.
-  # @return Any the resulting value.
+  # Color.rgb creates an opaque RGB color.
+  # @param r Number red channel.
+  # @param g Number green channel.
+  # @param b Number blue channel.
+  # @return Color the created color.
+  static rgb: r, g, b -> Color(r, g, b, 255)
+
+  # Color.rgba creates a color with an explicit alpha channel.
+  # @param r Number red channel.
+  # @param g Number green channel.
+  # @param b Number blue channel.
+  # @param a Number alpha channel.
+  # @return Color the created color.
+  static rgba: r, g, b, a -> Color(r, g, b, a)
+
+  # Color.initialize stores validated RGBA channel values.
+  # @param r Number red channel.
+  # @param g Number green channel.
+  # @param b Number blue channel.
+  # @param a Number alpha channel.
+  # @return Self the initialized object.
+  initialize: r, g, b, a ->
+    self.r = Validation
+      .number(r, "r", "color.channel")
+      .integer()
+      .between(0, 255)
+      .validate!()
+    self.g = Validation
+      .number(g, "g", "color.channel")
+      .integer()
+      .between(0, 255)
+      .validate!()
+    self.b = Validation
+      .number(b, "b", "color.channel")
+      .integer()
+      .between(0, 255)
+      .validate!()
+    self.a = Validation
+      .number(a, "a", "color.channel")
+      .integer()
+      .between(0, 255)
+      .validate!()
+
+  # Color.abs returns the absolute value of a number.
+  # @param value Number input value.
+  # @return Number the absolute value.
+  abs: value ->
+    if value < 0
+      return 0 - value
+    value
+
+  # Color.blend linearly interpolates between two colors.
+  # @param a Color start color, or end color when called on an instance.
+  # @param b Color end color.
+  # @param t Number interpolation amount in 0..1.
+  # @return Color the blended color.
+  blend: a_arg, b_arg, t = nil ->
+    if t == nil
+      t = b_arg
+      b_arg = a_arg
+      a_arg = self
+    ratio(t, "color.blend")
+    Self.rgba(
+      mix_channel(a_arg.r, b_arg.r, t),
+      mix_channel(a_arg.g, b_arg.g, t),
+      mix_channel(a_arg.b, b_arg.b, t),
+      mix_channel(a_arg.a, b_arg.a, t)
+    )
+
+  # Color.contrast_ratio computes the WCAG contrast ratio between two colors.
+  # @param a_arg Color first color, or second color when called on an instance.
+  # @param b_arg Color second color.
+  # @return Number the contrast ratio.
+  contrast_ratio: a_arg, b_arg = nil ->
+    if b_arg == nil
+      b_arg = a_arg
+      a_arg = self
+    color_la = luminance(a_arg)
+    color_lb = luminance(b_arg)
+    if color_la < color_lb
+      color_tmp = color_la
+      color_la = color_lb
+      color_lb = color_tmp
+    (color_la + 0.05) / (color_lb + 0.05)
+
+  # Color.darken mixes a color toward black.
+  # @param color Color source color, or amount when called on an instance.
+  # @param amount Number mix amount in 0..1.
+  # @return Color the darkened color.
+  darken: color, amount = nil ->
+    if amount == nil
+      amount = color
+      color = self
+    ratio(amount, "color.darken")
+    blend(color, BLACK, amount)
+
+  # Color.equal? compares every RGBA channel exactly.
+  # @param other Color other color.
+  # @return Boolean whether the condition is true.
+  equal?: other ->
+    self.r == other.r and self.g == other.g and self.b == other.b and self.a == other.a
+
+  # Color.grayscale converts a color to grayscale while preserving alpha.
+  # @param color Color source color, or nil to use the receiver.
+  # @return Color the grayscale color.
+  grayscale: color = nil ->
+    if color == nil
+      color = self
+    color_value = round(0.299 * color.r + 0.587 * color.g + 0.114 * color.b)
+    rgba(color_value, color_value, color_value, color.a)
+
+  # Color.invert inverts RGB channels while preserving alpha.
+  # @param color Color source color, or nil to use the receiver.
+  # @return Color the inverted color.
   invert: color = nil ->
     if color == nil
       color = self
-    Self.rgba(255 - color.r, 255 - color.g, 255 - color.b, color.a)
+    rgba(255 - color.r, 255 - color.g, 255 - color.b, color.a)
 
-  # Color.lighten provides the color/Color standard library operation.
-  # @param color Any color value.
-  # @param amount Any amount value.
-  # @return Any the resulting value.
+  # Color.lighten mixes a color toward white.
+  # @param color Color source color, or amount when called on an instance.
+  # @param amount Number mix amount in 0..1.
+  # @return Color the lightened color.
   lighten: color, amount = nil ->
     if amount == nil
       amount = color
       color = self
     ratio(amount, "color.lighten")
-    blend(color, Self.white(), amount)
+    blend(color, WHITE, amount)
 
-  # Color.linear provides the color/Color standard library operation.
-  # @param value String value value.
-  # @return Any the resulting value.
+  # Color.linear converts an sRGB channel to linear luminance space.
+  # @param value Number channel value in 0..255.
+  # @return Number the linearized channel.
   linear: value ->
     color_component = value / 255
     if color_component <= 0.03928
       return color_component / 12.92
     math_pow((color_component + 0.055) / 1.055, 2.4)
 
-  # Color.luminance provides the color/Color standard library operation.
-  # @param color Any color value.
-  # @return Any the resulting value.
+  # Color.luminance computes relative luminance for a color.
+  # @param color Color source color, or nil to use the receiver.
+  # @return Number relative luminance.
   luminance: color = nil ->
     if color == nil
       color = self
@@ -354,39 +349,26 @@ class Color
     color_b = linear(color.b)
     0.2126 * color_r + 0.7152 * color_g + 0.0722 * color_b
 
-  # Color.mix_channel provides the color/Color standard library operation.
-  # @param a Int a value.
-  # @param b Int b value.
-  # @param t Any t value.
-  # @return Any the resulting value.
+  # Color.mix_channel interpolates one numeric channel.
+  # @param a Number start channel.
+  # @param b Number end channel.
+  # @param t Number interpolation amount in 0..1.
+  # @return Number the rounded channel.
   mix_channel: a_arg, b_arg, t -> round(a_arg + (b_arg - a_arg) * t)
 
-  # Color.nearly_equal? provides the color/Color standard library operation.
-  # @param a_arg Int a_arg value.
-  # @param b_arg Int b_arg value.
-  # @param tolerance Any tolerance value.
+  # Color.nearly_equal? compares channels within a tolerance.
+  # @param other Color other color.
+  # @param tolerance Number tolerance value.
   # @return Boolean whether the condition is true.
-  nearly_equal?: a_arg, b_arg, tolerance = nil ->
-    if tolerance == nil
-      tolerance = b_arg
-      b_arg = a_arg
-      a_arg = self
+  nearly_equal?: other, tolerance ->
     if tolerance < 0
       raise error("color.nearly_equal?: tolerance must be non-negative")
-    abs(a_arg.r - b_arg.r) <= tolerance and abs(a_arg.g - b_arg.g) <= tolerance and abs(a_arg.b - b_arg.b) <= tolerance and abs(a_arg.a - b_arg.a) <= tolerance
+    abs(self.r - other.r) <= tolerance and abs(self.g - other.g) <= tolerance and abs(self.b - other.b) <= tolerance and abs(self.a - other.a) <= tolerance
 
-  # Color.new provides the color/Color standard library operation.
-  # @param r Int r value.
-  # @param g Int g value.
-  # @param b_arg Int b_arg value.
-  # @param a_arg Int a_arg value.
-  # @return Self the resulting value.
-  new: r_arg, g_arg, b_arg, a_arg -> Color(r_arg, g_arg, b_arg, a_arg)
-
-  # Color.over provides the color/Color standard library operation.
-  # @param foreground Any foreground value.
-  # @param background Any background value.
-  # @return Any the resulting value.
+  # Color.over composites a foreground color over a background color.
+  # @param foreground Color foreground color, or background when called on an instance.
+  # @param background Color background color.
+  # @return Color the composited color.
   over: foreground, background = nil ->
     if background == nil
       background = foreground
@@ -395,7 +377,7 @@ class Color
     color_ba = background.a / 255
     color_out_a = color_fa + color_ba * (1 - color_fa)
     if color_out_a == 0
-      return Self.transparent()
+      return TRANSPARENT
     color_r = foreground.r * color_fa
       + background.r * color_ba * (1 - color_fa) / color_out_a
     color_g = foreground.g * color_fa
@@ -409,10 +391,10 @@ class Color
       round(color_out_a * 255)
     )
 
-  # Color.ratio provides the color/Color standard library operation.
-  # @param value String value value.
-  # @param name String name value.
-  # @return Any the resulting value.
+  # Color.ratio validates a blend amount in 0..1.
+  # @param value Number amount value.
+  # @param name String operation name for error messages.
+  # @return Number the validated amount.
   ratio: value, name ->
     if value.class != Number
       raise error(name + ": amount must be a number")
@@ -420,35 +402,26 @@ class Color
       raise error(name + ": amount out of range")
     value
 
-  # Color.round provides the color/Color standard library operation.
-  # @param value String value value.
-  # @return Any the resulting value.
+  # Color.round rounds a number and returns an integer number.
+  # @param value Number input value.
+  # @return Number the rounded integer.
   round: value -> math_round(value).to_i()
 
-  # Color.to_array provides the color/Color standard library operation.
-  # @return Array the resulting value.
+  # Color.to_array returns channels as [r, g, b, a].
+  # @return Array RGBA channel values.
   to_array: -> [self.r, self.g, self.b, self.a]
 
-  # Color.to_hex provides the color/Color standard library operation.
-  # @param include_alpha Any include alpha value.
-  # @return Any the resulting value.
+  # Color.to_dict returns channels keyed by name.
+  # @return Dict RGBA channel values.
+  to_dict: -> { r: self.r, g: self.g, b: self.b, a: self.a }
+
+  # Color.to_hex formats the color as #rrggbb or #rrggbbaa.
+  # @param include_alpha Boolean whether to force alpha output.
+  # @return String hex color text.
   to_hex: include_alpha ->
     if include_alpha == nil
       include_alpha = false
-    color_out = "#"
-      + hex_byte(self.r)
-      + hex_byte(self.g)
-      + hex_byte(self.b)
+    color_out = "#" + hex_byte(self.r) + hex_byte(self.g) + hex_byte(self.b)
     if include_alpha or self.a != 255
       color_out = color_out + hex_byte(self.a)
     color_out
-
-  # Color.with_alpha provides the color/Color standard library operation.
-  # @param color Any color value.
-  # @param alpha Any alpha value.
-  # @return Any the resulting value.
-  with_alpha: color, alpha = nil ->
-    if alpha == nil
-      alpha = color
-      color = self
-    Self.rgba(color.r, color.g, color.b, alpha)

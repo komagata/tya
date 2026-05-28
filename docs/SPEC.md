@@ -503,16 +503,25 @@ defaulted `initialize` parameters, while required constructor parameters and
 the total parameter count are still enforced. Instance methods receive `self`.
 Instance fields are declared in the class body and are assigned with
 `self.<name> = value`; assigning an undeclared `self.<name>` is invalid,
-including inside `initialize`. Method parameters and local bindings inside an
-instance method cannot reuse an effective instance field name.
+including inside `initialize`. Method parameters and local bindings may reuse
+instance field names; the bare name refers to the local binding or parameter,
+and the field remains available through explicit `self.<name>` access.
 
 Inside `initialize` and instance methods, an unqualified call such as
 `helper(args)` resolves to `self.helper(args)` when ordinary callable lookup
 does not find `helper` and the current class, a parent class, or an interface
-default provides that instance method. Static methods similarly resolve
+default provides that instance method. If no instance method matches, the same
+unqualified call resolves to `Self.helper(args)` when the current class or a
+parent class provides that static method. Static methods also resolve
 `helper(args)` to `Self.helper(args)` for static methods on the current class
 or parent class. Field reads and writes remain explicit, and bare references
 such as `value = helper` are not receiver method references.
+Formatted Syntax prefers the unqualified call form for same-class receiver
+method calls: `self.helper(args)`, `Self.helper(args)`, and
+`CurrentClass.helper(args)` are formatted as `helper(args)` when they appear as
+calls inside `CurrentClass`. Same-class class constant reads such as
+`Self.NAME` and `CurrentClass.NAME` are formatted as `NAME`. Other non-call
+member access is not rewritten to a bare name.
 
 Tya supports:
 
@@ -528,10 +537,10 @@ Tya supports:
 - read-only class metadata members such as `class`, `class_name`, `name`, and `parent` where documented by the runtime.
 
 Class constants are class-owned immutable members. Inside the defining class,
-canonical access is `Self.NAME`. Public class constants may be read as
-`pkg.Class.NAME`; private class constants may only be read from the defining
-class. `static NAME: ...` is a class variable spelling and is not the
-canonical constant form.
+canonical access is the bare constant name, such as `NAME`. Public class
+constants may be read as `pkg.Class.NAME`; private class constants may only be
+read from the defining class. `static NAME: ...` is a class variable spelling
+and is not the canonical constant form.
 
 ```tya
 class Admin extends User
@@ -916,9 +925,12 @@ Multiple assignment evaluates the right-hand side and binds the corresponding
 left-hand targets. Right-hand expressions are evaluated first, left to right;
 after that, assignment targets are evaluated and assigned left to right.
 
-### If Statements
+### If Expressions
 
-`if`, `elseif`, and `else` select among blocks.
+`if`, `elseif`, and `else` select among blocks and may be used as either a
+statement or an expression. An `if` expression evaluates to the final value of
+the selected branch body. If no branch is selected and there is no `else`, the
+value is `nil`.
 
 ```tya
 if age >= 20
@@ -933,9 +945,10 @@ else
 Only `nil` and `false` are falsey. All other values, including `0`, `""`,
 empty arrays, and empty dictionaries, are truthy.
 
-### While Statements
+### While Expressions
 
-`while` repeats while its condition is truthy.
+`while` repeats while its condition is truthy and may be used as either a
+statement or an expression.
 
 ```tya
 while count < 3
@@ -943,12 +956,19 @@ while count < 3
   count = count + 1
 ```
 
-### For Statements
+`while` evaluates to the last completed body value. If the body never executes,
+the value is `nil`. `break` exits the nearest loop and leaves the loop value as
+the last completed body value before the break, or `nil` if there is none.
+`continue` skips to the next iteration and discards the current iteration's
+partial value.
+
+### For Expressions
 
 `for ... in` is the canonical way to consume iterable values. Arrays yield
 elements, strings yield characters, dictionaries yield `{ key: key, value:
 value }` entry dictionaries, and user values participate by exposing `iter()`.
-The second binding receives a zero-based index when present.
+The second binding receives a zero-based index when present. `for` may be used
+as either a statement or an expression.
 
 ```tya
 for item in items
@@ -968,17 +988,20 @@ for entry in user
 completed body value before the break, or `nil` if there is none. `continue`
 skips to the next iteration and discards the current iteration's partial value.
 
-### Match Statements
+### Match Expressions
 
-`match` selects one `case` block by comparing an expression to case patterns.
+`match` selects one `case` block by comparing an expression to case patterns and
+may be used as either a statement or an expression. A `match` expression
+evaluates to the selected case body's final value. If no case matches, the value
+is `nil`.
 `case _` is the wildcard case and is canonical only as the final case.
 
 ```tya
 match value
-case "ok"
-  print("ok")
-case _
-  print("other")
+  case "ok"
+    print("ok")
+  case _
+    print("other")
 ```
 
 ### Return Statements

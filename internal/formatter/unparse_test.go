@@ -173,6 +173,25 @@ func TestUnparseIfElseifElse(t *testing.T) {
 	}
 }
 
+func TestUnparseControlFlowAssignmentExpressions(t *testing.T) {
+	src := "label = if score >= 90\n  \"A\"\nelseif score >= 80\n  \"B\"\nelse\n  \"C\"\nlast = for item in items\n  item\nresult = match status\n  case \"ok\"\n    \"success\"\n  case _\n    \"fallback\"\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"label = if score >= 90",
+		"elseif score >= 80",
+		"last = for item in items",
+		"result = match status",
+		"case _",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in:\n%s", want, got)
+		}
+	}
+}
+
 func TestFormatTryFinally(t *testing.T) {
 	src := "try\n  print(\"try\")\ncatch err\n  print(err)\nfinally\n  print(\"done\")\n"
 	got, err := unparseSource(t, src)
@@ -240,7 +259,7 @@ func TestUnparseSingleQuotedStringPreservesLiteralValue(t *testing.T) {
 
 func TestUnparseSelfAndSuperExpressions(t *testing.T) {
 	src := "class Box\n  static get: ->\n    return Self.wrap(self.value + super.value)\n"
-	want := "class Box\n  static get: -> Self.wrap(self.value + super.value)\n"
+	want := "class Box\n  static get: -> wrap(self.value + super.value)\n"
 	got, err := unparseSource(t, src)
 	if err != nil {
 		t.Fatal(err)
@@ -274,7 +293,7 @@ func TestUnparseZeroArgFunctionDefinitionsUseShortArrow(t *testing.T) {
 		"with_args = name -> name",
 		"",
 		"class Box",
-		"  static build: -> Self.new()",
+		"  static build: -> new()",
 		"",
 		"  initialize: ->",
 		"    self.value = 1",

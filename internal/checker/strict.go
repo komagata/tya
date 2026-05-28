@@ -796,12 +796,16 @@ func strictCheckCanonicalSelf(m *ast.MemberExpr, ctx *strictCtx) {
 	if !ok || ident.Name != ctx.currentClass {
 		return
 	}
+	canonical := "Self." + m.Name
+	if constNameRE.MatchString(m.Name) {
+		canonical = m.Name
+	}
 	ctx.report(diag.Diagnostic{
 		Severity: diag.Warning,
 		Code:     "TYA-E0413",
 		Title:    "Non-canonical class member access",
-		Message:  fmt.Sprintf("`%s.%s` inside its own class body is non-canonical; write `Self.%s`.", ident.Name, m.Name, m.Name),
+		Message:  fmt.Sprintf("`%s.%s` inside its own class body is non-canonical; write `%s`.", ident.Name, m.Name, canonical),
 		Primary:  region(ident.Tok.Line, ident.Tok.Col, len(ident.Name)),
-		Hints:    []string{"Run `tya format` to rewrite to the canonical `Self.` form."},
+		Hints:    []string{"Run `tya format` to rewrite to the canonical form."},
 	})
 }

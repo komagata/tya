@@ -78,6 +78,22 @@ func (g *cgen) currentModulePrefix() string {
 	return ""
 }
 
+func (g *cgen) currentClassHasConstant(name string) bool {
+	if g.className == "" {
+		return false
+	}
+	class := g.classDecls[g.className]
+	if class == nil {
+		return false
+	}
+	for _, constant := range class.Constants {
+		if constant.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
 // EmitC compiles prog to a self-contained C translation unit.
 // Returns (csource, diags, err). Codegen is fail-fast in v0.56:
 // diags is nil on a clean emit, or carries a single entry copied
@@ -540,69 +556,7 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 	case *ast.SelectStmt:
 		return g.selectStmt(n)
 	case *ast.ForInStmt:
-		iterable, _, err := g.expr(n.Iterable)
-		if err != nil {
-			return err
-		}
-		iterName := fmt.Sprintf("__iter%d", g.temp)
-		indexName := fmt.Sprintf("__i%d", g.temp)
-		genericName := fmt.Sprintf("__generic_iter%d", g.temp)
-		g.temp++
-		g.line(fmt.Sprintf("TyaValue %s = %s;", iterName, iterable))
-		g.line(fmt.Sprintf("if (%s.kind == TYA_ARRAY || %s.kind == TYA_STRING || %s.kind == TYA_BYTES || %s.kind == TYA_DICT) {", iterName, iterName, iterName, iterName))
-		g.indent++
-		g.line(fmt.Sprintf("for (int %s = 0; %s < (int)tya_len(%s).number; %s++) {", indexName, indexName, iterName, indexName))
-		g.indent++
-		if n.IndexName != "" {
-			if g.vars[n.IndexName] {
-				g.line(fmt.Sprintf("%s = tya_number(%s);", cName(n.IndexName), indexName))
-			} else {
-				g.vars[n.IndexName] = true
-				g.line(fmt.Sprintf("TyaValue %s = tya_number(%s);", cName(n.IndexName), indexName))
-			}
-		}
-		if g.vars[n.ValueName] {
-			g.line(fmt.Sprintf("%s = (%s.kind == TYA_DICT ? tya_dict_entry_at(%s, tya_number(%s)) : tya_index(%s, tya_number(%s)));", cName(n.ValueName), iterName, iterName, indexName, iterName, indexName))
-		} else {
-			g.vars[n.ValueName] = true
-			g.line(fmt.Sprintf("TyaValue %s = (%s.kind == TYA_DICT ? tya_dict_entry_at(%s, tya_number(%s)) : tya_index(%s, tya_number(%s)));", cName(n.ValueName), iterName, iterName, indexName, iterName, indexName))
-		}
-		for _, stmt := range n.Body {
-			if err := g.stmt(stmt); err != nil {
-				return err
-			}
-		}
-		g.indent--
-		g.line("}")
-		g.indent--
-		g.line("} else {")
-		g.indent++
-		g.line(fmt.Sprintf("TyaValue %s = tya_iter(%s);", genericName, iterName))
-		g.line(fmt.Sprintf("for (int %s = 0; tya_truthy(tya_iterator_has_next(%s)); %s++) {", indexName, genericName, indexName))
-		g.indent++
-		if n.IndexName != "" {
-			if g.vars[n.IndexName] {
-				g.line(fmt.Sprintf("%s = tya_number(%s);", cName(n.IndexName), indexName))
-			} else {
-				g.vars[n.IndexName] = true
-				g.line(fmt.Sprintf("TyaValue %s = tya_number(%s);", cName(n.IndexName), indexName))
-			}
-		}
-		if g.vars[n.ValueName] {
-			g.line(fmt.Sprintf("%s = tya_iterator_next(%s);", cName(n.ValueName), genericName))
-		} else {
-			g.vars[n.ValueName] = true
-			g.line(fmt.Sprintf("TyaValue %s = tya_iterator_next(%s);", cName(n.ValueName), genericName))
-		}
-		for _, stmt := range n.Body {
-			if err := g.stmt(stmt); err != nil {
-				return err
-			}
-		}
-		g.indent--
-		g.line("}")
-		g.indent--
-		g.line("}")
+		return g.forInStmt(n, "")
 	case *ast.ReturnStmt:
 		if !g.inFunc {
 			g.line("/* return */")
@@ -650,6 +604,70 @@ func (g *cgen) emitImportStmt(n *ast.ImportStmt) {
 	} else {
 		g.line("/* import resolved by runner */")
 	}
+}
+
+func (g *cgen) forInStmt(n *ast.ForInStmt, result string) error {
+	iterable, _, err := g.expr(n.Iterable)
+	if err != nil {
+		return err
+	}
+	iterName := fmt.Sprintf("__iter%d", g.temp)
+	indexName := fmt.Sprintf("__i%d", g.temp)
+	genericName := fmt.Sprintf("__generic_iter%d", g.temp)
+	g.temp++
+	g.line(fmt.Sprintf("TyaValue %s = %s;", iterName, iterable))
+	g.declareForInBindings(n)
+	g.line(fmt.Sprintf("if (%s.kind == TYA_ARRAY || %s.kind == TYA_STRING || %s.kind == TYA_BYTES || %s.kind == TYA_DICT) {", iterName, iterName, iterName, iterName))
+	g.indent++
+	g.line(fmt.Sprintf("for (int %s = 0; %s < (int)tya_len(%s).number; %s++) {", indexName, indexName, iterName, indexName))
+	g.indent++
+	if err := g.forInBody(n, result, iterName, indexName, fmt.Sprintf("(%s.kind == TYA_DICT ? tya_dict_entry_at(%s, tya_number(%s)) : tya_index(%s, tya_number(%s)))", iterName, iterName, indexName, iterName, indexName)); err != nil {
+		return err
+	}
+	g.indent--
+	g.line("}")
+	g.indent--
+	g.line("} else {")
+	g.indent++
+	g.line(fmt.Sprintf("TyaValue %s = tya_iter(%s);", genericName, iterName))
+	g.line(fmt.Sprintf("for (int %s = 0; tya_truthy(tya_iterator_has_next(%s)); %s++) {", indexName, genericName, indexName))
+	g.indent++
+	if err := g.forInBody(n, result, iterName, indexName, fmt.Sprintf("tya_iterator_next(%s)", genericName)); err != nil {
+		return err
+	}
+	g.indent--
+	g.line("}")
+	g.indent--
+	g.line("}")
+	return nil
+}
+
+func (g *cgen) declareForInBindings(n *ast.ForInStmt) {
+	if n.IndexName != "" && !g.vars[n.IndexName] {
+		g.vars[n.IndexName] = true
+		g.line(fmt.Sprintf("TyaValue %s = tya_nil();", cName(n.IndexName)))
+	}
+	if !g.vars[n.ValueName] {
+		g.vars[n.ValueName] = true
+		g.line(fmt.Sprintf("TyaValue %s = tya_nil();", cName(n.ValueName)))
+	}
+}
+
+func (g *cgen) forInBody(n *ast.ForInStmt, result, iterName, indexName, valueExpr string) error {
+	if n.IndexName != "" {
+		g.line(fmt.Sprintf("%s = tya_number(%s);", cName(n.IndexName), indexName))
+	}
+	_ = iterName
+	g.line(fmt.Sprintf("%s = %s;", cName(n.ValueName), valueExpr))
+	if result != "" {
+		return g.assignControlBodyValue(result, n.Body)
+	}
+	for _, stmt := range n.Body {
+		if err := g.stmt(stmt); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (g *cgen) assignInterfaceDecl(name string) error {
@@ -722,6 +740,14 @@ func exprPos(expr ast.Expr) (line, col int, ok bool) {
 	case *ast.UnaryExpr:
 		return exprPos(n.Expr)
 	case *ast.TryExpr:
+		return n.Tok.Line, n.Tok.Col, n.Tok.Line > 0
+	case *ast.IfStmt:
+		return exprPos(n.Cond)
+	case *ast.WhileStmt:
+		return exprPos(n.Cond)
+	case *ast.ForInStmt:
+		return n.ValueTok.Line, n.ValueTok.Col, n.ValueTok.Line > 0
+	case *ast.MatchStmt:
 		return n.Tok.Line, n.Tok.Col, n.Tok.Line > 0
 	}
 	return 0, 0, false
@@ -874,6 +900,10 @@ func (g *cgen) tryCatchStmt(n *ast.TryCatchStmt) error {
 }
 
 func (g *cgen) matchStmt(n *ast.MatchStmt) error {
+	return g.matchStmtWithResult(n, "")
+}
+
+func (g *cgen) matchStmtWithResult(n *ast.MatchStmt, result string) error {
 	value, _, err := g.expr(n.Value)
 	if err != nil {
 		return err
@@ -900,9 +930,15 @@ func (g *cgen) matchStmt(n *ast.MatchStmt) error {
 		if err := g.bindPattern(c.Pattern, matchValue); err != nil {
 			return err
 		}
-		for _, stmt := range c.Body {
-			if err := g.stmt(stmt); err != nil {
+		if result != "" {
+			if err := g.assignControlBodyValue(result, c.Body); err != nil {
 				return err
+			}
+		} else {
+			for _, stmt := range c.Body {
+				if err := g.stmt(stmt); err != nil {
+					return err
+				}
 			}
 		}
 		for _, binding := range bindings {
@@ -1188,6 +1224,20 @@ func (g *cgen) emitFuncWithCaptures(name string, fn *ast.FuncLit, classRef strin
 					child.returnLine(value)
 				}
 			} else {
+				if control, ok := body[len(body)-1].(ast.Expr); ok && isControlFlowExpr(control) {
+					body = body[:len(body)-1]
+					for _, stmt := range body {
+						if err := child.stmt(stmt); err != nil {
+							return "", err
+						}
+					}
+					value, _, err := child.expr(control)
+					if err != nil {
+						return "", err
+					}
+					child.returnLine(value)
+					goto doneBody
+				}
 				for _, stmt := range body {
 					if err := child.stmt(stmt); err != nil {
 						return "", err
@@ -1199,6 +1249,7 @@ func (g *cgen) emitFuncWithCaptures(name string, fn *ast.FuncLit, classRef strin
 			child.returnLine("tya_nil()")
 		}
 	}
+doneBody:
 	g.temp = child.temp
 	g.funcOut.WriteString(child.funcOut.String())
 	out.WriteString(child.out.String())
@@ -1245,7 +1296,16 @@ func isSideEffectCall(expr ast.Expr) bool {
 		return false
 	}
 	switch id.Name {
-	case "push", "delete", "write_file", "exit", "panic", "print", "println":
+	case "push", "delete", "write_file", "exit", "panic", "print", "println", "assert", "assert_equal":
+		return true
+	default:
+		return false
+	}
+}
+
+func isControlFlowExpr(expr ast.Expr) bool {
+	switch expr.(type) {
+	case *ast.IfStmt, *ast.WhileStmt, *ast.ForInStmt, *ast.MatchStmt:
 		return true
 	default:
 		return false
@@ -1382,6 +1442,32 @@ func collectExprIdents(expr ast.Expr, out map[string]bool) {
 		collectExprIdents(n.Expr, out)
 	case *ast.TryExpr:
 		collectExprIdents(n.Expr, out)
+	case *ast.IfStmt:
+		collectExprIdents(n.Cond, out)
+		for _, stmt := range n.Then {
+			collectStmtIdents(stmt, out)
+		}
+		for _, stmt := range n.Else {
+			collectStmtIdents(stmt, out)
+		}
+	case *ast.WhileStmt:
+		collectExprIdents(n.Cond, out)
+		for _, stmt := range n.Body {
+			collectStmtIdents(stmt, out)
+		}
+	case *ast.ForInStmt:
+		collectExprIdents(n.Iterable, out)
+		for _, stmt := range n.Body {
+			collectStmtIdents(stmt, out)
+		}
+	case *ast.MatchStmt:
+		collectExprIdents(n.Value, out)
+		for _, c := range n.Cases {
+			collectExprIdents(c.Pattern, out)
+			for _, stmt := range c.Body {
+				collectStmtIdents(stmt, out)
+			}
+		}
 	case *ast.MemberExpr:
 		collectExprIdents(n.Target, out)
 	case *ast.IndexExpr:
@@ -2311,6 +2397,163 @@ func (g *cgen) exprStmt(expr ast.Expr) error {
 	return nil
 }
 
+func (g *cgen) sideEffectCallExpr(name string, args []ast.Expr) (string, bool, error) {
+	switch name {
+	case "print", "println":
+		if len(args) != 1 {
+			return "", false, nil
+		}
+		arg, _, err := g.expr(args[0])
+		if err != nil {
+			return "", true, err
+		}
+		g.line(fmt.Sprintf("tya_print(%s);", arg))
+		return "tya_nil()", true, nil
+	case "assert":
+		if len(args) != 1 && len(args) != 2 {
+			return "", false, nil
+		}
+		arg, _, err := g.expr(args[0])
+		if err != nil {
+			return "", true, err
+		}
+		g.line(fmt.Sprintf("tya_assert(%s, %s, %d);", arg, strconv.Quote(g.sourcePath), 1))
+		return "tya_nil()", true, nil
+	case "assert_equal":
+		if len(args) < 2 || len(args) > 3 {
+			return "", false, nil
+		}
+		expected, _, err := g.expr(args[0])
+		if err != nil {
+			return "", true, err
+		}
+		actual, _, err := g.expr(args[1])
+		if err != nil {
+			return "", true, err
+		}
+		g.line(fmt.Sprintf("tya_assert_equal(%s, %s, %s, %d);", expected, actual, strconv.Quote(g.sourcePath), 1))
+		return "tya_nil()", true, nil
+	default:
+		return "", false, nil
+	}
+}
+
+func (g *cgen) assignControlBodyValue(result string, body []ast.Stmt) error {
+	if len(body) == 0 {
+		return nil
+	}
+	for _, stmt := range body[:len(body)-1] {
+		if err := g.stmt(stmt); err != nil {
+			return err
+		}
+	}
+	last := body[len(body)-1]
+	if exprStmt, ok := last.(*ast.ExprStmt); ok {
+		if isSideEffectCall(exprStmt.Expr) {
+			if err := g.stmt(last); err != nil {
+				return err
+			}
+			g.line(fmt.Sprintf("%s = tya_nil();", result))
+			return nil
+		}
+		value, _, err := g.expr(exprStmt.Expr)
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("%s = %s;", result, value))
+		return nil
+	}
+	return g.stmt(last)
+}
+
+func (g *cgen) ifExpr(n *ast.IfStmt) (string, string, error) {
+	result := fmt.Sprintf("__ifexpr%d", g.temp)
+	g.temp++
+	g.line(fmt.Sprintf("TyaValue %s = tya_nil();", result))
+	cond, _, err := g.expr(n.Cond)
+	if err != nil {
+		return "", "", err
+	}
+	g.line(fmt.Sprintf("if (tya_truthy(%s)) {", cond))
+	g.indent++
+	if err := g.assignControlBodyValue(result, n.Then); err != nil {
+		return "", "", err
+	}
+	g.indent--
+	if err := g.ifExprElse(result, n.Else); err != nil {
+		return "", "", err
+	}
+	return result, "TyaValue", nil
+}
+
+func (g *cgen) ifExprElse(result string, body []ast.Stmt) error {
+	if len(body) == 0 {
+		g.line("}")
+		return nil
+	}
+	if len(body) == 1 {
+		if inner, ok := body[0].(*ast.IfStmt); ok {
+			cond, _, err := g.expr(inner.Cond)
+			if err != nil {
+				return err
+			}
+			g.line(fmt.Sprintf("} else if (tya_truthy(%s)) {", cond))
+			g.indent++
+			if err := g.assignControlBodyValue(result, inner.Then); err != nil {
+				return err
+			}
+			g.indent--
+			return g.ifExprElse(result, inner.Else)
+		}
+	}
+	g.line("} else {")
+	g.indent++
+	if err := g.assignControlBodyValue(result, body); err != nil {
+		return err
+	}
+	g.indent--
+	g.line("}")
+	return nil
+}
+
+func (g *cgen) whileExpr(n *ast.WhileStmt) (string, string, error) {
+	result := fmt.Sprintf("__loopexpr%d", g.temp)
+	g.temp++
+	g.line(fmt.Sprintf("TyaValue %s = tya_nil();", result))
+	cond, _, err := g.expr(n.Cond)
+	if err != nil {
+		return "", "", err
+	}
+	g.line(fmt.Sprintf("while (tya_truthy(%s)) {", cond))
+	g.indent++
+	if err := g.assignControlBodyValue(result, n.Body); err != nil {
+		return "", "", err
+	}
+	g.indent--
+	g.line("}")
+	return result, "TyaValue", nil
+}
+
+func (g *cgen) forExpr(n *ast.ForInStmt) (string, string, error) {
+	result := fmt.Sprintf("__loopexpr%d", g.temp)
+	g.temp++
+	g.line(fmt.Sprintf("TyaValue %s = tya_nil();", result))
+	if err := g.forInStmt(n, result); err != nil {
+		return "", "", err
+	}
+	return result, "TyaValue", nil
+}
+
+func (g *cgen) matchExpr(n *ast.MatchStmt) (string, string, error) {
+	result := fmt.Sprintf("__matchexpr%d", g.temp)
+	g.temp++
+	g.line(fmt.Sprintf("TyaValue %s = tya_nil();", result))
+	if err := g.matchStmtWithResult(n, result); err != nil {
+		return "", "", err
+	}
+	return result, "TyaValue", nil
+}
+
 func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 	switch n := expr.(type) {
 	case *ast.IntLit:
@@ -2391,6 +2634,9 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 	case *ast.Ident:
 		if g.closureVars != nil && g.closureVars[n.Name] {
 			return fmt.Sprintf("tya_member(__this, %s)", strconv.Quote(n.Name)), "TyaValue", nil
+		}
+		if g.currentClassHasConstant(n.Name) {
+			return fmt.Sprintf("tya_member(%s, %s)", g.classTarget(), strconv.Quote(n.Name)), "TyaValue", nil
 		}
 		if primitiveClassNames[n.Name] {
 			return fmt.Sprintf("tya_primitive_class(%s)", strconv.Quote(n.Name)), "TyaValue", nil
@@ -2578,6 +2824,9 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		}
 		id, ok := n.Callee.(*ast.Ident)
 		if ok {
+			if expr, handled, err := g.sideEffectCallExpr(id.Name, n.Args); handled {
+				return expr, "TyaValue", err
+			}
 			if removedPrimitiveHelperNames[id.Name] {
 				return "", "", fmt.Errorf("top-level builtin %s was removed; use receiver method syntax", id.Name)
 			}
@@ -3134,6 +3383,14 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		return fmt.Sprintf("tya_member(%s, %s)", dict, strconv.Quote(n.Name)), "TyaValue", nil
 	case *ast.TryExpr:
 		return g.expr(n.Expr)
+	case *ast.IfStmt:
+		return g.ifExpr(n)
+	case *ast.WhileStmt:
+		return g.whileExpr(n)
+	case *ast.ForInStmt:
+		return g.forExpr(n)
+	case *ast.MatchStmt:
+		return g.matchExpr(n)
 	case *ast.SpawnExpr:
 		// spawn fn(args) takes the args evaluated in this thread, then
 		// runs fn(args...) on a new pthread. Decompose the CallExpr to

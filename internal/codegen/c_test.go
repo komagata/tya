@@ -25,6 +25,23 @@ func TestEmitCCompilesSimpleProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesControlFlowExpressions(t *testing.T) {
+	src := "label = if true\n  \"adult\"\nelse\n  \"young\"\nprint(label)\nmissing = if false\n  \"bad\"\nprint(missing)\ni = 0\nlast_while = while i < 3\n  i = i + 1\n  i\nprint(last_while)\nlast_for = for item in [1, 2, 3]\n  item\nprint(last_for)\nstatus = match \"ok\"\n  case \"ok\"\n    \"success\"\n  case _\n    \"fallback\"\nprint(status)\n"
+	out := compileAndRun(t, src)
+	want := "adult\nnil\n3\n3\nsuccess\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestEmitCImplicitReturnFromControlFlowExpression(t *testing.T) {
+	src := "grade = score ->\n  if score >= 90\n    \"A\"\n  elseif score >= 80\n    \"B\"\n  else\n    \"C\"\nprint(grade(85))\n"
+	out := compileAndRun(t, src)
+	if string(out) != "B\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCFieldAssignmentDoesNotOverwriteSameNamedMethod(t *testing.T) {
 	src := "class Response\n  status: 0\n\n  initialize: ->\n    self.status = 200\n    bump()\n\n  bump: ->\n    self.status = self.status + 1\n\n  status: ->\n    self.status\n\nresponse = Response()\nprint(response.status())\nresponse.bump()\nprint(response.status())\n"
 	out := compileAndRun(t, src)

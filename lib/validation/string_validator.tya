@@ -9,11 +9,11 @@ class StringValidator
   errors: []
 
   # StringValidator.max_value stores an inclusive maximum length.
-  # @type Any
+  # @type Number?
   max_value: nil
 
   # StringValidator.min_value stores an inclusive minimum length.
-  # @type Any
+  # @type Number?
   min_value: nil
 
   # StringValidator.name stores the value name for error messages.
@@ -29,11 +29,11 @@ class StringValidator
   require_present: false
 
   # StringValidator.value stores the input value.
-  # @type Any
+  # @type String
   value: nil
 
   # StringValidator.initialize stores validation input and labels.
-  # @param value Any value value.
+  # @param value String value value.
   # @param name String name value.
   # @param context String context value.
   # @return Self the initialized object.

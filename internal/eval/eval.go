@@ -1540,6 +1540,13 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 	case *ast.Ident:
 		v, ok := env.get(n.Name)
 		if !ok {
+			if self, found := env.get("Self"); found {
+				if class, classOK := self.(Dict); classOK {
+					if constant, constantOK := class[n.Name]; constantOK {
+						return constant, nil
+					}
+				}
+			}
 			return nil, fmt.Errorf("%d:%d: undefined variable %s", n.Tok.Line, n.Tok.Col, n.Name)
 		}
 		return v, nil
@@ -1638,6 +1645,14 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			return nil, &returnSignal{value: &Tuple{items: []Value{nil, tuple.items[1]}}}
 		}
 		return tuple.items[0], nil
+	case *ast.IfStmt:
+		return evalStmt(n, env)
+	case *ast.WhileStmt:
+		return evalStmt(n, env)
+	case *ast.ForInStmt:
+		return evalStmt(n, env)
+	case *ast.MatchStmt:
+		return evalStmt(n, env)
 	case *ast.MemberExpr:
 		obj, err := evalExpr(n.Target, env)
 		if err != nil {
