@@ -641,17 +641,23 @@ func canonicalClassMembers(n *ast.ClassDecl) []classMember {
 func classMethodRank(m ast.ClassMethod) int {
 	if m.Class {
 		if m.Private {
+			return 8
+		}
+		if m.Protected {
 			return 7
 		}
 		return 6
 	}
 	if m.Name == "initialize" {
-		return 8
+		return 9
 	}
 	if m.Private {
-		return 10
+		return 12
 	}
-	return 9
+	if m.Protected {
+		return 11
+	}
+	return 10
 }
 
 func (u *unparser) classField(f ast.ClassField) error {
@@ -710,6 +716,8 @@ func (u *unparser) classMethod(m ast.ClassMethod) error {
 	parts := []string{}
 	if m.Private {
 		parts = append(parts, "private")
+	} else if m.Protected {
+		parts = append(parts, "protected")
 	}
 	if m.Class {
 		parts = append(parts, "static")

@@ -1,0 +1,125 @@
+# Protected methods are visible to the declaring class and subclasses,
+# but not to unrelated external callers.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/protected_ok.tya
+stdout 'base:x\nbase:y\nlabel:z\nlabel:i\n'
+! stderr .
+
+! exec go run ./cmd/tya check $WORK/protected_instance_external.tya
+stderr 'protected instance method normalize is not accessible'
+
+! exec go run ./cmd/tya check $WORK/protected_static_external.tya
+stderr 'protected class method build_label is not accessible'
+
+! exec go run ./cmd/tya check $WORK/protected_same_package.tya
+stderr 'protected instance method normalize is not accessible'
+
+! exec go run ./cmd/tya check $WORK/private_parent.tya
+stderr 'private instance member normalize is not accessible'
+
+! exec go run ./cmd/tya check $WORK/protected_to_private.tya
+stderr 'cannot reduce protected visibility'
+
+! exec go run ./cmd/tya check $WORK/public_to_protected.tya
+stderr 'cannot reduce public visibility'
+
+! exec go run ./cmd/tya check $WORK/protected_field.tya
+stderr 'protected can only be used on methods'
+
+! exec go run ./cmd/tya check $WORK/protected_constructor.tya
+stderr 'protected cannot be used on constructors'
+
+-- protected_ok.tya --
+class Parent
+  protected normalize: value ->
+    "base:{value}"
+
+  protected static build_label: value ->
+    "label:{value}"
+
+  own: value ->
+    self.normalize(value)
+
+class Child extends Parent
+  label: value ->
+    self.normalize(value)
+
+  self_label: value ->
+    self.normalize(value)
+
+  static class_label: value ->
+    Self.build_label(value)
+
+  instance_class_label: value ->
+    Self.build_label(value)
+
+print(Parent().own("x"))
+print(Child().self_label("y"))
+print(Child.class_label("z"))
+print(Child().instance_class_label("i"))
+
+-- protected_instance_external.tya --
+class Parent
+  protected normalize: value ->
+    value
+
+parent = Parent()
+print(parent.normalize("x"))
+
+-- protected_static_external.tya --
+class Parent
+  protected static build_label: value ->
+    value
+
+print(Parent.build_label("x"))
+
+-- protected_same_package.tya --
+class Parent
+  protected normalize: value ->
+    value
+
+class Other
+  call: ->
+    parent = Parent()
+    parent.normalize("x")
+
+print(Other().call())
+
+-- private_parent.tya --
+class Parent
+  private normalize: value ->
+    value
+
+class Child extends Parent
+  label: value ->
+    self.normalize(value)
+
+print(Child().label("x"))
+
+-- protected_to_private.tya --
+class Parent
+  protected normalize: value ->
+    value
+
+class Child extends Parent
+  private override normalize: value ->
+    value
+
+-- public_to_protected.tya --
+class Parent
+  normalize: value ->
+    value
+
+class Child extends Parent
+  protected override normalize: value ->
+    value
+
+-- protected_field.tya --
+class Parent
+  protected name: "x"
+
+-- protected_constructor.tya --
+class Parent
+  protected initialize: ->
+    nil

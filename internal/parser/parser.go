@@ -765,10 +765,14 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
 		// v0.68 canonical modifier order:
-		//   [private] [static] [abstract|override] [@@] <name>: <body>
+		//   [private|protected] [static] [abstract|override] [@@] <name>: <body>
 		isPrivateMember := false
+		isProtectedMember := false
 		if p.at(token.IDENT) && p.peek().Lexeme == "private" && p.peekN(1).Type != token.QUESTION {
 			isPrivateMember = true
+			p.next()
+		} else if p.at(token.IDENT) && p.peek().Lexeme == "protected" {
+			isProtectedMember = true
 			p.next()
 		}
 		// v0.46 G3: optional `static` keyword. Sets the same Class flag
@@ -810,6 +814,9 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 		}
 		memberPrivate := isPrivateMember
 		if isAbstractMethod {
+			if isProtectedMember {
+				return nil, p.err("protected can only be used on concrete methods")
+			}
 			params, paramToks, err := p.abstractMethodParams()
 			if err != nil {
 				return nil, err
@@ -823,9 +830,14 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 			return nil, err
 		}
 		if funcLit, ok := value.(*ast.FuncLit); ok {
-			decl.Methods = append(decl.Methods, ast.ClassMethod{Name: memberName.Lexeme, Tok: memberName, Func: funcLit, Class: isClassMember, Override: isOverrideMethod, Private: memberPrivate})
+			if isProtectedMember && (memberName.Lexeme == "init" || memberName.Lexeme == "_init" || memberName.Lexeme == "initialize") {
+				return nil, p.err("protected cannot be used on constructors")
+			}
+			decl.Methods = append(decl.Methods, ast.ClassMethod{Name: memberName.Lexeme, Tok: memberName, Func: funcLit, Class: isClassMember, Override: isOverrideMethod, Private: memberPrivate, Protected: isProtectedMember})
 		} else if isOverrideMethod {
 			return nil, p.err("override can only be used on methods")
+		} else if isProtectedMember {
+			return nil, p.err("protected can only be used on methods")
 		} else if !isClassMember && isConstName(memberName.Lexeme) {
 			decl.Constants = append(decl.Constants, ast.ClassConst{Name: memberName.Lexeme, Tok: memberName, Value: value, Private: memberPrivate})
 		} else if isClassMember {

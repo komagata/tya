@@ -286,7 +286,7 @@ func docItemsForProgram(prog *ast.Program, comments []parser.CommentInfo, path s
 				items = append(items, item)
 			}
 			for _, method := range d.Methods {
-				if method.Private {
+				if method.Private || method.Protected {
 					continue
 				}
 				kind := "method"

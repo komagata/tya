@@ -86,8 +86,18 @@ func privateModifier(private bool) string {
 	return ""
 }
 
+func methodVisibilityModifier(m ast.ClassMethod) string {
+	if m.Private {
+		return "private"
+	}
+	if m.Protected {
+		return "protected"
+	}
+	return ""
+}
+
 func classMethodDetail(m ast.ClassMethod) string {
-	parts := []string{functionSignature(m.Func), privateModifier(m.Private)}
+	parts := []string{functionSignature(m.Func), methodVisibilityModifier(m)}
 	if m.Class {
 		parts = append(parts, "static")
 	}

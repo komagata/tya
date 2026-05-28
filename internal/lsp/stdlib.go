@@ -81,7 +81,7 @@ var keywords = []string{
 	"while", "for", "in", "break", "continue",
 	"return", "raise", "try", "catch",
 	"class", "module", "interface", "implements", "extends",
-	"abstract", "final", "override", "private", "static",
+	"abstract", "final", "override", "private", "protected", "static",
 	"initialize", "self", "Self", "super",
 	"import", "as", "embed",
 	"match", "case", "when",

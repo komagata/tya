@@ -325,8 +325,8 @@ The core formatted rules are:
   members, before any leading comments attached to the following member, and no
   extra blank line after the final member;
 - class bodies are ordered by member category, then static/instance,
-  public/private, and member name, with `initialize` first among public
-  instance methods;
+  public/protected/private, and member name, with `initialize` first among
+  public instance methods;
 - `elseif` is the canonical spelling, and `else if` is not canonical;
 - `case _` in `match` is the wildcard case and must be final;
 - empty collection forms and empty `else` branches follow formatter-defined
@@ -363,7 +363,7 @@ are not part of v1.0.0 and must fail before code generation:
   dedicated declaration;
 - async function coloring such as `async fn`; use `spawn`, `await`, `scope`,
   `select`, tasks, and channels;
-- visibility modifiers beyond public and `private`, including `protected` and
+- visibility modifiers beyond public, `protected`, and `private`, including
   `friend`.
 
 ## Declarations And Scope
@@ -408,6 +408,10 @@ in constants are also immutable through that constant binding.
 
 Class member privacy uses the `private` keyword for private class fields,
 class constants, methods, class variables, class methods, and constructors.
+Protected visibility uses the `protected` keyword for instance and static
+methods that are callable from the declaring class and descendant classes, but
+not from unrelated code or same-package peers. Protected visibility does not
+apply to fields, constants, class variables, or constructors.
 
 ```tya
 class User
@@ -417,6 +421,9 @@ class User
 
   private normalize: ->
     Self.ROLE + ":" + self.id.to_s()
+
+  protected label: value ->
+    "user:{value}"
 ```
 
 ### Embedded Assets
@@ -549,6 +556,7 @@ Tya supports:
 - single class inheritance with `extends`;
 - constructor and method delegation with `super(...)`;
 - `private` members;
+- `protected` instance and static methods for inheritance contracts;
 - class constants declared as `SCREAMING_SNAKE_CASE: value`;
 - `static` class methods and class variables;
 - `abstract class` and abstract methods;
@@ -571,6 +579,10 @@ class Admin extends User
   override label: ->
     "admin:{self.name}"
 ```
+
+Subclasses may override a protected method as protected or public. A subclass
+may not reduce visibility by overriding a protected method as private or a
+public method as protected/private.
 
 A class file is a snake_case `.tya` file. It must declare exactly one public class or interface whose PascalCase name maps to the filename. It may also declare private
 helper classes and interfaces. Class files are library files and cannot be run

@@ -414,6 +414,28 @@ func TestParseClassConstants(t *testing.T) {
 	}
 }
 
+func TestParseProtectedClassMethods(t *testing.T) {
+	src := "class User\n  protected normalize: value -> value\n  protected static build_label: value -> value\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := Parse(toks)
+	if err != nil {
+		t.Fatalf("parse class protected methods: %v", err)
+	}
+	class := prog.Stmts[0].(*ast.ClassDecl)
+	if len(class.Methods) != 2 {
+		t.Fatalf("methods = %#v", class.Methods)
+	}
+	if !class.Methods[0].Protected || class.Methods[0].Class {
+		t.Fatalf("instance protected method = %#v", class.Methods[0])
+	}
+	if !class.Methods[1].Protected || !class.Methods[1].Class {
+		t.Fatalf("static protected method = %#v", class.Methods[1])
+	}
+}
+
 func TestParseRejectsOldClassAndInterfaceMemberAssignmentSyntax(t *testing.T) {
 	tests := []struct {
 		name string

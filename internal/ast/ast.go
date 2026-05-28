@@ -259,14 +259,15 @@ type ClassConst struct {
 }
 
 type ClassMethod struct {
-	Name     string
-	Tok      token.Token
-	Func     *FuncLit
-	Class    bool
-	Abstract bool
-	Override bool
-	Private  bool // v0.46 G1; see ClassField.Private.
-	Comments StmtComments
+	Name      string
+	Tok       token.Token
+	Func      *FuncLit
+	Class     bool
+	Abstract  bool
+	Override  bool
+	Private   bool // v0.46 G1; see ClassField.Private.
+	Protected bool
+	Comments  StmtComments
 }
 
 type ClassRef struct {

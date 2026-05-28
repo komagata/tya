@@ -379,6 +379,20 @@ class Counter
     self.count
 ```
 
+Use `protected` for helper methods that subclasses may call but external code
+must not call. Protected methods are not same-package methods; only the
+declaring class and descendants can use them.
+
+```tya
+class Parent
+  protected normalize: value ->
+    value.to_s()
+
+class Child extends Parent
+  label: value ->
+    normalize(value)
+```
+
 Class files use snake_case filenames such as `user.tya` while declaring PascalCase classes such as `class User`. They are library files, not script entry points.
 
 ## Standard Library

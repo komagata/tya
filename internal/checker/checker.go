@@ -581,6 +581,7 @@ type scope struct {
 	parent           *scope
 	names            map[string]bool
 	kinds            map[string]valueKind
+	objectClasses    map[string]string
 	funcParams       map[string][]string
 	classes          map[string]classInfo
 	interfaces       map[string]interfaceInfo
@@ -613,9 +614,11 @@ type classInfo struct {
 	fields                map[string]bool
 	privateFields         map[string]bool
 	privateMethods        map[string]bool
+	protectedMethods      map[string]bool
 	classConstants        map[string]bool
 	privateClassMembers   map[string]bool
 	privateClassMethods   map[string]bool
+	protectedClassMethods map[string]bool
 	privateFieldAssigned  map[string]bool
 	// v0.45 cross-file private enforcement metadata. originFile is
 	// the basename of the source file (e.g. "util.tya") that declared
@@ -653,10 +656,11 @@ type interfaceRequirement struct {
 }
 
 func newScope(parent *scope) *scope {
-	s := &scope{parent: parent, names: map[string]bool{}, kinds: map[string]valueKind{}, funcParams: map[string][]string{}}
+	s := &scope{parent: parent, names: map[string]bool{}, kinds: map[string]valueKind{}, objectClasses: map[string]string{}, funcParams: map[string][]string{}}
 	if parent != nil {
 		s.classes = parent.classes
 		s.interfaces = parent.interfaces
+		s.objectClasses = parent.objectClasses
 		s.funcParams = parent.funcParams
 		s.inInstanceMethod = parent.inInstanceMethod
 		s.inClassMethod = parent.inClassMethod
@@ -718,6 +722,16 @@ func (s *scope) kind(name string) valueKind {
 		return s.parent.kind(name)
 	}
 	return kindUnknown
+}
+
+func (s *scope) objectClass(name string) string {
+	if key, ok := s.objectClasses[name]; ok {
+		return key
+	}
+	if s.parent != nil {
+		return s.parent.objectClass(name)
+	}
+	return ""
 }
 
 func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error {
@@ -804,6 +818,11 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 					constants[name.Name] = true
 				}
 				scope.define(name.Name, nextKind)
+				if nextKind == kindObject {
+					if classKey := exprObjectClassKey(n.Values, scope); classKey != "" {
+						scope.objectClasses[name.Name] = classKey
+					}
+				}
 			}
 		case *ast.ModuleDecl:
 			if !valueNameRE.MatchString(n.Name) || strings.HasPrefix(n.Name, "_") {
@@ -1137,12 +1156,18 @@ func predeclareModuleClass(module string, class *ast.ClassDecl, scope *scope) er
 				info.privateClassMembers[method.Name] = true
 				info.privateClassMethods[method.Name] = true
 			}
+			if method.Protected {
+				info.protectedClassMethods[method.Name] = true
+			}
 			continue
 		}
 		info.methods[method.Name] = len(method.Func.Params)
 		info.methodParams[method.Name] = append([]string(nil), method.Func.Params...)
 		if method.Private {
 			info.privateMethods[method.Name] = true
+		}
+		if method.Protected {
+			info.protectedMethods[method.Name] = true
 		}
 		// v0.46 G1: `init` + Private flag is the private constructor.
 		// Legacy `_init` (no keyword) also flows through Private from
@@ -1191,12 +1216,18 @@ func predeclareClass(class *ast.ClassDecl, scope *scope) error {
 				info.privateClassMembers[method.Name] = true
 				info.privateClassMethods[method.Name] = true
 			}
+			if method.Protected {
+				info.protectedClassMethods[method.Name] = true
+			}
 			continue
 		}
 		info.methods[method.Name] = len(method.Func.Params)
 		info.methodParams[method.Name] = append([]string(nil), method.Func.Params...)
 		if method.Private {
 			info.privateMethods[method.Name] = true
+		}
+		if method.Protected {
+			info.protectedMethods[method.Name] = true
 		}
 		// v0.46 G1: see predeclareModuleClass for the same logic.
 		// v0.46 G5: `initialize` is the canonical constructor name;
@@ -1219,23 +1250,25 @@ func predeclareClass(class *ast.ClassDecl, scope *scope) error {
 
 func newClassInfo(key string, class *ast.ClassDecl) classInfo {
 	return classInfo{
-		name:                 key,
-		abstract:             class.Abstract,
-		final:                class.Final,
-		methods:              map[string]int{},
-		methodParams:         map[string][]string{},
-		classMethods:         map[string]int{},
-		classMethodParams:    map[string][]string{},
-		abstractMethods:      map[string]int{},
-		abstractClassMethods: map[string]int{},
-		interfaceMethods:     map[string]int{},
-		fields:               map[string]bool{},
-		privateFields:        map[string]bool{},
-		privateMethods:       map[string]bool{},
-		classConstants:       map[string]bool{},
-		privateClassMembers:  map[string]bool{},
-		privateClassMethods:  map[string]bool{},
-		privateFieldAssigned: map[string]bool{},
+		name:                  key,
+		abstract:              class.Abstract,
+		final:                 class.Final,
+		methods:               map[string]int{},
+		methodParams:          map[string][]string{},
+		classMethods:          map[string]int{},
+		classMethodParams:     map[string][]string{},
+		abstractMethods:       map[string]int{},
+		abstractClassMethods:  map[string]int{},
+		interfaceMethods:      map[string]int{},
+		fields:                map[string]bool{},
+		privateFields:         map[string]bool{},
+		privateMethods:        map[string]bool{},
+		protectedMethods:      map[string]bool{},
+		classConstants:        map[string]bool{},
+		privateClassMembers:   map[string]bool{},
+		privateClassMethods:   map[string]bool{},
+		protectedClassMethods: map[string]bool{},
+		privateFieldAssigned:  map[string]bool{},
 	}
 }
 
@@ -1352,6 +1385,18 @@ func importCheckerKey(imp *ast.ImportStmt) string {
 func checkExpr(expr ast.Expr, scope *scope) error {
 	switch n := expr.(type) {
 	case *ast.Ident:
+		if scope.currentClass != "" && !scope.defined(n.Name) {
+			if scope.inInstanceMethod {
+				if err := checkPrivateInstanceAccess(n.Name, n.Tok.Line, n.Tok.Col, scope, false); err != nil {
+					return err
+				}
+			}
+			if scope.inClassMethod {
+				if err := checkPrivateClassAccess(n.Name, n.Tok.Line, n.Tok.Col, scope); err != nil {
+					return err
+				}
+			}
+		}
 		if isPrivateName(n.Name) && scope.inInstanceMethod && scope.currentClass != "" {
 			if scope.classes[scope.currentClass].privateMethods[n.Name] {
 				return nil
@@ -1579,6 +1624,9 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		if err := checkPrivateInstanceAccess(n.Name, n.NameTok.Line, n.NameTok.Col, scope, false); err != nil {
 			return err
 		}
+		if err := checkProtectedInstanceAccess(n.Name, n.NameTok.Line, n.NameTok.Col, scope); err != nil {
+			return err
+		}
 	case *ast.ClassVarExpr:
 		if !scope.inClassBody && !scope.inInstanceMethod && !scope.inClassMethod {
 			return fmt.Errorf("%d:%d: @@%s is only valid inside a class", n.NameTok.Line, n.NameTok.Col, n.Name)
@@ -1589,9 +1637,30 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		if err := checkPrivateClassAccess(n.Name, n.NameTok.Line, n.NameTok.Col, scope); err != nil {
 			return err
 		}
+		if err := checkProtectedClassAccess(n.Name, n.NameTok.Line, n.NameTok.Col, scope); err != nil {
+			return err
+		}
 	case *ast.MemberExpr:
 		if err := checkExpr(n.Target, scope); err != nil {
 			return err
+		}
+		if self, ok := n.Target.(*ast.SelfExpr); ok {
+			if self.Class {
+				if err := checkPrivateClassAccess(n.Name, n.NameTok.Line, n.NameTok.Col, scope); err != nil {
+					return err
+				}
+				if err := checkProtectedClassAccess(n.Name, n.NameTok.Line, n.NameTok.Col, scope); err != nil {
+					return err
+				}
+			} else {
+				if err := checkPrivateInstanceAccess(n.Name, n.NameTok.Line, n.NameTok.Col, scope, false); err != nil {
+					return err
+				}
+				if err := checkProtectedInstanceAccess(n.Name, n.NameTok.Line, n.NameTok.Col, scope); err != nil {
+					return err
+				}
+			}
+			return nil
 		}
 		switch kindOf(n.Target, scope) {
 		case kindDict:
@@ -1619,6 +1688,9 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			}
 			return nil
 		case kindObject:
+			if err := checkExternalInstanceMemberAccess(n, scope); err != nil {
+				return err
+			}
 			return nil
 		default:
 			return nil
@@ -2037,6 +2109,9 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 						return fmt.Errorf("%d:%d: class constructor must call super to run interface initialization", method.Tok.Line, method.Tok.Col)
 					}
 				} else {
+					if err := checkOverrideVisibility(method, parent, scope); err != nil {
+						return err
+					}
 					if err := checkOverrideMethod(class, method, parent, scope); err != nil {
 						return err
 					}
@@ -2055,6 +2130,9 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 		} else {
 			parent := scope.classes[key].parent
 			if parent != "" {
+				if err := checkOverrideVisibility(method, parent, scope); err != nil {
+					return err
+				}
 				if err := checkOverrideMethod(class, method, parent, scope); err != nil {
 					return err
 				}
@@ -2515,6 +2593,24 @@ func checkPrivateInstanceAccess(name string, line, col int, scope *scope, assign
 	return nil
 }
 
+func checkProtectedInstanceAccess(name string, line, col int, scope *scope) error {
+	if scope.currentClass == "" {
+		return nil
+	}
+	info := scope.classes[scope.currentClass]
+	if info.protectedMethods[name] {
+		return nil
+	}
+	for parent := info.parent; parent != ""; {
+		parentInfo := scope.classes[parent]
+		if parentInfo.protectedMethods[name] {
+			return nil
+		}
+		parent = parentInfo.parent
+	}
+	return nil
+}
+
 func checkPrivateClassAccess(name string, line, col int, scope *scope) error {
 	// v0.46 G1: see checkPrivateInstanceAccess. Walk ancestors
 	// regardless of name shape; privacy is on classInfo.
@@ -2535,19 +2631,74 @@ func checkPrivateClassAccess(name string, line, col int, scope *scope) error {
 	return nil
 }
 
+func checkProtectedClassAccess(name string, line, col int, scope *scope) error {
+	if scope.currentClass == "" {
+		return nil
+	}
+	info := scope.classes[scope.currentClass]
+	if info.protectedClassMethods[name] {
+		return nil
+	}
+	for parent := info.parent; parent != ""; {
+		parentInfo := scope.classes[parent]
+		if parentInfo.protectedClassMethods[name] {
+			return nil
+		}
+		parent = parentInfo.parent
+	}
+	return nil
+}
+
 func checkExternalClassMemberAccess(member *ast.MemberExpr, scope *scope) error {
 	key := classExprKey(member.Target, scope)
 	if key == "" {
 		return nil
 	}
 	info, ok := scope.classes[key]
-	if !ok || !info.privateClassMembers[member.Name] {
+	if !ok {
 		return nil
 	}
-	if scope.currentClass == key {
+	if info.privateClassMembers[member.Name] {
+		if scope.currentClass == key {
+			return nil
+		}
+		return fmt.Errorf("%d:%d: private class member %s is not accessible from %s", member.NameTok.Line, member.NameTok.Col, member.Name, accessSite(scope))
+	}
+	if classHasProtectedClassMethod(key, member.Name, scope) {
+		if scope.currentClass == key || isSubclassOf(scope.currentClass, key, scope) {
+			return nil
+		}
+		return fmt.Errorf("%d:%d: protected class method %s is not accessible from %s", member.NameTok.Line, member.NameTok.Col, member.Name, accessSite(scope))
+	}
+	return nil
+}
+
+func checkExternalInstanceMemberAccess(member *ast.MemberExpr, scope *scope) error {
+	id, ok := member.Target.(*ast.Ident)
+	if !ok {
 		return nil
 	}
-	return fmt.Errorf("%d:%d: private class member %s is not accessible from %s", member.NameTok.Line, member.NameTok.Col, member.Name, accessSite(scope))
+	key := scope.objectClass(id.Name)
+	if key == "" {
+		return nil
+	}
+	info, ok := scope.classes[key]
+	if !ok {
+		return nil
+	}
+	if info.privateMethods[member.Name] {
+		if scope.currentClass == key {
+			return nil
+		}
+		return fmt.Errorf("%d:%d: private instance member %s is not accessible from %s", member.NameTok.Line, member.NameTok.Col, member.Name, accessSite(scope))
+	}
+	if classHasProtectedMethod(key, member.Name, scope) {
+		if scope.currentClass == key || isSubclassOf(scope.currentClass, key, scope) {
+			return nil
+		}
+		return fmt.Errorf("%d:%d: protected instance method %s is not accessible from %s", member.NameTok.Line, member.NameTok.Col, member.Name, accessSite(scope))
+	}
+	return nil
 }
 
 func accessSite(scope *scope) string {
@@ -2555,6 +2706,51 @@ func accessSite(scope *scope) string {
 		return scope.currentClass
 	}
 	return "outside the class"
+}
+
+func isSubclassOf(child string, parent string, scope *scope) bool {
+	if child == "" || parent == "" {
+		return false
+	}
+	for className := child; className != ""; {
+		if className == parent {
+			return true
+		}
+		info, ok := scope.classes[className]
+		if !ok {
+			return false
+		}
+		className = info.parent
+	}
+	return false
+}
+
+func classHasProtectedMethod(className string, method string, scope *scope) bool {
+	for className != "" {
+		info, ok := scope.classes[className]
+		if !ok {
+			return false
+		}
+		if info.protectedMethods[method] {
+			return true
+		}
+		className = info.parent
+	}
+	return false
+}
+
+func classHasProtectedClassMethod(className string, method string, scope *scope) bool {
+	for className != "" {
+		info, ok := scope.classes[className]
+		if !ok {
+			return false
+		}
+		if info.protectedClassMethods[method] {
+			return true
+		}
+		className = info.parent
+	}
+	return false
 }
 
 func classExprKey(expr ast.Expr, scope *scope) string {
@@ -2646,7 +2842,7 @@ func inheritedMethodArity(className string, method string, scope *scope) (int, b
 		if !ok {
 			return 0, false
 		}
-		if arity, ok := info.methods[method]; ok {
+		if arity, ok := info.methods[method]; ok && !info.privateMethods[method] {
 			return arity, true
 		}
 		className = info.parent
@@ -2660,7 +2856,7 @@ func inheritedClassMethodArity(className string, method string, scope *scope) (i
 		if !ok {
 			return 0, false
 		}
-		if arity, ok := info.classMethods[method]; ok {
+		if arity, ok := info.classMethods[method]; ok && !info.privateClassMethods[method] {
 			return arity, true
 		}
 		className = info.parent
@@ -2731,6 +2927,9 @@ func checkOverrideMethod(class *ast.ClassDecl, method ast.ClassMethod, parent st
 	if !method.Override {
 		return nil
 	}
+	if err := checkOverrideVisibility(method, parent, scope); err != nil {
+		return err
+	}
 	if method.Class {
 		if arity, ok := inheritedClassMethodArity(parent, method.Name, scope); ok {
 			if arity != len(method.Func.Params) {
@@ -2771,6 +2970,52 @@ func checkOverrideMethod(class *ast.ClassDecl, method ast.ClassMethod, parent st
 		return fmt.Errorf("%d:%d: override method %s targets inherited class method", method.Tok.Line, method.Tok.Col, method.Name)
 	}
 	return fmt.Errorf("%d:%d: override method %s has no inherited method target", method.Tok.Line, method.Tok.Col, method.Name)
+}
+
+func checkOverrideVisibility(method ast.ClassMethod, parent string, scope *scope) error {
+	visibility, ok := inheritedMethodVisibility(parent, method.Name, method.Class, scope)
+	if !ok {
+		return nil
+	}
+	if visibility == "public" && (method.Private || method.Protected) {
+		return fmt.Errorf("%d:%d: override method %s cannot reduce public visibility", method.Tok.Line, method.Tok.Col, method.Name)
+	}
+	if visibility == "protected" && method.Private {
+		return fmt.Errorf("%d:%d: override method %s cannot reduce protected visibility", method.Tok.Line, method.Tok.Col, method.Name)
+	}
+	return nil
+}
+
+func inheritedMethodVisibility(className string, method string, classMethod bool, scope *scope) (string, bool) {
+	for className != "" {
+		info, ok := scope.classes[className]
+		if !ok {
+			return "", false
+		}
+		if classMethod {
+			if _, ok := info.classMethods[method]; ok {
+				if info.privateClassMethods[method] {
+					return "private", true
+				}
+				if info.protectedClassMethods[method] {
+					return "protected", true
+				}
+				return "public", true
+			}
+		} else {
+			if _, ok := info.methods[method]; ok {
+				if info.privateMethods[method] {
+					return "private", true
+				}
+				if info.protectedMethods[method] {
+					return "protected", true
+				}
+				return "public", true
+			}
+		}
+		className = info.parent
+	}
+	return "", false
 }
 
 func checkConstructorSuper(class *ast.ClassDecl, method ast.ClassMethod, parent string, scope *scope, module string) error {
@@ -3585,6 +3830,33 @@ func exprKind(values []ast.Expr, scope *scope) valueKind {
 		}
 	}
 	return literalKind(values[0])
+}
+
+func exprObjectClassKey(values []ast.Expr, scope *scope) string {
+	if len(values) != 1 {
+		return ""
+	}
+	call, ok := values[0].(*ast.CallExpr)
+	if !ok {
+		return ""
+	}
+	switch callee := call.Callee.(type) {
+	case *ast.Ident:
+		if scope.kind(callee.Name) == kindClass {
+			return callee.Name
+		}
+	case *ast.MemberExpr:
+		if kindOf(callee.Target, scope) == kindModule && classNameRE.MatchString(callee.Name) {
+			key := memberKey(callee)
+			if scope.kind(key) == kindClass {
+				return key
+			}
+			if scope.kind(callee.Name) == kindClass {
+				return callee.Name
+			}
+		}
+	}
+	return ""
 }
 
 func kindOf(expr ast.Expr, scope *scope) valueKind {

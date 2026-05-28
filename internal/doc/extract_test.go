@@ -71,6 +71,8 @@ func TestExtractReportIncludesMemberMetadata(t *testing.T) {
 		"",
 		"  private hidden: []",
 		"",
+		"  protected normalize: value -> value",
+		"",
 	}, "\n")
 	if err := os.WriteFile(path, []byte(src), 0o644); err != nil {
 		t.Fatal(err)
@@ -100,6 +102,9 @@ func TestExtractReportIncludesMemberMetadata(t *testing.T) {
 	}
 	if _, ok := byName["Csv.hidden"]; ok {
 		t.Fatalf("private variable should not be documented: %#v", report.Items)
+	}
+	if _, ok := byName["Csv.normalize"]; ok {
+		t.Fatalf("protected method should not be documented: %#v", report.Items)
 	}
 }
 
