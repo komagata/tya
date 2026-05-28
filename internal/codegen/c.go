@@ -30,7 +30,7 @@ var primitiveClassNames = map[string]bool{
 
 var removedPrimitiveHelperNames = map[string]bool{
 	"kind": true, "len": true, "byte_len": true, "char_len": true,
-	"trim": true, "contains": true, "starts_with": true, "ends_with": true,
+	"trim": true, "contains": true, "index_of": true, "starts_with": true, "ends_with": true,
 	"replace": true, "split": true, "join": true, "keys": true,
 	"values": true, "has": true, "push": true, "pop": true,
 	"map": true, "filter": true, "find": true, "any": true,
@@ -1537,6 +1537,9 @@ func collectStmtIdents(stmt ast.Stmt, out map[string]bool) {
 func collectExprIdents(expr ast.Expr, out map[string]bool) {
 	switch n := expr.(type) {
 	case *ast.Ident:
+		if n.ImplicitField {
+			return
+		}
 		out[n.Name] = true
 	case *ast.ArrayLit:
 		for _, elem := range n.Elems {
@@ -2756,6 +2759,9 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		lines = append(lines, fmt.Sprintf("tya_bind_method_params(%s, %s, %s)", env, sym, cParamArray(n.Params)))
 		return fmt.Sprintf("({ %s; })", strings.Join(lines, " ")), "TyaValue", nil
 	case *ast.Ident:
+		if n.ImplicitField {
+			return fmt.Sprintf("tya_member(__this, %s)", strconv.Quote("@"+n.Name)), "TyaValue", nil
+		}
 		if g.closureVars != nil && g.closureVars[n.Name] {
 			return fmt.Sprintf("tya_member(__this, %s)", strconv.Quote(n.Name)), "TyaValue", nil
 		}
@@ -3081,6 +3087,24 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				return "", "", err
 			}
 			return fmt.Sprintf("tya_contains(%s, %s)", text, part), "TyaValue", nil
+		}
+		if ok && id.Name == "index_of" && (len(n.Args) == 2 || len(n.Args) == 3) {
+			text, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			needle, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			start := "tya_number(0)"
+			if len(n.Args) == 3 {
+				start, _, err = g.expr(n.Args[2])
+				if err != nil {
+					return "", "", err
+				}
+			}
+			return fmt.Sprintf("tya_string_index_of(%s, %s, %s)", text, needle, start), "TyaValue", nil
 		}
 		if ok && id.Name == "starts_with" && len(n.Args) == 2 {
 			text, _, err := g.expr(n.Args[0])
@@ -4048,6 +4072,13 @@ func standardStringCall(name string, args []string) string {
 	case "contains":
 		if len(args) == 2 {
 			return fmt.Sprintf("tya_contains(%s, %s)", args[0], args[1])
+		}
+	case "index_of":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_string_index_of(%s, %s, tya_number(0))", args[0], args[1])
+		}
+		if len(args) == 3 {
+			return fmt.Sprintf("tya_string_index_of(%s, %s, %s)", args[0], args[1], args[2])
 		}
 	case "starts_with":
 		if len(args) == 2 {

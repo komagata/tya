@@ -489,6 +489,8 @@ func removedPrimitiveModuleCallError(member *ast.MemberExpr, scope *scope) error
 			replacement = "text.trim()"
 		case "contains":
 			replacement = "text.contains(part)"
+		case "index_of":
+			replacement = "text.index_of(needle)"
 		case "starts_with":
 			replacement = "text.starts_with(prefix)"
 		case "ends_with":
@@ -1458,6 +1460,10 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		if !scope.defined(n.Name) {
 			if scope.currentClass != "" {
 				if info, ok := scope.classes[scope.currentClass]; ok && info.classConstants[n.Name] {
+					return nil
+				}
+				if scope.inInstanceMethod && effectiveInstanceField(n.Name, scope.currentClass, scope) {
+					n.ImplicitField = true
 					return nil
 				}
 			}

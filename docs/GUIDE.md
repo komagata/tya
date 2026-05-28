@@ -395,8 +395,12 @@ class Counter
 
   increment: ->
     self.count = self.count + 1
-    self.count
+    count
 ```
+
+Inside instance methods, field reads can use the bare field name when no local
+binding or parameter has the same name. Keep field writes explicit with
+`self.field = value`.
 
 Use `protected` for helper methods that subclasses may call but external code
 must not call. Protected methods are not same-package methods; only the

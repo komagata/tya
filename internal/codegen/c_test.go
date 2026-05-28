@@ -58,6 +58,15 @@ func TestEmitCImplicitSelfAndSelfMethodCalls(t *testing.T) {
 	}
 }
 
+func TestEmitCBareInstanceFieldRead(t *testing.T) {
+	src := "interface Tagged\n  tags: []\n\nclass Base\n  values: []\n\nclass Command extends Base implements Tagged\n  arguments: []\n\n  argument: spec ->\n    arguments.push(spec)\n    self\n\n  first: -> arguments[0]\n\n  local_shadow: ->\n    arguments = [\"local\"]\n    arguments[0]\n\n  replace_arguments: arguments ->\n    self.arguments = arguments\n\n  add_value: value -> values.push(value)\n\n  add_tag: tag -> tags.push(tag)\n\ncmd = Command()\ncmd.argument(\"one\")\nprint(cmd.first())\nprint(cmd.local_shadow())\ncmd.replace_arguments([\"two\"])\nprint(cmd.first())\ncmd.add_value(\"base\")\nprint(cmd.values[0])\ncmd.add_tag(\"iface\")\nprint(cmd.tags[0])\n"
+	out := compileAndRun(t, src)
+	want := "one\nlocal\ntwo\nbase\niface\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestEmitCAllowsInstanceAndClassPrivatePredicateMethods(t *testing.T) {
 	src := "class Address\n  private?: -> true\n\n  static private?: -> false\n\naddr = Address()\nprint(addr.private?())\nprint(Address.private?())\n"
 	out := compileAndRun(t, src)
@@ -213,9 +222,9 @@ func TestEmitCCompilesArrayProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesStringProgram(t *testing.T) {
-	src := "text = \"  hello,tya  \"\ntrimmed = text.trim()\nparts = trimmed.split(\",\")\nprint(parts.join(\"-\"))\nprint(trimmed.replace(\"tya\", \"Tya\"))\nprint(trimmed.contains(\"hello\"))\nprint(trimmed.starts_with(\"hello\"))\nprint(trimmed.ends_with(\"tya\"))\nprint(trimmed.slice(1, 4))\nprint(\"あいう\".slice(1, 3))\nprint(\"quote: \\\"tya\\\"\")\nprint(\"tya\"[1])\n"
+	src := "text = \"  hello,tya  \"\ntrimmed = text.trim()\nparts = trimmed.split(\",\")\nprint(parts.join(\"-\"))\nprint(trimmed.replace(\"tya\", \"Tya\"))\nprint(trimmed.contains(\"hello\"))\nprint(trimmed.index_of(\"tya\"))\nprint(trimmed.index_of(\"missing\"))\nprint(\"あいう\".index_of(\"い\"))\nprint(trimmed.starts_with(\"hello\"))\nprint(trimmed.ends_with(\"tya\"))\nprint(trimmed.slice(1, 4))\nprint(\"あいう\".slice(1, 3))\nprint(\"quote: \\\"tya\\\"\")\nprint(\"tya\"[1])\n"
 	out := compileAndRun(t, src)
-	if string(out) != "hello-tya\nhello,Tya\ntrue\ntrue\ntrue\nell\nいう\nquote: \"tya\"\ny\n" {
+	if string(out) != "hello-tya\nhello,Tya\ntrue\n6\n-1\n1\ntrue\ntrue\nell\nいう\nquote: \"tya\"\ny\n" {
 		t.Fatalf("got %q", out)
 	}
 }

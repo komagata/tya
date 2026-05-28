@@ -1138,8 +1138,16 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 		return module, nil
 	case *ast.ClassDecl:
 		className := displayClassName(n.Name)
-		class := Dict{"__module_namespace": true, "__class_name": className, "name": className, "__instance_methods": Dict{}}
+		class := Dict{"__module_namespace": true, "__class_name": className, "name": className, "__instance_methods": Dict{}, "__fields": Dict{}}
 		env.set(n.Name, class)
+		fields := class["__fields"].(Dict)
+		for _, field := range n.Fields {
+			value, err := evalExpr(field.Value, env)
+			if err != nil {
+				return nil, err
+			}
+			fields[field.Name] = value
+		}
 		for _, constant := range n.Constants {
 			value, err := evalExpr(constant.Value, env)
 			if err != nil {
@@ -1556,6 +1564,15 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 	case *ast.Ident:
 		v, ok := env.get(n.Name)
 		if !ok {
+			if n.ImplicitField {
+				if self, found := env.get("self"); found {
+					if obj, objOK := self.(Dict); objOK {
+						if value, valueOK := obj["@"+n.Name]; valueOK {
+							return value, nil
+						}
+					}
+				}
+			}
 			if self, found := env.get("Self"); found {
 				if class, classOK := self.(Dict); classOK {
 					if constant, constantOK := class[n.Name]; constantOK {
@@ -1999,7 +2016,7 @@ func evalStandardModuleCall(module string, name string, args []Value, env *Env) 
 
 func isStandardStringCall(name string) bool {
 	switch name {
-	case "len", "byte_len", "char_len", "slice", "trim", "contains", "starts_with", "ends_with", "replace", "split", "join", "lines", "upcase", "downcase", "sequence":
+	case "len", "byte_len", "char_len", "slice", "trim", "contains", "index_of", "starts_with", "ends_with", "replace", "split", "join", "lines", "upcase", "downcase", "sequence":
 		return true
 	default:
 		return false
@@ -2076,6 +2093,38 @@ func evalStringModuleCall(name string, args []Value, env *Env) (Value, error) {
 			return nil, err
 		}
 		return strings.Contains(text, part), nil
+	case "index_of":
+		if len(args) != 2 && len(args) != 3 {
+			return nil, fmt.Errorf("string.index_of expects 2 or 3 arguments")
+		}
+		text, ok := args[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("string.index_of expects string text")
+		}
+		needle, ok := args[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("string.index_of expects string needle")
+		}
+		start := int64(0)
+		if len(args) == 3 {
+			var ok bool
+			start, ok = args[2].(int64)
+			if !ok {
+				return nil, fmt.Errorf("string.index_of expects integer start")
+			}
+		}
+		if start < 0 {
+			return nil, fmt.Errorf("string.index_of does not support negative indexes")
+		}
+		runes := []rune(text)
+		if int(start) > len(runes) {
+			return int64(-1), nil
+		}
+		idx := strings.Index(string(runes[int(start):]), needle)
+		if idx < 0 {
+			return int64(-1), nil
+		}
+		return start + int64(len([]rune(string(runes[int(start):])[:idx]))), nil
 	case "starts_with":
 		text, prefix, err := twoStrings("string.starts_with", args)
 		if err != nil {
@@ -2819,6 +2868,11 @@ func instantiateClass(class Dict, args []Value) (Value, error) {
 func instantiateClassWithKeywords(class Dict, args []Value, keywords []keywordArgValue) (Value, error) {
 	name, _ := class["__class_name"].(string)
 	obj := Dict{"__class": class, "__class_name": name}
+	if fields, ok := class["__fields"].(Dict); ok {
+		for key, value := range fields {
+			obj["@"+key] = value
+		}
+	}
 	methods, _ := class["__instance_methods"].(Dict)
 	init, ok := methods["initialize"]
 	if !ok {

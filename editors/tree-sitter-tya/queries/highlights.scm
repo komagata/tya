@@ -25,6 +25,8 @@
   "class"
   "module"
   "interface"
+  "struct"
+  "record"
   "implements"
   "extends"
   "abstract"

@@ -211,6 +211,9 @@ type unparser struct {
 	// Empty outside class bodies.
 	currentClass       string
 	currentClassMethod bool
+	currentClassFields map[string]bool
+	fieldReadShadows   map[string]bool
+	suppressBareField  bool
 }
 
 // columnLimit is the canonical wrap target (CANONICAL §5.1).
@@ -310,13 +313,16 @@ func (u *unparser) stmt(s ast.Stmt) error {
 		if err != nil {
 			return err
 		}
-		// Wrap a top-level CallExpr if the single-line form
-		// exceeds the column limit.
-		if call, ok := n.Expr.(*ast.CallExpr); ok && !u.fitsInline(ex) {
-			if u.isWrappedCallChain(call) {
-				return u.emitWrappedCallChain(s, "", call)
+		if !u.fitsInline(ex) {
+			switch expr := n.Expr.(type) {
+			case *ast.CallExpr:
+				if u.isWrappedCallChain(expr) {
+					return u.emitWrappedCallChain(s, "", expr)
+				}
+				return u.emitWrappedCall(s, "", expr)
+			case *ast.BinaryExpr:
+				return u.emitWrappedBinary(s, "", expr)
 			}
-			return u.emitWrappedCall(s, "", call)
 		}
 		u.emitStmtLine(s, ex)
 		return nil
@@ -327,6 +333,25 @@ func (u *unparser) stmt(s ast.Stmt) error {
 		}
 		if len(n.Values) == 1 && u.isControlExpr(n.Values[0]) {
 			return u.controlExpr("return ", n.Values[0])
+		}
+		if len(n.Values) == 1 {
+			ex, err := u.expr(n.Values[0])
+			if err != nil {
+				return err
+			}
+			if !u.fitsInline("return " + ex) {
+				switch expr := n.Values[0].(type) {
+				case *ast.CallExpr:
+					if u.isWrappedCallChain(expr) {
+						return u.emitWrappedCallChain(s, "return ", expr)
+					}
+					return u.emitWrappedCall(s, "return ", expr)
+				case *ast.BinaryExpr:
+					return u.emitWrappedBinary(s, "return ", expr)
+				}
+			}
+			u.emitStmtLine(s, "return "+ex)
+			return nil
 		}
 		parts := make([]string, 0, len(n.Values))
 		for _, v := range n.Values {
@@ -552,8 +577,16 @@ func (u *unparser) classDecl(n *ast.ClassDecl) error {
 	// v0.48 G6: track the declaring class so same-class receiver calls
 	// can be canonicalized inside their own body.
 	prevClass := u.currentClass
+	prevFields := u.currentClassFields
 	u.currentClass = n.Name
-	defer func() { u.currentClass = prevClass }()
+	u.currentClassFields = map[string]bool{}
+	for _, f := range n.Fields {
+		u.currentClassFields[f.Name] = true
+	}
+	defer func() {
+		u.currentClass = prevClass
+		u.currentClassFields = prevFields
+	}()
 	head := "class " + n.Name
 	if n.Abstract {
 		head = "abstract " + head
@@ -733,8 +766,17 @@ func (u *unparser) classConst(c ast.ClassConst) error {
 func (u *unparser) classMethod(m ast.ClassMethod) error {
 	u.leadingComments(m.Comments)
 	prevClassMethod := u.currentClassMethod
+	prevFieldShadows := u.fieldReadShadows
 	u.currentClassMethod = m.Class
-	defer func() { u.currentClassMethod = prevClassMethod }()
+	if m.Class {
+		u.fieldReadShadows = nil
+	} else {
+		u.fieldReadShadows = fieldReadShadowNames(m.Func)
+	}
+	defer func() {
+		u.currentClassMethod = prevClassMethod
+		u.fieldReadShadows = prevFieldShadows
+	}()
 
 	// v0.46+ canonical: keyword modifiers in canonical order
 	// (`private static abstract|override`). Legacy `@@` is removed.
@@ -890,7 +932,10 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 	}
 	targets := make([]string, 0, len(n.Targets))
 	for _, t := range n.Targets {
+		prevSuppress := u.suppressBareField
+		u.suppressBareField = true
 		s, err := u.expr(t)
+		u.suppressBareField = prevSuppress
 		if err != nil {
 			return err
 		}
@@ -1757,6 +1802,9 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 		}
 		return callee + "(" + strings.Join(args, ", ") + ")", nil
 	case *ast.MemberExpr:
+		if name, ok := u.bareSameClassFieldName(n); ok {
+			return name, nil
+		}
 		if name, ok := u.bareSameClassConstantName(n); ok {
 			return name, nil
 		}
@@ -1868,6 +1916,22 @@ func (u *unparser) bareSameClassConstantName(e *ast.MemberExpr) (string, bool) {
 	return "", false
 }
 
+func (u *unparser) bareSameClassFieldName(e *ast.MemberExpr) (string, bool) {
+	if u.currentClass == "" || u.currentClassMethod || u.suppressBareField {
+		return "", false
+	}
+	if !u.currentClassFields[e.Name] || u.fieldReadShadows[e.Name] {
+		return "", false
+	}
+	switch target := e.Target.(type) {
+	case *ast.SelfExpr:
+		return e.Name, !target.Class
+	case *ast.Ident:
+		return e.Name, target.Name == "self"
+	}
+	return "", false
+}
+
 func (u *unparser) postfixTarget(e ast.Expr) (string, error) {
 	s, err := u.expr(e)
 	if err != nil {
@@ -1878,5 +1942,165 @@ func (u *unparser) postfixTarget(e ast.Expr) (string, error) {
 		return "(" + s + ")", nil
 	default:
 		return s, nil
+	}
+}
+
+func fieldReadShadowNames(fn *ast.FuncLit) map[string]bool {
+	shadows := map[string]bool{}
+	if fn == nil {
+		return shadows
+	}
+	for _, p := range fn.Params {
+		shadows[p] = true
+	}
+	for _, stmt := range fn.Body {
+		collectFieldReadShadows(stmt, shadows)
+	}
+	if fn.Expr != nil {
+		collectFieldReadShadowExpr(fn.Expr, shadows)
+	}
+	return shadows
+}
+
+func collectFieldReadShadows(stmt ast.Stmt, out map[string]bool) {
+	switch n := stmt.(type) {
+	case *ast.AssignStmt:
+		for _, target := range n.Targets {
+			collectFieldReadShadowTarget(target, out)
+		}
+		for _, value := range n.Values {
+			collectFieldReadShadowExpr(value, out)
+		}
+	case *ast.ExprStmt:
+		collectFieldReadShadowExpr(n.Expr, out)
+	case *ast.IfStmt:
+		collectFieldReadShadowExpr(n.Cond, out)
+		for _, s := range n.Then {
+			collectFieldReadShadows(s, out)
+		}
+		for _, s := range n.Else {
+			collectFieldReadShadows(s, out)
+		}
+	case *ast.WhileStmt:
+		collectFieldReadShadowExpr(n.Cond, out)
+		for _, s := range n.Body {
+			collectFieldReadShadows(s, out)
+		}
+	case *ast.ForInStmt:
+		if n.ValueName != "" {
+			out[n.ValueName] = true
+		}
+		if n.IndexName != "" {
+			out[n.IndexName] = true
+		}
+		collectFieldReadShadowExpr(n.Iterable, out)
+		for _, s := range n.Body {
+			collectFieldReadShadows(s, out)
+		}
+	case *ast.ReturnStmt:
+		for _, value := range n.Values {
+			collectFieldReadShadowExpr(value, out)
+		}
+	case *ast.RaiseStmt:
+		if n.Value != nil {
+			collectFieldReadShadowExpr(n.Value, out)
+		}
+	case *ast.MatchStmt:
+		collectFieldReadShadowExpr(n.Value, out)
+		for _, c := range n.Cases {
+			collectFieldReadShadowExpr(c.Pattern, out)
+			for _, s := range c.Body {
+				collectFieldReadShadows(s, out)
+			}
+		}
+	case *ast.TryCatchStmt:
+		for _, s := range n.Try {
+			collectFieldReadShadows(s, out)
+		}
+		if n.CatchName != "" {
+			out[n.CatchName] = true
+		}
+		for _, s := range n.Catch {
+			collectFieldReadShadows(s, out)
+		}
+		for _, s := range n.Finally {
+			collectFieldReadShadows(s, out)
+		}
+	case *ast.SelectStmt:
+		for _, arm := range n.Arms {
+			if arm.BindName != "" {
+				out[arm.BindName] = true
+			}
+			if arm.Channel != nil {
+				collectFieldReadShadowExpr(arm.Channel, out)
+			}
+			if arm.Value != nil {
+				collectFieldReadShadowExpr(arm.Value, out)
+			}
+			if arm.Seconds != nil {
+				collectFieldReadShadowExpr(arm.Seconds, out)
+			}
+			for _, s := range arm.Body {
+				collectFieldReadShadows(s, out)
+			}
+		}
+	}
+}
+
+func collectFieldReadShadowTarget(expr ast.Expr, out map[string]bool) {
+	switch n := expr.(type) {
+	case *ast.Ident:
+		out[n.Name] = true
+	case *ast.IndexExpr:
+		collectFieldReadShadowExpr(n.Target, out)
+		collectFieldReadShadowExpr(n.Index, out)
+	}
+}
+
+func collectFieldReadShadowExpr(expr ast.Expr, out map[string]bool) {
+	switch n := expr.(type) {
+	case *ast.ArrayLit:
+		for _, elem := range n.Elems {
+			collectFieldReadShadowExpr(elem, out)
+		}
+	case *ast.DictLit:
+		for _, prop := range n.Props {
+			collectFieldReadShadowExpr(prop.Value, out)
+		}
+	case *ast.BinaryExpr:
+		collectFieldReadShadowExpr(n.Left, out)
+		collectFieldReadShadowExpr(n.Right, out)
+	case *ast.UnaryExpr:
+		collectFieldReadShadowExpr(n.Expr, out)
+	case *ast.TryExpr:
+		collectFieldReadShadowExpr(n.Expr, out)
+	case *ast.IfStmt:
+		collectFieldReadShadows(n, out)
+	case *ast.WhileStmt:
+		collectFieldReadShadows(n, out)
+	case *ast.ForInStmt:
+		collectFieldReadShadows(n, out)
+	case *ast.MatchStmt:
+		collectFieldReadShadows(n, out)
+	case *ast.MemberExpr:
+		collectFieldReadShadowExpr(n.Target, out)
+	case *ast.IndexExpr:
+		collectFieldReadShadowExpr(n.Target, out)
+		collectFieldReadShadowExpr(n.Index, out)
+	case *ast.CallExpr:
+		collectFieldReadShadowExpr(n.Callee, out)
+		for _, arg := range n.EffectiveArgs() {
+			collectFieldReadShadowExpr(arg.Value, out)
+		}
+	case *ast.FuncLit:
+		for _, p := range n.Params {
+			out[p] = true
+		}
+		for _, s := range n.Body {
+			collectFieldReadShadows(s, out)
+		}
+		if n.Expr != nil {
+			collectFieldReadShadowExpr(n.Expr, out)
+		}
 	}
 }

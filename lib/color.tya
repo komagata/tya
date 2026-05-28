@@ -110,7 +110,12 @@ class Color
     if has_alpha
       if color_parts.len() != 4
         raise error("color.css: rgba() expects 4 channels")
-      return rgba(color_parts[0].trim().to_i(), color_parts[1].trim().to_i(), color_parts[2].trim().to_i(), color_parts[3].trim().to_i())
+      return rgba(
+        color_parts[0].trim().to_i(),
+        color_parts[1].trim().to_i(),
+        color_parts[2].trim().to_i(),
+        color_parts[3].trim().to_i()
+      )
     if color_parts.len() != 3
       raise error("color.css: rgb() expects 3 channels")
     Self.rgb(
@@ -128,15 +133,15 @@ class Color
     chr(87 + value)
 
   # Color.from_array creates a color from [r, g, b] or [r, g, b, a].
-  # @param values Array channel values.
+  # @param channels Array channel values.
   # @return Color the created color.
-  static from_array: values ->
-    if values.class != Array
-      raise error("color.from_array: values must be an array")
-    if values.len() == 3
-      return rgb(values[0], values[1], values[2])
-    if values.len() == 4
-      return rgba(values[0], values[1], values[2], values[3])
+  static from_array: channels ->
+    if channels.class != Array
+      raise error("color.from_array: channels must be an array")
+    if channels.len() == 3
+      return rgb(channels[0], channels[1], channels[2])
+    if channels.len() == 4
+      return rgba(channels[0], channels[1], channels[2], channels[3])
     raise error("color.from_array: expected 3 or 4 channels")
 
   # Color.hex parses #rgb, #rgba, #rrggbb, or #rrggbbaa color text.
@@ -294,7 +299,10 @@ class Color
   # @param other Color other color.
   # @return Boolean whether the condition is true.
   equal?: other ->
-    self.r == other.r and self.g == other.g and self.b == other.b and self.a == other.a
+    self.r == other.r
+      and self.g == other.g
+      and self.b == other.b
+      and self.a == other.a
 
   # Color.grayscale converts a color to grayscale while preserving alpha.
   # @param color Color source color, or nil to use the receiver.
@@ -358,7 +366,10 @@ class Color
   nearly_equal?: other, tolerance ->
     if tolerance < 0
       raise error("color.nearly_equal?: tolerance must be non-negative")
-    abs(self.r - other.r) <= tolerance and abs(self.g - other.g) <= tolerance and abs(self.b - other.b) <= tolerance and abs(self.a - other.a) <= tolerance
+    abs(self.r - other.r) <= tolerance
+      and abs(self.g - other.g) <= tolerance
+      and abs(self.b - other.b) <= tolerance
+      and abs(self.a - other.a) <= tolerance
 
   # Color.over composites a foreground color over a background color.
   # @param foreground Color foreground color, or background when called on an instance.

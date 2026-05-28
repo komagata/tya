@@ -48,6 +48,23 @@ func TestCheckAllowsImplicitSelfAndSelfMethodCalls(t *testing.T) {
 	}
 }
 
+func TestCheckAllowsBareInstanceFieldRead(t *testing.T) {
+	src := "class Command\n  arguments: []\n\n  argument: spec ->\n    arguments.push(spec)\n    arguments\n"
+	if err := Check(parse(t, src)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckRejectsBareInstanceFieldReadInStaticMethod(t *testing.T) {
+	err := Check(parse(t, "class Command\n  arguments: []\n\n  static argument: spec ->\n    arguments.push(spec)\n"))
+	if err == nil {
+		t.Fatal("expected undefined variable error")
+	}
+	if !strings.Contains(err.Error(), "undefined variable arguments") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestCheckRejectsUndeclaredSelfFieldAssignment(t *testing.T) {
 	err := Check(parse(t, "class User\n  initialize: name ->\n    self.name = name\n"))
 	if err == nil {

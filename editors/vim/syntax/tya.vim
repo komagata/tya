@@ -16,13 +16,13 @@ syntax match tyaNumber "\v<0b[01_]+>"
 syntax match tyaNumber "\v<[0-9][0-9_]*(\.[0-9][0-9_]*)?>"
 
 syntax keyword tyaKeyword if elseif else while for in break continue return raise try catch match case when select receive send timeout default
-syntax keyword tyaDeclaration class module interface implements extends abstract final private static initialize import as
+syntax keyword tyaDeclaration class module interface struct record implements extends abstract final private static initialize import as
 syntax keyword tyaConcurrency spawn await scope
 syntax keyword tyaLiteral true false nil
 syntax keyword tyaSelf self Self super
 syntax keyword tyaLogical and or not
 
-syntax match tyaTypeDecl "\<\(class\|interface\)\s\+\zs[A-Z][A-Za-z0-9_]*"
+syntax match tyaTypeDecl "\<\(class\|interface\|struct\|record\)\s\+\zs[A-Z][A-Za-z0-9_]*"
 syntax match tyaModuleDecl "\<module\s\+\zs[A-Za-z_][A-Za-z0-9_]*"
 syntax match tyaFunctionDecl "\<[A-Za-z_][A-Za-z0-9_?]*\>\ze\s*=\s*->"
 syntax match tyaOperator "->\|==\|!=\|<=\|>=\|<<\|>>\|[+\-*\/%=<>.,:&|^~]"

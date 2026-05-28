@@ -123,6 +123,7 @@ TyaValue tya_iterator_next(TyaValue iter);
 TyaValue tya_sequence(TyaValue value);
 TyaValue tya_contains(TyaValue text, TyaValue part);
 TyaValue tya_contains_method(TyaValue receiver, TyaValue value);
+TyaValue tya_string_index_of(TyaValue text, TyaValue needle, TyaValue start);
 TyaValue tya_starts_with(TyaValue text, TyaValue prefix);
 TyaValue tya_ends_with(TyaValue text, TyaValue suffix);
 TyaValue tya_trim(TyaValue text);

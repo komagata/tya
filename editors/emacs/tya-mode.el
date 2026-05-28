@@ -21,7 +21,7 @@
     "timeout" "default"))
 
 (defconst tya-mode-declarations
-  '("class" "module" "interface" "implements" "extends" "abstract" "final"
+  '("class" "module" "interface" "struct" "record" "implements" "extends" "abstract" "final"
     "private" "static" "initialize" "import" "as"))
 
 (defconst tya-mode-concurrency
@@ -34,7 +34,7 @@
     (,(regexp-opt '("true" "false" "nil") 'symbols) . font-lock-constant-face)
     (,(regexp-opt '("self" "Self" "super") 'symbols) . font-lock-variable-name-face)
     (,(regexp-opt '("and" "or" "not") 'symbols) . font-lock-builtin-face)
-    ("\\_<\\(class\\|interface\\)\\_>[ \t]+\\([A-Z][A-Za-z0-9_]*\\)"
+    ("\\_<\\(class\\|interface\\|struct\\|record\\)\\_>[ \t]+\\([A-Z][A-Za-z0-9_]*\\)"
      (2 font-lock-type-face))
     ("\\_<module\\_>[ \t]+\\([A-Za-z_][A-Za-z0-9_]*\\)"
      (1 font-lock-constant-face))

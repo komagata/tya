@@ -95,7 +95,7 @@
         },
         {
           "name": "storage.type.tya",
-          "match": "\\b(class|module|interface|implements|extends|abstract|final|override|private|static|initialize|import|as|embed)\\b"
+          "match": "\\b(class|module|interface|struct|record|implements|extends|abstract|final|override|private|static|initialize|import|as|embed)\\b"
         },
         {
           "name": "variable.language.tya",
@@ -120,7 +120,7 @@
       "patterns": [
         {
           "name": "entity.name.type.tya",
-          "match": "\\b(?:class|interface)\\s+([A-Z][A-Za-z0-9_]*)\\b",
+          "match": "\\b(?:class|interface|struct|record)\\s+([A-Z][A-Za-z0-9_]*)\\b",
           "captures": {
             "1": { "name": "entity.name.type.tya" }
           }

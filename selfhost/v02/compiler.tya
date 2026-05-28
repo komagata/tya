@@ -3276,6 +3276,8 @@ emit_scalar = expr ->
         return "tya_replace(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ", " + emit_nested(expr["args"][2]) + ")"
       if name == "contains"
         return "tya_contains(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
+      if name == "index_of"
+        return "tya_string_index_of(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ", tya_number(0))"
       if name == "starts_with"
         return "tya_starts_with(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
       if name == "ends_with"

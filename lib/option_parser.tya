@@ -40,33 +40,21 @@ class OptionParser
         self.arguments.push(arg)
     self
 
-  # OptionParser.index_of returns the byte index of needle in text.
-  # @param text String text to search.
-  # @param needle String one-byte text to find.
-  # @return Number byte index or -1 when not found.
-  private index_of: text, needle ->
-    i = 0
-    while i < text.byte_len()
-      if text[i] == needle
-        return i
-      i = i + 1
-    -1
-
   # OptionParser.long_option builds a long option token.
   # @param name String long option name.
   # @param value Any parsed option value.
   # @param raw String original option token.
-  # @return Dict parsed option token.
+  # @return ParsedOption parsed option token.
   private long_option: name, value, raw ->
-    { kind: "long", name: name, value: value, raw: raw }
+    ParsedOption("long", name, value, raw)
 
   # OptionParser.parse_long! parses one long option token.
   # @param arg String command-line token.
   # @return Nil no meaningful value.
   private parse_long!: arg ->
     raw_name = arg.slice(2, arg.len())
-    eq = index_of(raw_name, "=")
-    if eq >= 0
+    eq = raw_name.index_of("=")
+    if eq != -1
       name = raw_name.slice(0, eq)
       value = raw_name.slice(eq + 1, raw_name.len())
       self.options.push(long_option(name, value, arg))
@@ -79,7 +67,7 @@ class OptionParser
   private parse_short!: arg ->
     raw = arg.slice(1, arg.len())
     i = 0
-    while i < raw.byte_len()
+    while i != raw.byte_len()
       name = raw[i]
       self.options.push(short_option(name, true, "-{name}"))
       i = i + 1
@@ -88,6 +76,36 @@ class OptionParser
   # @param name String short option name.
   # @param value Any parsed option value.
   # @param raw String original option token.
-  # @return Dict parsed option token.
+  # @return ParsedOption parsed option token.
   private short_option: name, value, raw ->
-    { kind: "short", name: name, value: value, raw: raw }
+    ParsedOption("short", name, value, raw)
+
+# ParsedOption stores one parsed option token.
+class ParsedOption
+  # ParsedOption.kind stores "long" or "short".
+  # @type String
+  kind: ""
+
+  # ParsedOption.name stores the option name without dashes.
+  # @type String
+  name: ""
+
+  # ParsedOption.value stores the parsed option value.
+  # @type Any
+  value: nil
+
+  # ParsedOption.raw stores the original option token.
+  # @type String
+  raw: ""
+
+  # ParsedOption.initialize initializes all fields.
+  # @param kind String option kind.
+  # @param name String option name.
+  # @param value Any option value.
+  # @param raw String original option token.
+  # @return Nil no meaningful value.
+  initialize: kind, name, value, raw ->
+    self.kind = kind
+    self.name = name
+    self.value = value
+    self.raw = raw

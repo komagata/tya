@@ -295,8 +295,9 @@ type ClassRef struct {
 }
 
 type Ident struct {
-	Name string
-	Tok  token.Token
+	Name          string
+	Tok           token.Token
+	ImplicitField bool
 }
 
 func (*Ident) expr() {}

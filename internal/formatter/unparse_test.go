@@ -509,6 +509,25 @@ func TestUnparseWrapsLongCall(t *testing.T) {
 	}
 }
 
+func TestUnparseWrapsLongReturnCall(t *testing.T) {
+	src := "build = ->\n  if has_alpha\n    return rgba(color_parts[0].trim().to_i(), color_parts[1].trim().to_i(), color_parts[2].trim().to_i(), color_parts[3].trim().to_i())\n  rgb(0, 0, 0)\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "build = ->\n  if has_alpha\n    return rgba(\n      color_parts[0].trim().to_i(),\n      color_parts[1].trim().to_i(),\n      color_parts[2].trim().to_i(),\n      color_parts[3].trim().to_i()\n    )\n  rgb(0, 0, 0)\n"
+	if got != want {
+		t.Errorf("wrap mismatch\nwant:\n%s\ngot:\n%s", want, got)
+	}
+	again, err := unparseSource(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again != got {
+		t.Fatalf("not idempotent:\n%s", again)
+	}
+}
+
 func TestUnparseWrapsLongCallChain(t *testing.T) {
 	src := "value = validation.Validation.number(value, name, \"color.channel\").integer().between(0, 255).validate!()\n"
 	got, err := unparseSource(t, src)
@@ -516,6 +535,25 @@ func TestUnparseWrapsLongCallChain(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := "value = validation.Validation\n  .number(value, name, \"color.channel\")\n  .integer()\n  .between(0, 255)\n  .validate!()\n"
+	if got != want {
+		t.Errorf("wrap mismatch\nwant:\n%s\ngot:\n%s", want, got)
+	}
+	again, err := unparseSource(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again != got {
+		t.Fatalf("not idempotent:\n%s", again)
+	}
+}
+
+func TestUnparseWrapsLongBinaryExprStmt(t *testing.T) {
+	src := "abs(self.r - other.r) <= tolerance and abs(self.g - other.g) <= tolerance and abs(self.b - other.b) <= tolerance and abs(self.a - other.a) <= tolerance\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "abs(self.r - other.r) <= tolerance\n  and abs(self.g - other.g) <= tolerance\n  and abs(self.b - other.b) <= tolerance\n  and abs(self.a - other.a) <= tolerance\n"
 	if got != want {
 		t.Errorf("wrap mismatch\nwant:\n%s\ngot:\n%s", want, got)
 	}
@@ -776,6 +814,53 @@ func TestUnparseSortsClassMembers(t *testing.T) {
 	}
 	if again != got {
 		t.Fatalf("class member order is not idempotent\nfirst:\n%s\nsecond:\n%s", got, again)
+	}
+}
+
+func TestUnparseBareInstanceFieldReads(t *testing.T) {
+	src := strings.Join([]string{
+		"class Command",
+		"  arguments: []",
+		"  count: 0",
+		"",
+		"  argument: spec ->",
+		"    self.arguments.push(spec)",
+		"    self.count",
+		"",
+		"  replace_arguments: arguments ->",
+		"    self.arguments = arguments",
+		"    self.arguments",
+		"",
+		"  assign_local: ->",
+		"    count = 1",
+		"    self.count",
+		"",
+	}, "\n")
+	want := strings.Join([]string{
+		"class Command",
+		"  arguments: []",
+		"",
+		"  count: 0",
+		"",
+		"  argument: spec ->",
+		"    arguments.push(spec)",
+		"    count",
+		"",
+		"  assign_local: ->",
+		"    count = 1",
+		"    self.count",
+		"",
+		"  replace_arguments: arguments ->",
+		"    self.arguments = arguments",
+		"    self.arguments",
+		"",
+	}, "\n")
+	got, err := unparseSourceWithComments(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("got:\n%swant:\n%s", got, want)
 	}
 }
 

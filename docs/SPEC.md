@@ -542,14 +542,21 @@ default provides that instance method. If no instance method matches, the same
 unqualified call resolves to `Self.helper(args)` when the current class or a
 parent class provides that static method. Static methods also resolve
 `helper(args)` to `Self.helper(args)` for static methods on the current class
-or parent class. Field reads and writes remain explicit, and bare references
-such as `value = helper` are not receiver method references.
+or parent class. Inside `initialize` and instance methods, an unqualified field
+read such as `items` resolves to `self.items` when ordinary lexical lookup does
+not find `items` and the current class, a parent class, or an implemented
+interface declares that instance field. This bare field read may be used as a
+member target, such as `items.push(value)`. Field writes remain explicit:
+`items = value` assigns a local binding, while `self.items = value` assigns the
+instance field. Bare references such as `value = helper` are not receiver
+method references.
 Formatted Syntax prefers the unqualified call form for same-class receiver
 method calls: `self.helper(args)`, `Self.helper(args)`, and
 `CurrentClass.helper(args)` are formatted as `helper(args)` when they appear as
 calls inside `CurrentClass`. Same-class class constant reads such as
-`Self.NAME` and `CurrentClass.NAME` are formatted as `NAME`. Other non-call
-member access is not rewritten to a bare name.
+`Self.NAME` and `CurrentClass.NAME` are formatted as `NAME`. Same-class
+`self.field` reads are formatted as `field` when no method parameter or local
+binding with that name can change the meaning.
 
 Tya supports:
 

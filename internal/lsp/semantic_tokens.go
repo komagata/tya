@@ -115,6 +115,10 @@ func classifyToken(t token.Token, all []token.Token, i int, idx *SymbolIndex) in
 				switch sym.Kind {
 				case "class":
 					return stClass
+				case "struct":
+					return stClass
+				case "record":
+					return stClass
 				case "module":
 					return stNamespace
 				case "interface":

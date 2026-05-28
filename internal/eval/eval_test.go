@@ -112,6 +112,53 @@ func TestRunImplicitSelfAndSelfMethodCalls(t *testing.T) {
 	}
 }
 
+func TestRunBareInstanceFieldRead(t *testing.T) {
+	src := strings.Join([]string{
+		"class Command",
+		"  arguments: []",
+		"",
+		"  argument: spec ->",
+		"    arguments.push(spec)",
+		"    self",
+		"",
+		"  first: -> arguments[0]",
+		"",
+		"  local_shadow: ->",
+		"    arguments = [\"local\"]",
+		"    arguments[0]",
+		"",
+		"  replace_arguments: arguments ->",
+		"    self.arguments = arguments",
+		"",
+		"cmd = Command()",
+		"cmd.argument(\"one\")",
+		"print(cmd.first())",
+		"print(cmd.local_shadow())",
+		"cmd.replace_arguments([\"two\"])",
+		"print(cmd.first())",
+		"",
+	}, "\n")
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := checker.Check(prog); err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	want := "one\nlocal\ntwo\n"
+	if out.String() != want {
+		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
 func TestRunDefaultParameters(t *testing.T) {
 	src := strings.Join([]string{
 		"greet = name, suffix = \"!\" -> name + suffix",
@@ -856,7 +903,7 @@ func TestRunConversions(t *testing.T) {
 }
 
 func TestRunStringBuiltins(t *testing.T) {
-	src := "text = \"  hello,tya  \"\ntrimmed = text.trim()\nparts = trimmed.split(\",\")\nprint(parts.join(\"-\"))\nprint(trimmed.replace(\"tya\", \"Tya\"))\nprint(trimmed.contains(\"hello\"))\nprint(trimmed.starts_with(\"hello\"))\nprint(trimmed.ends_with(\"tya\"))\nprint(trimmed.slice(1, 4))\nprint(\"あいう\".slice(1, 3))\nprint(\"quote: \\\"tya\\\"\")\nprint(\"tya\"[1])\n"
+	src := "text = \"  hello,tya  \"\ntrimmed = text.trim()\nparts = trimmed.split(\",\")\nprint(parts.join(\"-\"))\nprint(trimmed.replace(\"tya\", \"Tya\"))\nprint(trimmed.contains(\"hello\"))\nprint(trimmed.index_of(\"tya\"))\nprint(trimmed.index_of(\"missing\"))\nprint(\"あいう\".index_of(\"い\"))\nprint(trimmed.starts_with(\"hello\"))\nprint(trimmed.ends_with(\"tya\"))\nprint(trimmed.slice(1, 4))\nprint(\"あいう\".slice(1, 3))\nprint(\"quote: \\\"tya\\\"\")\nprint(\"tya\"[1])\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -869,7 +916,7 @@ func TestRunStringBuiltins(t *testing.T) {
 	if err := Run(prog, &out); err != nil {
 		t.Fatal(err)
 	}
-	want := "hello-tya\nhello,Tya\ntrue\ntrue\ntrue\nell\nいう\nquote: \"tya\"\ny\n"
+	want := "hello-tya\nhello,Tya\ntrue\n6\n-1\n1\ntrue\ntrue\nell\nいう\nquote: \"tya\"\ny\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
 	}
