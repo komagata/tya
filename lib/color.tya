@@ -76,33 +76,28 @@ class Color
       BLACK
     elseif color_raw == "white"
       WHITE
+    elseif color_raw == "red"
+      RED
+    elseif color_raw == "green"
+      GREEN
+    elseif color_raw == "blue"
+      BLUE
+    elseif color_raw == "yellow"
+      YELLOW
+    elseif color_raw == "cyan"
+      CYAN
+    elseif color_raw == "magenta"
+      MAGENTA
+    elseif color_raw == "transparent"
+      TRANSPARENT
+    elseif color_raw.starts_with("#")
+      hex(color_raw)
+    elseif color_raw.starts_with("rgb(") and color_raw.ends_with(")")
+      css_rgb(color_raw, 4, false)
+    elseif color_raw.starts_with("rgba(") and color_raw.ends_with(")")
+      css_rgb(color_raw, 5, true)
     else
-      if color_raw == "red"
-        RED
-      elseif color_raw == "green"
-        GREEN
-      else
-        if color_raw == "blue"
-          BLUE
-        elseif color_raw == "yellow"
-          YELLOW
-        else
-          if color_raw == "cyan"
-            CYAN
-          elseif color_raw == "magenta"
-            MAGENTA
-          else
-            if color_raw == "transparent"
-              TRANSPARENT
-            elseif color_raw.starts_with("#")
-              hex(color_raw)
-            else
-              if color_raw.starts_with("rgb(") and color_raw.ends_with(")")
-                css_rgb(color_raw, 4, false)
-              elseif color_raw.starts_with("rgba(") and color_raw.ends_with(")")
-                css_rgb(color_raw, 5, true)
-              else
-                hex(color_raw)
+      hex(color_raw)
 
   # Color.css_rgb parses an rgb(...) or rgba(...) function body.
   # @param text String CSS function text.

@@ -174,14 +174,18 @@ func TestUnparseIfElseifElse(t *testing.T) {
 }
 
 func TestUnparseControlFlowAssignmentExpressions(t *testing.T) {
-	src := "label = if score >= 90\n  \"A\"\nelseif score >= 80\n  \"B\"\nelse\n  \"C\"\nlast = for item in items\n  item\nresult = match status\n  case \"ok\"\n    \"success\"\n  case _\n    \"fallback\"\n"
+	src := "label = if score >= 90\n  \"A\"\nelseif score >= 80\n  \"B\"\nelseif score >= 70\n  \"C\"\nelse\n  \"D\"\nlast = for item in items\n  item\nresult = match status\n  case \"ok\"\n    \"success\"\n  case _\n    \"fallback\"\n"
 	got, err := unparseSource(t, src)
 	if err != nil {
 		t.Fatal(err)
 	}
+	if strings.Contains(got, "else\n  if") {
+		t.Fatalf("elseif chain was nested:\n%s", got)
+	}
 	for _, want := range []string{
 		"label = if score >= 90",
 		"elseif score >= 80",
+		"elseif score >= 70",
 		"last = for item in items",
 		"result = match status",
 		"case _",

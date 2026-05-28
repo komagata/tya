@@ -1326,25 +1326,41 @@ func (u *unparser) ifStmtWithPrefix(prefix string, n *ast.IfStmt) error {
 	if len(n.Else) == 0 {
 		return nil
 	}
-	// If else is a single IfStmt, emit `elseif ...`.
+	// If else is a single IfStmt, emit the whole chain as `elseif ...`.
 	if len(n.Else) == 1 {
 		if inner, ok := n.Else[0].(*ast.IfStmt); ok {
-			cond2, err := u.expr(inner.Cond)
-			if err != nil {
-				return err
-			}
-			u.emitCondHeader("elseif", cond2)
-			if err := u.block(inner.Then); err != nil {
-				return err
-			}
-			if len(inner.Else) > 0 {
-				u.line("else")
-				return u.blockBody(inner.Else)
-			}
-			return nil
+			return u.elseifChain(inner, false)
 		}
 	}
 	u.line("else")
+	return u.blockBody(n.Else)
+}
+
+func (u *unparser) elseifChain(n *ast.IfStmt, tail bool) error {
+	cond, err := u.expr(n.Cond)
+	if err != nil {
+		return err
+	}
+	u.emitCondHeader("elseif", cond)
+	if tail {
+		if err := u.tailBlock(n.Then); err != nil {
+			return err
+		}
+	} else if err := u.block(n.Then); err != nil {
+		return err
+	}
+	if len(n.Else) == 0 {
+		return nil
+	}
+	if len(n.Else) == 1 {
+		if inner, ok := n.Else[0].(*ast.IfStmt); ok {
+			return u.elseifChain(inner, tail)
+		}
+	}
+	u.line("else")
+	if tail {
+		return u.tailBlock(n.Else)
+	}
 	return u.blockBody(n.Else)
 }
 
@@ -1550,19 +1566,7 @@ func (u *unparser) ifStmtTail(n *ast.IfStmt) error {
 	}
 	if len(n.Else) == 1 {
 		if inner, ok := n.Else[0].(*ast.IfStmt); ok {
-			cond2, err := u.expr(inner.Cond)
-			if err != nil {
-				return err
-			}
-			u.emitCondHeader("elseif", cond2)
-			if err := u.tailBlock(inner.Then); err != nil {
-				return err
-			}
-			if len(inner.Else) > 0 {
-				u.line("else")
-				return u.tailBlock(inner.Else)
-			}
-			return nil
+			return u.elseifChain(inner, true)
 		}
 	}
 	u.line("else")
