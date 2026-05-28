@@ -184,13 +184,28 @@ func TestParseRejectsSliceSyntax(t *testing.T) {
 	}
 }
 
-func TestParseRejectsNamedArguments(t *testing.T) {
-	toks, errs := lexer.Lex("request(url, timeout: 10)\n")
+func TestParseKeywordArguments(t *testing.T) {
+	toks, errs := lexer.Lex("request(url, timeout: 10, **options)\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	if _, _, err := Parse(toks); err == nil {
-		t.Fatal("expected named argument syntax error")
+	prog, _, err := Parse(toks)
+	if err != nil {
+		t.Fatalf("unexpected keyword argument syntax error: %v", err)
+	}
+	stmt := prog.Stmts[0].(*ast.ExprStmt)
+	call := stmt.Expr.(*ast.CallExpr)
+	if len(call.CallArgs) != 3 {
+		t.Fatalf("got %d call args", len(call.CallArgs))
+	}
+	if call.CallArgs[0].Name != "" || call.CallArgs[0].Expand {
+		t.Fatalf("first arg = %#v", call.CallArgs[0])
+	}
+	if call.CallArgs[1].Name != "timeout" || call.CallArgs[1].Expand {
+		t.Fatalf("second arg = %#v", call.CallArgs[1])
+	}
+	if !call.CallArgs[2].Expand {
+		t.Fatalf("third arg = %#v", call.CallArgs[2])
 	}
 }
 

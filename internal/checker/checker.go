@@ -581,6 +581,7 @@ type scope struct {
 	parent           *scope
 	names            map[string]bool
 	kinds            map[string]valueKind
+	funcParams       map[string][]string
 	classes          map[string]classInfo
 	interfaces       map[string]interfaceInfo
 	inInstanceMethod bool
@@ -599,9 +600,12 @@ type classInfo struct {
 	hasInit               bool
 	initRequired          int
 	initArity             int
+	initParams            []string
 	privateInit           bool
 	methods               map[string]int
+	methodParams          map[string][]string
 	classMethods          map[string]int
+	classMethodParams     map[string][]string
 	abstractMethods       map[string]int
 	abstractClassMethods  map[string]int
 	interfaceMethods      map[string]int
@@ -649,10 +653,11 @@ type interfaceRequirement struct {
 }
 
 func newScope(parent *scope) *scope {
-	s := &scope{parent: parent, names: map[string]bool{}, kinds: map[string]valueKind{}}
+	s := &scope{parent: parent, names: map[string]bool{}, kinds: map[string]valueKind{}, funcParams: map[string][]string{}}
 	if parent != nil {
 		s.classes = parent.classes
 		s.interfaces = parent.interfaces
+		s.funcParams = parent.funcParams
 		s.inInstanceMethod = parent.inInstanceMethod
 		s.inClassMethod = parent.inClassMethod
 		s.inClassBody = parent.inClassBody
@@ -1035,6 +1040,7 @@ func predeclareFunctionBindings(stmts []ast.Stmt, scope *scope) error {
 			if _, ok := n.Values[0].(*ast.FuncLit); !ok {
 				continue
 			}
+			fn := n.Values[0].(*ast.FuncLit)
 			if isPredicateName(name.Name) || isBangName(name.Name) {
 				if !validCallableName(name.Name) {
 					return fmt.Errorf("%d:%d: invalid callable name %s", name.Tok.Line, name.Tok.Col, name.Name)
@@ -1045,6 +1051,7 @@ func predeclareFunctionBindings(stmts []ast.Stmt, scope *scope) error {
 				}
 			}
 			scope.define(name.Name, kindUnknown)
+			scope.funcParams[name.Name] = append([]string(nil), fn.Params...)
 		case *ast.ClassDecl:
 			if err := predeclareClass(n, scope); err != nil {
 				return err
@@ -1125,6 +1132,7 @@ func predeclareModuleClass(module string, class *ast.ClassDecl, scope *scope) er
 		}
 		if method.Class {
 			info.classMethods[method.Name] = len(method.Func.Params)
+			info.classMethodParams[method.Name] = append([]string(nil), method.Func.Params...)
 			if method.Private {
 				info.privateClassMembers[method.Name] = true
 				info.privateClassMethods[method.Name] = true
@@ -1132,6 +1140,7 @@ func predeclareModuleClass(module string, class *ast.ClassDecl, scope *scope) er
 			continue
 		}
 		info.methods[method.Name] = len(method.Func.Params)
+		info.methodParams[method.Name] = append([]string(nil), method.Func.Params...)
 		if method.Private {
 			info.privateMethods[method.Name] = true
 		}
@@ -1144,6 +1153,7 @@ func predeclareModuleClass(module string, class *ast.ClassDecl, scope *scope) er
 			info.hasInit = true
 			info.initRequired = requiredParamCount(method.Func)
 			info.initArity = len(method.Func.Params)
+			info.initParams = append([]string(nil), method.Func.Params...)
 			if method.Private {
 				info.privateInit = true
 			}
@@ -1176,6 +1186,7 @@ func predeclareClass(class *ast.ClassDecl, scope *scope) error {
 		}
 		if method.Class {
 			info.classMethods[method.Name] = len(method.Func.Params)
+			info.classMethodParams[method.Name] = append([]string(nil), method.Func.Params...)
 			if method.Private {
 				info.privateClassMembers[method.Name] = true
 				info.privateClassMethods[method.Name] = true
@@ -1183,6 +1194,7 @@ func predeclareClass(class *ast.ClassDecl, scope *scope) error {
 			continue
 		}
 		info.methods[method.Name] = len(method.Func.Params)
+		info.methodParams[method.Name] = append([]string(nil), method.Func.Params...)
 		if method.Private {
 			info.privateMethods[method.Name] = true
 		}
@@ -1193,6 +1205,7 @@ func predeclareClass(class *ast.ClassDecl, scope *scope) error {
 			info.hasInit = true
 			info.initRequired = requiredParamCount(method.Func)
 			info.initArity = len(method.Func.Params)
+			info.initParams = append([]string(nil), method.Func.Params...)
 			if method.Private {
 				info.privateInit = true
 			}
@@ -1210,7 +1223,9 @@ func newClassInfo(key string, class *ast.ClassDecl) classInfo {
 		abstract:             class.Abstract,
 		final:                class.Final,
 		methods:              map[string]int{},
+		methodParams:         map[string][]string{},
 		classMethods:         map[string]int{},
+		classMethodParams:    map[string][]string{},
 		abstractMethods:      map[string]int{},
 		abstractClassMethods: map[string]int{},
 		interfaceMethods:     map[string]int{},
@@ -1644,6 +1659,11 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 				if len(n.Args) != arity {
 					return fmt.Errorf("%d:%d: super class method %s expects %d arguments", super.Tok.Line, super.Tok.Col, scope.currentMethod, arity)
 				}
+				if params, ok := effectiveClassMethodParams(parent, scope.currentMethod, scope); ok {
+					if err := checkCallKeywords(n, params); err != nil {
+						return err
+					}
+				}
 			} else if scope.currentMethod == "init" || scope.currentMethod == "_init" || scope.currentMethod == "initialize" {
 				if parentInfo := scope.classes[parent]; parentInfo.privateInit {
 					return fmt.Errorf("%d:%d: super cannot call private parent constructor", super.Tok.Line, super.Tok.Col)
@@ -1658,6 +1678,11 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 				if !arity.accepts(len(n.Args)) {
 					return fmt.Errorf("%d:%d: super init expects %s", super.Tok.Line, super.Tok.Col, arity.describe())
 				}
+				if parentInfo, ok := scope.classes[parent]; ok {
+					if err := checkCallKeywords(n, effectiveInitParams(parentInfo, scope)); err != nil {
+						return err
+					}
+				}
 			} else {
 				if _, ok := inheritedAbstractMethodArity(parent, scope.currentMethod, scope); ok {
 					return fmt.Errorf("%d:%d: super cannot call abstract parent method %s", super.Tok.Line, super.Tok.Col, scope.currentMethod)
@@ -1668,6 +1693,11 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 				}
 				if len(n.Args) != arity {
 					return fmt.Errorf("%d:%d: super method %s expects %d arguments", super.Tok.Line, super.Tok.Col, scope.currentMethod, arity)
+				}
+				if params, ok := effectiveMethodParams(parent, scope.currentMethod, scope); ok {
+					if err := checkCallKeywords(n, params); err != nil {
+						return err
+					}
 				}
 			}
 			for _, arg := range n.Args {
@@ -1693,10 +1723,20 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 					if len(n.Args) != arity {
 						return fmt.Errorf("%d:%d: method %s expects %d arguments", id.Tok.Line, id.Tok.Col, id.Name, arity)
 					}
+					if params, ok := effectiveMethodParams(scope.currentClass, id.Name, scope); ok {
+						if err := checkCallKeywords(n, params); err != nil {
+							return err
+						}
+					}
 					n.ImplicitSelf = true
 				} else if arity, found := effectiveClassMethodArity(scope.currentClass, id.Name, scope); found {
 					if len(n.Args) != arity {
 						return fmt.Errorf("%d:%d: class method %s expects %d arguments", id.Tok.Line, id.Tok.Col, id.Name, arity)
+					}
+					if params, ok := effectiveClassMethodParams(scope.currentClass, id.Name, scope); ok {
+						if err := checkCallKeywords(n, params); err != nil {
+							return err
+						}
 					}
 					n.ImplicitClass = true
 				}
@@ -1704,6 +1744,11 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 				if arity, found := effectiveClassMethodArity(scope.currentClass, id.Name, scope); found {
 					if len(n.Args) != arity {
 						return fmt.Errorf("%d:%d: class method %s expects %d arguments", id.Tok.Line, id.Tok.Col, id.Name, arity)
+					}
+					if params, ok := effectiveClassMethodParams(scope.currentClass, id.Name, scope); ok {
+						if err := checkCallKeywords(n, params); err != nil {
+							return err
+						}
 					}
 					n.ImplicitClass = true
 				}
@@ -1715,8 +1760,20 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			}
 		}
 		if id, ok := n.Callee.(*ast.Ident); ok && scope.kind(id.Name) == kindClass {
+			if info, ok := scope.classes[id.Name]; ok {
+				if err := checkCallKeywords(n, effectiveInitParams(info, scope)); err != nil {
+					return err
+				}
+			}
 			if err := checkClassCall(id.Name, id.Name, id.Tok.Line, id.Tok.Col, len(n.Args), scope); err != nil {
 				return err
+			}
+		}
+		if id, ok := n.Callee.(*ast.Ident); ok {
+			if params := scope.funcParams[id.Name]; len(params) > 0 {
+				if err := checkCallKeywords(n, params); err != nil {
+					return err
+				}
 			}
 		}
 		if id, ok := n.Callee.(*ast.Ident); ok && scope.kind(id.Name) == kindInterface {
@@ -2269,6 +2326,18 @@ func effectiveInit(info classInfo, scope *scope) (bool, arityRange) {
 	return false, arityRange{}
 }
 
+func effectiveInitParams(info classInfo, scope *scope) []string {
+	if info.hasInit {
+		return info.initParams
+	}
+	if info.parent != "" {
+		if parent, ok := scope.classes[info.parent]; ok {
+			return effectiveInitParams(parent, scope)
+		}
+	}
+	return nil
+}
+
 func requiredParamCount(fn *ast.FuncLit) int {
 	required := len(fn.Params)
 	for i, def := range fn.Defaults {
@@ -2288,6 +2357,42 @@ func (r arityRange) describe() string {
 		return fmt.Sprintf("%d arguments", r.max)
 	}
 	return fmt.Sprintf("%d to %d arguments", r.required, r.max)
+}
+
+func checkCallKeywords(call *ast.CallExpr, params []string) error {
+	if call.PositionalArgsOnly() {
+		return nil
+	}
+	if len(params) == 0 {
+		return nil
+	}
+	indexes := map[string]int{}
+	for i, param := range params {
+		indexes[param] = i
+	}
+	filled := map[int]string{}
+	pos := 0
+	for _, arg := range call.EffectiveArgs() {
+		if arg.Expand {
+			continue
+		}
+		if arg.Name == "" {
+			if pos < len(params) {
+				filled[pos] = params[pos]
+			}
+			pos++
+			continue
+		}
+		index, ok := indexes[arg.Name]
+		if !ok {
+			return fmt.Errorf("%d:%d: unknown keyword %s", arg.NameTok.Line, arg.NameTok.Col, arg.Name)
+		}
+		if filled[index] != "" {
+			return fmt.Errorf("%d:%d: argument %s supplied multiple times", arg.NameTok.Line, arg.NameTok.Col, arg.Name)
+		}
+		filled[index] = arg.Name
+	}
+	return nil
 }
 
 // bareClassName strips the leading "module." prefix from a class
@@ -3033,6 +3138,34 @@ func effectiveMethodArity(className string, method string, scope *scope) (int, b
 		className = info.parent
 	}
 	return 0, false
+}
+
+func effectiveMethodParams(className string, method string, scope *scope) ([]string, bool) {
+	for className != "" {
+		info, ok := scope.classes[className]
+		if !ok {
+			return nil, false
+		}
+		if params, ok := info.methodParams[method]; ok {
+			return params, true
+		}
+		className = info.parent
+	}
+	return nil, false
+}
+
+func effectiveClassMethodParams(className string, method string, scope *scope) ([]string, bool) {
+	for className != "" {
+		info, ok := scope.classes[className]
+		if !ok {
+			return nil, false
+		}
+		if params, ok := info.classMethodParams[method]; ok {
+			return params, true
+		}
+		className = info.parent
+	}
+	return nil, false
 }
 
 func effectiveAbstractRequirements(className string, scope *scope) (map[string]int, map[string]int) {

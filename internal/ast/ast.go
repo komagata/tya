@@ -416,11 +416,39 @@ func (*IndexExpr) expr() {}
 type CallExpr struct {
 	Callee        Expr
 	Args          []Expr
+	CallArgs      []CallArg
 	ImplicitSelf  bool
 	ImplicitClass bool
 }
 
 func (*CallExpr) expr() {}
+
+type CallArg struct {
+	Name    string
+	NameTok token.Token
+	Value   Expr
+	Expand  bool
+}
+
+func (c *CallExpr) EffectiveArgs() []CallArg {
+	if len(c.CallArgs) > 0 {
+		return c.CallArgs
+	}
+	args := make([]CallArg, 0, len(c.Args))
+	for _, arg := range c.Args {
+		args = append(args, CallArg{Value: arg})
+	}
+	return args
+}
+
+func (c *CallExpr) PositionalArgsOnly() bool {
+	for _, arg := range c.CallArgs {
+		if arg.Name != "" || arg.Expand {
+			return false
+		}
+	}
+	return true
+}
 
 // v0.42 Tya Concurrency
 

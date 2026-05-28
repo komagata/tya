@@ -75,13 +75,17 @@ TyaValue tya_array(const TyaValue *items, int count);
 TyaValue tya_dict(const TyaDictEntry *entries, int count);
 TyaValue tya_object(void);
 TyaValue tya_function_raw(TyaFunctionPtr fn);
+TyaValue tya_function_params_raw(TyaFunctionPtr fn, const char **params, int param_count);
 TyaValue tya_class_raw(TyaFunctionPtr fn, const char *name, TyaValue parent);
 TyaValue tya_primitive_class(const char *name);
 TyaValue tya_class_of(TyaValue value);
 TyaValue tya_bind_method_raw(TyaValue receiver, TyaFunctionPtr fn);
+TyaValue tya_bind_method_params_raw(TyaValue receiver, TyaFunctionPtr fn, const char **params, int param_count);
 #define tya_function(fn) tya_function_raw((TyaFunctionPtr)(fn))
+#define tya_function_params(fn, params, param_count) tya_function_params_raw((TyaFunctionPtr)(fn), params, param_count)
 #define tya_class(fn, name, parent) tya_class_raw((TyaFunctionPtr)(fn), name, parent)
 #define tya_bind_method(receiver, fn) tya_bind_method_raw(receiver, (TyaFunctionPtr)(fn))
+#define tya_bind_method_params(receiver, fn, params, param_count) tya_bind_method_params_raw(receiver, (TyaFunctionPtr)(fn), params, param_count)
 TyaValue tya_error(TyaValue message);
 TyaValue tya_error2(TyaValue message, TyaValue options);
 TyaValue tya_call0(TyaValue fn);
@@ -91,6 +95,8 @@ TyaValue tya_call3(TyaValue fn, TyaValue first, TyaValue second, TyaValue third)
 TyaValue tya_call4(TyaValue fn, TyaValue first, TyaValue second, TyaValue third, TyaValue fourth);
 TyaValue tya_call5(TyaValue fn, TyaValue first, TyaValue second, TyaValue third, TyaValue fourth, TyaValue fifth);
 TyaValue tya_call6(TyaValue fn, TyaValue first, TyaValue second, TyaValue third, TyaValue fourth, TyaValue fifth, TyaValue sixth);
+TyaValue tya_call_keywords(TyaValue fn, const TyaValue *positional, int positional_count, TyaValue keywords);
+void tya_keywords_merge(TyaValue target, TyaValue source);
 TyaValue tya_len(TyaValue value);
 TyaValue tya_index(TyaValue value, TyaValue index);
 TyaValue tya_destructure_array(TyaValue value, int expected, int index);

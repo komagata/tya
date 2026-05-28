@@ -1,0 +1,89 @@
+# Keyword arguments bind by existing parameter names.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_LIB_DIR=$REPO/lib
+cd $WORK
+
+exec $WORK/tya run keyword_arguments.tya
+stdout 'keyword ok'
+
+exec $WORK/tya build keyword_arguments.tya -o keyword_arguments
+exec ./keyword_arguments
+stdout 'keyword ok'
+
+! exec $WORK/tya check positional_after_keyword.tya
+stderr 'positional argument after keyword argument'
+
+! exec $WORK/tya run duplicate_keyword.tya
+stderr 'argument a supplied multiple times'
+
+! exec $WORK/tya run unknown_keyword.tya
+stderr 'unknown keyword c'
+
+! exec $WORK/tya run non_dict_expand.tya
+stderr 'keyword expansion expects dictionary'
+
+-- keyword_arguments.tya --
+assert_equal = expected, actual ->
+  if expected != actual
+    panic("expected {expected}, got {actual}")
+
+f = a, b = 2, c = 3 ->
+  [a, b, c]
+
+assert_equal([1, 2, 3], f(a: 1))
+assert_equal([1, 2, 9], f(1, c: 9))
+assert_equal([1, 2, 3], f(c: 3, a: 1))
+
+options = { b: 7 }
+assert_equal([1, 7, 3], f(1, **options))
+
+class Base
+  name: ""
+  count: 0
+
+  initialize: name, count = 1 ->
+    self.name = name
+    self.count = count
+
+  values: ->
+    [self.name, self.count]
+
+  pair: left, right ->
+    [left, right]
+
+class Child extends Base
+  label: ""
+
+  initialize: name, count = 1, label = "child" ->
+    super(count: count, name: name)
+    self.label = label
+
+  values: ->
+    [self.name, self.count, self.label]
+
+assert_equal(["base", 2], Base(name: "base", count: 2).values())
+base = Base(name: "base", count: 2)
+assert_equal(["L", "R"], base.pair(right: "R", left: "L"))
+pair_options = { right: "RR" }
+assert_equal(["LL", "RR"], base.pair(left: "LL", **pair_options))
+assert_equal(["child", 3, "ok"], Child(label: "ok", name: "child", count: 3).values())
+
+println("keyword ok")
+
+-- positional_after_keyword.tya --
+f = a, b -> [a, b]
+f(a: 1, 2)
+
+-- duplicate_keyword.tya --
+f = a, b -> [a, b]
+f(1, a: 2)
+
+-- unknown_keyword.tya --
+f = a, b -> [a, b]
+f(c: 1)
+
+-- non_dict_expand.tya --
+f = a -> a
+f(**1)

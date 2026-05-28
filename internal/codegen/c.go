@@ -141,7 +141,7 @@ type CoverageRegistry struct {
 // Returns (csource, registry, diags, err). diags is nil on success,
 // or the same payload as err.(*CodegenError).Diags on failure.
 func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOptions) (string, *CoverageRegistry, []diag.Diagnostic, error) {
-	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, classes: map[string]string{}, classMethods: map[string]string{}, classDecls: map[string]*ast.ClassDecl{}, interfaceDecls: map[string]*ast.InterfaceDecl{}, moduleClasses: map[string]string{}, sourcePath: sourcePath}
+	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, funcParams: map[string][]string{}, classes: map[string]string{}, classParams: map[string][]string{}, classMethods: map[string]string{}, methodParams: map[string][]string{}, classDecls: map[string]*ast.ClassDecl{}, interfaceDecls: map[string]*ast.InterfaceDecl{}, moduleClasses: map[string]string{}, sourcePath: sourcePath}
 	if opt != nil {
 		g.coverEnabled = true
 		g.coverOpt = opt
@@ -245,8 +245,11 @@ type cgen struct {
 	indent         int
 	vars           map[string]bool
 	funcs          map[string]string
+	funcParams     map[string][]string
 	classes        map[string]string
+	classParams    map[string][]string
 	classMethods   map[string]string
+	methodParams   map[string][]string
 	classDecls     map[string]*ast.ClassDecl
 	interfaceDecls map[string]*ast.InterfaceDecl
 	// moduleClasses maps a module-class key ("module_ClassName") to
@@ -444,7 +447,8 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 			}
 			if len(captures) == 0 {
 				g.funcs[id.Name] = sym
-				g.line(fmt.Sprintf("%s = tya_function(%s);", cName(id.Name), sym))
+				g.funcParams[id.Name] = append([]string(nil), fn.Params...)
+				g.line(fmt.Sprintf("%s = tya_function_params(%s, %s);", cName(id.Name), sym, cParamArray(fn.Params)))
 				return nil
 			}
 			env := fmt.Sprintf("__env%d", g.temp)
@@ -453,7 +457,7 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 			for _, name := range sortedMapKeys(captures) {
 				g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", env, strconv.Quote(name), g.captureValue(name)))
 			}
-			g.line(fmt.Sprintf("%s = tya_bind_method(%s, %s);", cName(id.Name), env, sym))
+			g.line(fmt.Sprintf("%s = tya_bind_method_params(%s, %s, %s);", cName(id.Name), env, sym, cParamArray(fn.Params)))
 			return nil
 		}
 		ex, typ, err := g.expr(n.Values[0])
@@ -1147,8 +1151,11 @@ func (g *cgen) emitFuncWithCaptures(name string, fn *ast.FuncLit, classRef strin
 	child := &cgen{
 		vars:              map[string]bool{},
 		funcs:             g.funcs,
+		funcParams:        g.funcParams,
 		classes:           g.classes,
+		classParams:       g.classParams,
 		classMethods:      g.classMethods,
+		methodParams:      g.methodParams,
 		classDecls:        g.classDecls,
 		interfaceDecls:    g.interfaceDecls,
 		moduleClasses:     g.moduleClasses,
@@ -1256,6 +1263,17 @@ doneBody:
 	out.WriteString("}\n\n")
 	g.funcOut.WriteString(out.String())
 	return sym, nil
+}
+
+func cParamArray(params []string) string {
+	if len(params) == 0 {
+		return "(const char**)0, 0"
+	}
+	values := make([]string, 0, len(params))
+	for _, param := range params {
+		values = append(values, strconv.Quote(param))
+	}
+	return fmt.Sprintf("((const char*[]){%s}), %d", strings.Join(values, ", "), len(params))
 }
 
 func (g *cgen) returnLine(value string) {
@@ -1555,7 +1573,7 @@ func (g *cgen) assignModuleDecl(module *ast.ModuleDecl) error {
 		if err != nil {
 			return err
 		}
-		g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_function(%s));", target, strconv.Quote(member.Name), sym))
+		g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_function_params(%s, %s));", target, strconv.Quote(member.Name), sym, cParamArray(fn.Params)))
 	}
 	// Pre-register every module class so the within-package fallback
 	// in expr (Ident) and CallExpr can resolve unqualified references
@@ -1633,11 +1651,14 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 		methodSyms[methodSymbolKey(*method)] = sym
 		if method.Class {
 			g.classMethods[name+".class."+method.Name] = sym
+			g.methodParams[name+".class."+method.Name] = append([]string(nil), method.Func.Params...)
 		} else {
 			g.classMethods[name+"."+method.Name] = sym
+			g.methodParams[name+"."+method.Name] = append([]string(nil), method.Func.Params...)
 		}
 		if (method.Name == "init" || method.Name == "_init" || method.Name == "initialize") && !method.Class {
 			initMethod = method
+			g.classParams[name] = append([]string(nil), method.Func.Params...)
 		}
 	}
 	prevClass, prevClassRef := g.className, g.classRef
@@ -1681,7 +1702,7 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 		if method.Abstract || method.Class || method.Name == "init" || method.Name == "_init" || method.Name == "initialize" {
 			continue
 		}
-		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), methodSyms[methodSymbolKey(method)]))
+		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method_params(__obj, %s, %s));\n", strconv.Quote(method.Name), methodSyms[methodSymbolKey(method)], cParamArray(method.Func.Params)))
 	}
 	if initMethod != nil {
 		out.WriteString(fmt.Sprintf("  (void)%s(__obj, __arg0, __arg1, __arg2, __arg3, __arg4, __arg5);\n", methodSyms[methodSymbolKey(*initMethod)]))
@@ -1710,7 +1731,7 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 		if method.Abstract || method.Class || method.Name == "init" || method.Name == "_init" || method.Name == "initialize" {
 			continue
 		}
-		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), methodSyms[methodSymbolKey(method)]))
+		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method_params(__obj, %s, %s));\n", strconv.Quote(method.Name), methodSyms[methodSymbolKey(method)], cParamArray(method.Func.Params)))
 	}
 	out.WriteString("  return __obj;\n")
 	out.WriteString("}\n\n")
@@ -1803,7 +1824,7 @@ func (g *cgen) emitClassMembers(target string, name string, class *ast.ClassDecl
 			continue
 		}
 		sym := g.classMethods[name+".class."+method.Name]
-		g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_bind_method(%s, %s));", target, strconv.Quote(method.Name), target, sym))
+		g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_bind_method_params(%s, %s, %s));", target, strconv.Quote(method.Name), target, sym, cParamArray(method.Func.Params)))
 	}
 	return nil
 }
@@ -1882,7 +1903,7 @@ func (g *cgen) emitParentMethods(out *strings.Builder, parentKey string, class *
 		}
 		sym := g.classMethods[g.cClassName(parentKey)+"."+method.Name]
 		if sym != "" {
-			out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), sym))
+			out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method_params(__obj, %s, %s));\n", strconv.Quote(method.Name), sym, cParamArray(method.Func.Params)))
 		}
 	}
 }
@@ -2014,7 +2035,7 @@ func (g *cgen) emitInterfaceMethods(out *strings.Builder, className string, clas
 			if err != nil {
 				return err
 			}
-			out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), sym))
+			out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method_params(__obj, %s, %s));\n", strconv.Quote(method.Name), sym, cParamArray(method.Func.Params)))
 		}
 	}
 	return nil
@@ -2621,7 +2642,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			return "", "", err
 		}
 		if len(captures) == 0 {
-			return fmt.Sprintf("tya_function(%s)", sym), "TyaValue", nil
+			return fmt.Sprintf("tya_function_params(%s, %s)", sym, cParamArray(n.Params)), "TyaValue", nil
 		}
 		env := fmt.Sprintf("__env%d", g.temp)
 		g.temp++
@@ -2629,7 +2650,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		for _, name := range sortedMapKeys(captures) {
 			lines = append(lines, fmt.Sprintf("tya_set_member(%s, %s, %s);", env, strconv.Quote(name), g.captureValue(name)))
 		}
-		lines = append(lines, fmt.Sprintf("tya_bind_method(%s, %s)", env, sym))
+		lines = append(lines, fmt.Sprintf("tya_bind_method_params(%s, %s, %s)", env, sym, cParamArray(n.Params)))
 		return fmt.Sprintf("({ %s; })", strings.Join(lines, " ")), "TyaValue", nil
 	case *ast.Ident:
 		if g.closureVars != nil && g.closureVars[n.Name] {
@@ -2778,13 +2799,17 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			if sym == "" {
 				return "tya_nil()", "TyaValue", nil
 			}
-			args := make([]string, 0, len(n.Args))
-			for _, arg := range n.Args {
-				ex, _, err := g.expr(arg)
-				if err != nil {
-					return "", "", err
-				}
-				args = append(args, ex)
+			params := []string(nil)
+			if g.inClassMethod {
+				params = g.methodParams[g.superClass+".class."+g.methodName]
+			} else if g.methodName == "init" || g.methodName == "_init" || g.methodName == "initialize" {
+				params = g.classParams[g.superClass]
+			} else {
+				params = g.methodParams[g.superClass+"."+g.methodName]
+			}
+			args, err := g.callArgExprs(n, params)
+			if err != nil {
+				return "", "", err
 			}
 			for len(args) < 6 {
 				args = append(args, "tya_missing()")
@@ -2842,13 +2867,9 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				}
 			}
 			if found {
-				args := make([]string, 0, len(n.Args))
-				for _, arg := range n.Args {
-					ex, _, err := g.expr(arg)
-					if err != nil {
-						return "", "", err
-					}
-					args = append(args, ex)
+				args, err := g.callArgExprs(n, g.classParams[classKey])
+				if err != nil {
+					return "", "", err
 				}
 				for len(args) < 6 {
 					args = append(args, "tya_missing()")
@@ -3256,13 +3277,9 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		}
 		if ok {
 			if sym, found := g.funcs[id.Name]; found {
-				args := make([]string, 0, len(n.Args))
-				for _, arg := range n.Args {
-					ex, _, err := g.expr(arg)
-					if err != nil {
-						return "", "", err
-					}
-					args = append(args, ex)
+				args, err := g.callArgExprs(n, g.funcParams[id.Name])
+				if err != nil {
+					return "", "", err
 				}
 				for len(args) < 6 {
 					args = append(args, "tya_missing()")
@@ -3300,6 +3317,13 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			if err != nil {
 				return "", "", err
 			}
+			if !n.PositionalArgsOnly() {
+				positional, keywords, err := g.dynamicKeywordArgs(n)
+				if err != nil {
+					return "", "", err
+				}
+				return fmt.Sprintf("tya_call_keywords(tya_member(%s, %s), (TyaValue[]){%s}, %d, %s)", receiver, strconv.Quote(member.Name), strings.Join(positional, ", "), len(positional), keywords), "TyaValue", nil
+			}
 			args := make([]string, 0, len(n.Args))
 			for _, arg := range n.Args {
 				ex, _, err := g.expr(arg)
@@ -3328,6 +3352,13 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		callee, _, err := g.expr(n.Callee)
 		if err != nil {
 			return "", "", err
+		}
+		if !n.PositionalArgsOnly() {
+			positional, keywords, err := g.dynamicKeywordArgs(n)
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_call_keywords(%s, (TyaValue[]){%s}, %d, %s)", callee, strings.Join(positional, ", "), len(positional), keywords), "TyaValue", nil
 		}
 		args := make([]string, 0, len(n.Args))
 		for _, arg := range n.Args {
@@ -3484,6 +3515,113 @@ func (g *cgen) emitDynamicCall(callee string, args []string) string {
 	default:
 		return fmt.Sprintf("tya_call6(%s, %s, %s, %s, %s, %s, %s)", callee, args[0], args[1], args[2], args[3], args[4], args[5])
 	}
+}
+
+func (g *cgen) callArgExprs(call *ast.CallExpr, params []string) ([]string, error) {
+	if call.PositionalArgsOnly() || len(params) == 0 {
+		args := make([]string, 0, len(call.Args))
+		for _, arg := range call.Args {
+			ex, _, err := g.expr(arg)
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, ex)
+		}
+		return args, nil
+	}
+	paramIndex := map[string]int{}
+	for i, name := range params {
+		paramIndex[name] = i
+	}
+	values := make([]string, len(params))
+	filled := make([]bool, len(params))
+	pos := 0
+	expansions := []string{}
+	for _, arg := range call.EffectiveArgs() {
+		if arg.Expand {
+			ex, _, err := g.expr(arg.Value)
+			if err != nil {
+				return nil, err
+			}
+			tmp := fmt.Sprintf("__kw%d", g.temp)
+			g.temp++
+			ex = fmt.Sprintf("({ TyaValue %s = %s; if (%s.kind != TYA_DICT) { tya_panic(tya_string(\"keyword expansion expects dictionary\")); } %s; })", tmp, ex, tmp, tmp)
+			expansions = append(expansions, ex)
+			continue
+		}
+		ex, _, err := g.expr(arg.Value)
+		if err != nil {
+			return nil, err
+		}
+		if arg.Name == "" {
+			if pos >= len(params) {
+				return nil, fmt.Errorf("too many positional arguments")
+			}
+			values[pos] = ex
+			filled[pos] = true
+			pos++
+			continue
+		}
+		index, ok := paramIndex[arg.Name]
+		if !ok {
+			return nil, fmt.Errorf("unknown keyword %s", arg.Name)
+		}
+		if filled[index] {
+			return nil, fmt.Errorf("argument %s supplied multiple times", arg.Name)
+		}
+		values[index] = ex
+		filled[index] = true
+	}
+	last := -1
+	for i := range params {
+		if filled[i] || len(expansions) > 0 {
+			last = i
+		}
+	}
+	if last < 0 {
+		return nil, nil
+	}
+	out := make([]string, last+1)
+	for i := 0; i <= last; i++ {
+		if filled[i] {
+			out[i] = values[i]
+			continue
+		}
+		ex := "tya_missing()"
+		for j := len(expansions) - 1; j >= 0; j-- {
+			ex = fmt.Sprintf("tya_dict_get(%s, tya_string(%s), %s, true)", expansions[j], strconv.Quote(params[i]), ex)
+		}
+		out[i] = ex
+	}
+	return out, nil
+}
+
+func (g *cgen) dynamicKeywordArgs(call *ast.CallExpr) ([]string, string, error) {
+	positional := []string{}
+	lines := []string{}
+	kw := fmt.Sprintf("__kw%d", g.temp)
+	g.temp++
+	lines = append(lines, fmt.Sprintf("TyaValue %s = tya_dict(0, 0);", kw))
+	for _, arg := range call.EffectiveArgs() {
+		ex, _, err := g.expr(arg.Value)
+		if err != nil {
+			return nil, "", err
+		}
+		if arg.Expand {
+			tmp := fmt.Sprintf("__kw_exp%d", g.temp)
+			g.temp++
+			lines = append(lines, fmt.Sprintf("TyaValue %s = %s;", tmp, ex))
+			lines = append(lines, fmt.Sprintf("tya_keywords_merge(%s, %s);", kw, tmp))
+			continue
+		}
+		if arg.Name == "" {
+			positional = append(positional, ex)
+			continue
+		}
+		lines = append(lines, fmt.Sprintf("tya_set_index(%s, tya_string(%s), %s);", kw, strconv.Quote(arg.Name), ex))
+	}
+	lines = append(lines, kw)
+	return positional, "({ " + strings.Join(lines, " ") + "; })", nil
 }
 
 func (g *cgen) selectStmt(n *ast.SelectStmt) error {

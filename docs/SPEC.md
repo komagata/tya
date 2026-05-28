@@ -342,8 +342,6 @@ are not part of v1.0.0 and must fail before code generation:
 
 - slice syntax such as `items[1:3]`, `items[:3]`, `items[1:]`, and stepped
   slices; use explicit `.slice(...)` methods;
-- named or keyword arguments such as `request(url, timeout: 10)`; pass
-  dictionary options such as `request(url, { timeout: 10 })`;
 - variadic parameter syntax and splat calls such as `fn = *args -> args` and
   `fn(*items)`; pass arrays explicitly;
 - destructuring assignment with array or dictionary patterns such as
@@ -460,6 +458,29 @@ Calls always use parentheses.
 ```tya
 print(greet("Tya"))
 ```
+
+Calls may pass arguments by parameter name. Keyword names bind to the existing
+parameter names; there is no separate keyword-parameter declaration syntax.
+Positional arguments may appear before keyword arguments, but not after them.
+
+```tya
+request = url, timeout = 30, method = "GET" ->
+  [url, timeout, method]
+
+request("https://example.test", timeout: 10)
+request(method: "POST", url: "https://example.test")
+```
+
+Required parameters may be supplied by keyword. Unknown keywords, duplicate
+keywords, and parameters supplied both positionally and by keyword are invalid.
+Dictionary expansion with `**expr` expands string keys into keyword arguments.
+
+```tya
+options = { timeout: 10, method: "GET" }
+request("https://example.test", **options)
+```
+
+Array splat calls such as `fn(*items)` remain invalid; pass arrays explicitly.
 
 The final evaluated statement or expression in a function body is returned
 implicitly when no explicit `return` exits first. Use `return` for early return

@@ -976,7 +976,7 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 
 type callChainStep struct {
 	name string
-	args []ast.Expr
+	args []ast.CallArg
 }
 
 func (u *unparser) isWrappedCallChain(call *ast.CallExpr) bool {
@@ -996,7 +996,7 @@ func (u *unparser) callChain(call *ast.CallExpr) (ast.Expr, []callChainStep, boo
 		if !ok {
 			break
 		}
-		reversed = append(reversed, callChainStep{name: member.Name, args: c.Args})
+		reversed = append(reversed, callChainStep{name: member.Name, args: c.EffectiveArgs()})
 		current = member.Target
 	}
 	if len(reversed) == 0 {
@@ -1023,7 +1023,7 @@ func (u *unparser) emitWrappedCallChain(stmt ast.Stmt, prefix string, call *ast.
 	for _, step := range steps {
 		args := make([]string, 0, len(step.args))
 		for _, arg := range step.args {
-			text, err := u.expr(arg)
+			text, err := u.callArg(arg)
 			if err != nil {
 				u.indent--
 				return err
@@ -1055,13 +1055,14 @@ func (u *unparser) emitWrappedCall(stmt ast.Stmt, prefix string, call *ast.CallE
 	}
 	u.line(prefix + callee + "(")
 	u.indent++
-	for i, a := range call.Args {
-		s, err := u.expr(a)
+	args := call.EffectiveArgs()
+	for i, a := range args {
+		s, err := u.callArg(a)
 		if err != nil {
 			u.indent--
 			return err
 		}
-		if i < len(call.Args)-1 {
+		if i < len(args)-1 {
 			s += ","
 		}
 		u.line(s)
@@ -1074,6 +1075,20 @@ func (u *unparser) emitWrappedCall(stmt ast.Stmt, prefix string, call *ast.CallE
 		u.line(closing)
 	}
 	return nil
+}
+
+func (u *unparser) callArg(arg ast.CallArg) (string, error) {
+	value, err := u.expr(arg.Value)
+	if err != nil {
+		return "", err
+	}
+	if arg.Expand {
+		return "**" + value, nil
+	}
+	if arg.Name != "" {
+		return arg.Name + ": " + value, nil
+	}
+	return value, nil
 }
 
 // emitWrappedBinary emits a left-associative binary chain in the
@@ -1685,9 +1700,9 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 		return op + inner, nil
 	case *ast.CallExpr:
 		if name, ok := u.bareSameClassCallName(n.Callee); ok {
-			args := make([]string, 0, len(n.Args))
-			for _, a := range n.Args {
-				s, err := u.expr(a)
+			args := make([]string, 0, len(n.EffectiveArgs()))
+			for _, a := range n.EffectiveArgs() {
+				s, err := u.callArg(a)
 				if err != nil {
 					return "", err
 				}
@@ -1699,9 +1714,9 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		args := make([]string, 0, len(n.Args))
-		for _, a := range n.Args {
-			s, err := u.expr(a)
+		args := make([]string, 0, len(n.EffectiveArgs()))
+		for _, a := range n.EffectiveArgs() {
+			s, err := u.callArg(a)
 			if err != nil {
 				return "", err
 			}

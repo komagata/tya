@@ -1806,31 +1806,68 @@ func evalCall(c *ast.CallExpr, env *Env) (Value, error) {
 	if id, ok := c.Callee.(*ast.Ident); ok && (c.ImplicitSelf || c.ImplicitClass) {
 		target := ast.Expr(&ast.SelfExpr{Tok: id.Tok, Class: c.ImplicitClass})
 		return evalCall(&ast.CallExpr{
-			Callee: &ast.MemberExpr{Target: target, Name: id.Name, NameTok: id.Tok},
-			Args:   c.Args,
+			Callee:   &ast.MemberExpr{Target: target, Name: id.Name, NameTok: id.Tok},
+			Args:     c.Args,
+			CallArgs: c.CallArgs,
 		}, env)
 	}
 	fnVal, err := evalCallee(c.Callee, env)
 	if err != nil {
 		return nil, err
 	}
-	args := make([]Value, 0, len(c.Args))
-	for _, a := range c.Args {
-		v, err := evalExpr(a, env)
-		if err != nil {
-			return nil, err
-		}
-		args = append(args, v)
+	args, kwargs, err := evalCallArgs(c.EffectiveArgs(), env)
+	if err != nil {
+		return nil, err
 	}
 	switch fn := fnVal.(type) {
 	case Builtin, *Function:
-		return callValue(fn, args)
+		return callValueWithKeywords(fn, args, kwargs)
 	case Dict:
 		if isModuleNamespace(fn) {
-			return instantiateClass(fn, args)
+			return instantiateClassWithKeywords(fn, args, kwargs)
 		}
 	}
 	return nil, fmt.Errorf("value is not callable")
+}
+
+type keywordArgValue struct {
+	name  string
+	value Value
+}
+
+type missingKeywordArg struct{}
+
+func evalCallArgs(callArgs []ast.CallArg, env *Env) ([]Value, []keywordArgValue, error) {
+	args := []Value{}
+	keywords := []keywordArgValue{}
+	seenKeyword := false
+	for _, arg := range callArgs {
+		v, err := evalExpr(arg.Value, env)
+		if err != nil {
+			return nil, nil, err
+		}
+		if arg.Expand {
+			seenKeyword = true
+			dict, ok := v.(Dict)
+			if !ok {
+				return nil, nil, fmt.Errorf("keyword expansion expects dictionary")
+			}
+			for key, value := range dict {
+				keywords = append(keywords, keywordArgValue{name: key, value: value})
+			}
+			continue
+		}
+		if arg.Name != "" {
+			seenKeyword = true
+			keywords = append(keywords, keywordArgValue{name: arg.Name, value: v})
+			continue
+		}
+		if seenKeyword {
+			return nil, nil, fmt.Errorf("positional argument after keyword argument")
+		}
+		args = append(args, v)
+	}
+	return args, keywords, nil
 }
 
 func evalStandardModuleCall(module string, name string, args []Value, env *Env) (Value, bool, error) {
@@ -2543,10 +2580,22 @@ func sequenceItems(source Value) (*Array, error) {
 }
 
 func callValue(fn Value, args []Value) (Value, error) {
+	return callValueWithKeywords(fn, args, nil)
+}
+
+func callValueWithKeywords(fn Value, args []Value, keywords []keywordArgValue) (Value, error) {
 	switch f := fn.(type) {
 	case Builtin:
+		if len(keywords) > 0 {
+			return nil, fmt.Errorf("builtin function does not accept keyword arguments")
+		}
 		return f(args)
 	case *Function:
+		var err error
+		args, err = bindKeywordArgs(f.Params, args, keywords)
+		if err != nil {
+			return nil, err
+		}
 		required := len(f.Params)
 		for i, def := range f.Defaults {
 			if i < len(f.Params) && def != nil {
@@ -2565,7 +2614,22 @@ func callValue(fn Value, args []Value) (Value, error) {
 		for i, name := range f.Params {
 			var value Value
 			if i < len(args) {
-				value = args[i]
+				if _, missing := args[i].(missingKeywordArg); missing {
+					if i < len(f.Defaults) && f.Defaults[i] != nil {
+						v, err := evalExpr(f.Defaults[i], callEnv)
+						if err != nil {
+							return nil, err
+						}
+						value = v
+					} else {
+						if required == len(f.Params) {
+							return nil, fmt.Errorf("function expects %d arguments, got %d", len(f.Params), len(args))
+						}
+						return nil, fmt.Errorf("function expects %d to %d arguments, got %d", required, len(f.Params), len(args))
+					}
+				} else {
+					value = args[i]
+				}
 			} else if i < len(f.Defaults) && f.Defaults[i] != nil {
 				v, err := evalExpr(f.Defaults[i], callEnv)
 				if err != nil {
@@ -2606,7 +2670,59 @@ func callValue(fn Value, args []Value) (Value, error) {
 	return nil, fmt.Errorf("value is not callable")
 }
 
+func bindKeywordArgs(params []string, args []Value, keywords []keywordArgValue) ([]Value, error) {
+	if len(keywords) == 0 {
+		return args, nil
+	}
+	values := make([]Value, len(params))
+	filled := make([]bool, len(params))
+	for i, arg := range args {
+		if i >= len(params) {
+			return args, nil
+		}
+		values[i] = arg
+		filled[i] = true
+	}
+	indexes := map[string]int{}
+	for i, name := range params {
+		indexes[name] = i
+	}
+	for _, keyword := range keywords {
+		index, ok := indexes[keyword.name]
+		if !ok {
+			return nil, fmt.Errorf("unknown keyword %s", keyword.name)
+		}
+		if filled[index] {
+			return nil, fmt.Errorf("argument %s supplied multiple times", keyword.name)
+		}
+		values[index] = keyword.value
+		filled[index] = true
+	}
+	last := -1
+	for i := range filled {
+		if filled[i] {
+			last = i
+		}
+	}
+	if last < 0 {
+		return nil, nil
+	}
+	out := make([]Value, last+1)
+	for i := 0; i <= last; i++ {
+		if filled[i] {
+			out[i] = values[i]
+		} else {
+			out[i] = missingKeywordArg{}
+		}
+	}
+	return out, nil
+}
+
 func instantiateClass(class Dict, args []Value) (Value, error) {
+	return instantiateClassWithKeywords(class, args, nil)
+}
+
+func instantiateClassWithKeywords(class Dict, args []Value, keywords []keywordArgValue) (Value, error) {
 	name, _ := class["__class_name"].(string)
 	obj := Dict{"__class": class, "__class_name": name}
 	methods, _ := class["__instance_methods"].(Dict)
@@ -2617,22 +2733,26 @@ func instantiateClass(class Dict, args []Value) (Value, error) {
 		}
 		return obj, nil
 	}
-	if _, err := callMethod(init, obj, args); err != nil {
+	if _, err := callMethodWithKeywords(init, obj, args, keywords); err != nil {
 		return nil, err
 	}
 	return obj, nil
 }
 
 func callMethod(method Value, receiver Value, args []Value) (Value, error) {
+	return callMethodWithKeywords(method, receiver, args, nil)
+}
+
+func callMethodWithKeywords(method Value, receiver Value, args []Value, keywords []keywordArgValue) (Value, error) {
 	fn, ok := method.(*Function)
 	if !ok {
-		return callValue(method, args)
+		return callValueWithKeywords(method, args, keywords)
 	}
 	callEnv := fn.Env.child()
 	callEnv.set("self", receiver)
 	bound := *fn
 	bound.Env = callEnv
-	return callValue(&bound, args)
+	return callValueWithKeywords(&bound, args, keywords)
 }
 
 func nameFunction(name string, value Value) Value {

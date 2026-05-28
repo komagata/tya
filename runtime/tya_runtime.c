@@ -165,9 +165,24 @@ struct TyaFunction {
   TyaValue receiver;
   TyaDict *members;
   const char *class_name;
+  const char **params;
+  int param_count;
   TyaValue parent;
   bool is_class;
 };
+
+static const char **tya_copy_params(const char **params, int param_count) {
+  if (params == NULL || param_count <= 0) return NULL;
+  const char **copy = malloc(sizeof(const char*) * param_count);
+  if (copy == NULL) {
+    fprintf(stderr, "tya: out of memory\n");
+    exit(1);
+  }
+  for (int i = 0; i < param_count; i++) {
+    copy[i] = params[i];
+  }
+  return copy;
+}
 
 static TyaValue tya_class_number;
 static TyaValue tya_class_string;
@@ -690,6 +705,10 @@ TyaValue tya_object(void) {
 }
 
 TyaValue tya_function_raw(TyaFunctionPtr fn) {
+  return tya_function_params_raw(fn, NULL, 0);
+}
+
+TyaValue tya_function_params_raw(TyaFunctionPtr fn, const char **params, int param_count) {
   TyaFunction *function = tya_gc_alloc(sizeof(TyaFunction), TYA_GC_FUNCTION);
   function->fn = fn;
   function->receiver = tya_nil();
@@ -697,6 +716,8 @@ TyaValue tya_function_raw(TyaFunctionPtr fn) {
   function->members->len = 0;
   function->members->entries = NULL;
   function->class_name = NULL;
+  function->params = tya_copy_params(params, param_count);
+  function->param_count = param_count;
   function->parent = tya_nil();
   function->is_class = false;
   return (TyaValue){.kind = TYA_FUNCTION, .function = function};
@@ -757,6 +778,10 @@ TyaValue tya_class_of(TyaValue value) {
 }
 
 TyaValue tya_bind_method_raw(TyaValue receiver, TyaFunctionPtr fn) {
+  return tya_bind_method_params_raw(receiver, fn, NULL, 0);
+}
+
+TyaValue tya_bind_method_params_raw(TyaValue receiver, TyaFunctionPtr fn, const char **params, int param_count) {
   TyaFunction *function = tya_gc_alloc(sizeof(TyaFunction), TYA_GC_FUNCTION);
   function->fn = fn;
   function->receiver = receiver;
@@ -764,6 +789,8 @@ TyaValue tya_bind_method_raw(TyaValue receiver, TyaFunctionPtr fn) {
   function->members->len = 0;
   function->members->entries = NULL;
   function->class_name = NULL;
+  function->params = tya_copy_params(params, param_count);
+  function->param_count = param_count;
   function->parent = tya_nil();
   function->is_class = false;
   return (TyaValue){.kind = TYA_FUNCTION, .function = function};
@@ -885,6 +912,48 @@ TyaValue tya_call6(TyaValue fn, TyaValue first, TyaValue second, TyaValue third,
     return tya_nil();
   }
   return fn.function->fn(fn.function->receiver, first, second, third, fourth, fifth, sixth);
+}
+
+TyaValue tya_call_keywords(TyaValue fn, const TyaValue *positional, int positional_count, TyaValue keywords) {
+  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
+    return tya_nil();
+  }
+  if (keywords.kind != TYA_DICT || keywords.dict == NULL) {
+    tya_panic(tya_string("keyword expansion expects dictionary"));
+  }
+  TyaValue args[6] = {tya_missing(), tya_missing(), tya_missing(), tya_missing(), tya_missing(), tya_missing()};
+  for (int i = 0; i < positional_count && i < 6; i++) {
+    args[i] = positional[i];
+  }
+  for (int i = 0; i < keywords.dict->len; i++) {
+    const char *key = keywords.dict->entries[i].key;
+    int found = -1;
+    for (int j = 0; j < fn.function->param_count; j++) {
+      if (key != NULL && fn.function->params[j] != NULL && strcmp(key, fn.function->params[j]) == 0) {
+        found = j;
+        break;
+      }
+    }
+    if (found < 0) {
+      fprintf(stderr, "unknown keyword %s\n", key == NULL ? "" : key);
+      exit(1);
+    }
+    if (found < positional_count || args[found].kind != TYA_MISSING) {
+      fprintf(stderr, "argument %s supplied multiple times\n", key == NULL ? "" : key);
+      exit(1);
+    }
+    args[found] = keywords.dict->entries[i].value;
+  }
+  return fn.function->fn(fn.function->receiver, args[0], args[1], args[2], args[3], args[4], args[5]);
+}
+
+void tya_keywords_merge(TyaValue target, TyaValue source) {
+  if (target.kind != TYA_DICT || target.dict == NULL || source.kind != TYA_DICT || source.dict == NULL) {
+    tya_panic(tya_string("keyword expansion expects dictionary"));
+  }
+  for (int i = 0; i < source.dict->len; i++) {
+    tya_set_index(target, tya_string(source.dict->entries[i].key), source.dict->entries[i].value);
+  }
 }
 
 TyaValue tya_len(TyaValue value) {

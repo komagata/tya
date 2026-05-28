@@ -1931,24 +1931,51 @@ func (p *Parser) call() (ast.Expr, error) {
 		}
 		if p.match(token.LPAREN) {
 			var args []ast.Expr
+			var callArgs []ast.CallArg
+			seenKeyword := false
 			if !p.at(token.RPAREN) {
 				for {
 					if p.at(token.IDENT) && p.peekN(1).Type == token.COLON {
-						return nil, p.err("named arguments are not part of Tya v1.0.0")
-					}
-					if p.at(token.STAR) {
-						return nil, p.err("splat call syntax is not part of Tya v1.0.0")
-					}
-					arg, err := p.exprNoCommaFunc()
-					if err != nil {
-						// v0.56 expression-level recovery: the
-						// diagnostic is already recorded in
-						// p.errs by p.err/newDiag — skip to the
-						// next ',' or ')' and continue with the
-						// remaining args.
-						p.skipToCommaOrClose(token.RPAREN)
+						seenKeyword = true
+						name := p.next()
+						p.next()
+						arg, err := p.exprNoCommaFunc()
+						if err != nil {
+							p.skipToCommaOrClose(token.RPAREN)
+						} else {
+							args = append(args, arg)
+							callArgs = append(callArgs, ast.CallArg{Name: name.Lexeme, NameTok: name, Value: arg})
+						}
+					} else if p.at(token.STAR) && p.peekN(1).Type == token.STAR {
+						seenKeyword = true
+						p.next()
+						p.next()
+						arg, err := p.exprNoCommaFunc()
+						if err != nil {
+							p.skipToCommaOrClose(token.RPAREN)
+						} else {
+							args = append(args, arg)
+							callArgs = append(callArgs, ast.CallArg{Value: arg, Expand: true})
+						}
 					} else {
-						args = append(args, arg)
+						if seenKeyword {
+							return nil, p.err("positional argument after keyword argument")
+						}
+						if p.at(token.STAR) {
+							return nil, p.err("splat call syntax is not part of Tya v1.0.0")
+						}
+						arg, err := p.exprNoCommaFunc()
+						if err != nil {
+							// v0.56 expression-level recovery: the
+							// diagnostic is already recorded in
+							// p.errs by p.err/newDiag — skip to the
+							// next ',' or ')' and continue with the
+							// remaining args.
+							p.skipToCommaOrClose(token.RPAREN)
+						} else {
+							args = append(args, arg)
+							callArgs = append(callArgs, ast.CallArg{Value: arg})
+						}
 					}
 					if !p.match(token.COMMA) {
 						break
@@ -1961,7 +1988,7 @@ func (p *Parser) call() (ast.Expr, error) {
 			if !p.match(token.RPAREN) {
 				return nil, p.err("expected ')'")
 			}
-			ex = &ast.CallExpr{Callee: ex, Args: args}
+			ex = &ast.CallExpr{Callee: ex, Args: args, CallArgs: callArgs}
 			continue
 		}
 		if p.match(token.LBRACKET) {

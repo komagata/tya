@@ -8,9 +8,6 @@ cd $WORK
 ! exec $WORK/tya check slice.tya
 stderr 'slice syntax is not part of Tya'
 
-! exec $WORK/tya check named_args.tya
-stderr 'named arguments are not part of Tya v1.0.0'
-
 ! exec $WORK/tya check splat.tya
 stderr 'splat call syntax is not part of Tya v1.0.0'
 
@@ -53,16 +50,9 @@ stderr 'friend syntax is not part of Tya v1.0.0'
 ! exec $WORK/tya run slice.tya
 stderr 'slice syntax is not part of Tya'
 
-! exec $WORK/tya build named_args.tya -o named_args
-stderr 'named arguments are not part of Tya v1.0.0'
-
 -- slice.tya --
 items = [1, 2, 3]
 print(items[1:3])
-
--- named_args.tya --
-request = url, options -> url
-request("https://example.test", timeout: 10)
 
 -- splat.tya --
 call = items -> items
