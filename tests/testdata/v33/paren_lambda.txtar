@@ -8,7 +8,7 @@ stdout '6'
 stdout '30'
 
 exec go run ./cmd/tya version
-stdout '0.71.1\n'
+stdout '0.71.2\n'
 
 -- lambda.tya --
 add = (a, b) -> a + b
