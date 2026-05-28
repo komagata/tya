@@ -11,9 +11,9 @@ Objective: ship syntax coloring for major editors.
 | Shared syntax fixture exists | `editors/syntax-sample.tya` |
 | VS Code syntax coloring exists | `editors/vscode/syntaxes/tya.tmLanguage.json`, registered from `editors/vscode/package.json` |
 | VS Code package builds | `npm run compile` and `npm run package` in `editors/vscode` |
-| VS Code manual-install package is published | GitHub Release `editors-vscode-v0.71.1` with `tya-0.71.1.vsix` |
-| VS Code Marketplace package publish accepted | `Publish VS Code extension` run `26539093955` logged `Published komagata.tya v0.71.1.` |
-| Open VSX package publish accepted | `Publish VS Code extension` run `26539093955` logged `Published komagata.tya v0.71.1.` |
+| VS Code manual-install package is published | GitHub Release `editors-vscode-v0.71.2` with `tya-0.71.2.vsix` |
+| VS Code Marketplace package publish accepted | `Publish VS Code extension` run `26555037353` logged `Published komagata.tya v0.71.2.` |
+| Open VSX package publish accepted | `Publish VS Code extension` run `26555037353` logged `Published komagata.tya v0.71.2.` |
 | VS Code publish workflow exists | `.github/workflows/publish-vscode-extension.yml` |
 | Vim / Neovim syntax coloring exists | `editors/vim/syntax/tya.vim` |
 | Vim / Neovim filetype and indent exist | `editors/vim/ftdetect/tya.vim`, `editors/vim/indent/tya.vim` |
@@ -41,7 +41,7 @@ scripts/verify_editor_assets.sh
 Last observed GitHub Actions verification:
 
 ```text
-Publish VS Code extension / main / 26539093955 / success / 2026-05-27T21:14:17Z
+Publish VS Code extension / main / 26555037353 / success / 2026-05-28T04:39:30Z
 ```
 
 ## Published Repository Evidence
@@ -55,19 +55,19 @@ Publish VS Code extension / main / 26539093955 / success / 2026-05-27T21:14:17Z
 - Main commit with manual editor asset bundle docs: `3aad8f2`
 - Main commit licensing the Tree-sitter grammar as MIT: `018f8a6`
 - Latest observed GitHub Actions `Publish VS Code extension` Marketplace run:
-  `26539093955`, status: success; log says `Published komagata.tya v0.71.1.`
+  `26555037353`, status: success; log says `Published komagata.tya v0.71.2.`
 - Latest observed GitHub Actions `Publish VS Code extension` Open VSX run:
-  `26539093955`, status: success; log says `Published komagata.tya v0.71.1.`
+  `26555037353`, status: success; log says `Published komagata.tya v0.71.2.`
 - VS Code manual-install release:
-  https://github.com/komagata/tya/releases/tag/editors-vscode-v0.71.1
-  (`tya-0.71.1.vsix`, sha256
-  `5ae3f2e62818a39d074e039ef10563c05f67450b0a96832b5069aa71c511536b`)
+  https://github.com/komagata/tya/releases/tag/editors-vscode-v0.71.2
+  (`tya-0.71.2.vsix`, sha256
+  `fd8df17cd974385af2d3c54ff00cafd7418a66037d1d9cea43c6b214a8b2f7bd`)
 - Manual editor asset bundle:
   https://github.com/komagata/tya/releases/tag/editors-assets-v0.61.0
   (`tya-editor-assets-v0.61.0.tar.gz`, sha256
   `87e2c78cf2d5a1fc224780d1f0db1dc2870ae008fcd85e584bd0159af49c8f8f`)
-- Visual Studio Marketplace extension: `komagata.tya` v0.71.1 publish accepted by workflow `26539093955`; public gallery query last observed `0.71.0` while Marketplace propagation was still pending.
-- Open VSX extension: `komagata.tya` v0.71.1 publish accepted by workflow `26539093955`; public metadata query last observed `0.65.1` while Open VSX propagation was still pending.
+- Visual Studio Marketplace extension: `komagata.tya` v0.71.2 publish accepted by workflow `26555037353`; public gallery query last observed `0.71.1` while Marketplace propagation was still pending.
+- Open VSX extension: `komagata.tya` v0.71.2 publish accepted by workflow `26555037353`; public metadata query last observed `0.71.1` while Open VSX propagation was still pending.
 - MELPA pull request: https://github.com/melpa/melpa/pull/10013
 - Standalone Tree-sitter grammar repository: https://github.com/komagata/tree-sitter-tya
 - Follow-up issues: `komagata/tya#1`, `komagata/tya#2`, `komagata/tya#3`
