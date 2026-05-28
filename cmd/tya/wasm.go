@@ -151,14 +151,20 @@ TyaValue tya_array(const TyaValue *items, int count);
 TyaValue tya_dict(const TyaDictEntry *entries, int count);
 TyaValue tya_object(void);
 TyaValue tya_function_raw(TyaFunctionPtr fn);
+TyaValue tya_function_params_raw(TyaFunctionPtr fn, const char **params, int param_count);
 TyaValue tya_class_raw(TyaFunctionPtr fn, const char *name, TyaValue parent);
 TyaValue tya_bind_method_raw(TyaValue receiver, TyaFunctionPtr fn);
+TyaValue tya_bind_method_params_raw(TyaValue receiver, TyaFunctionPtr fn, const char **params, int param_count);
 #define tya_function(fn) tya_function_raw((TyaFunctionPtr)(fn))
+#define tya_function_params(fn, params, param_count) tya_function_params_raw((TyaFunctionPtr)(fn), params, param_count)
 #define tya_class(fn, name, parent) tya_class_raw((TyaFunctionPtr)(fn), name, parent)
 #define tya_bind_method(receiver, fn) tya_bind_method_raw(receiver, (TyaFunctionPtr)(fn))
+#define tya_bind_method_params(receiver, fn, params, param_count) tya_bind_method_params_raw(receiver, (TyaFunctionPtr)(fn), params, param_count)
 TyaValue tya_call0(TyaValue fn);
 TyaValue tya_call1(TyaValue fn, TyaValue arg);
 TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second);
+TyaValue tya_call_keywords(TyaValue fn, const TyaValue *positional, int positional_count, TyaValue keywords);
+void tya_keywords_merge(TyaValue target, TyaValue source);
 TyaValue tya_index(TyaValue value, TyaValue index);
 void tya_set_index(TyaValue value, TyaValue index, TyaValue item);
 TyaValue tya_member(TyaValue value, const char *key);
@@ -273,6 +279,10 @@ TyaValue tya_function_raw(TyaFunctionPtr fn) {
   f->fn = fn; f->receiver = tya_nil(); f->bound = false; f->members = tya_dict(NULL, 0).dict;
   return (TyaValue){.kind = TYA_FUNCTION, .function = f};
 }
+TyaValue tya_function_params_raw(TyaFunctionPtr fn, const char **params, int param_count) {
+  (void)params; (void)param_count;
+  return tya_function_raw(fn);
+}
 TyaValue tya_class_raw(TyaFunctionPtr fn, const char *name, TyaValue parent) {
   (void)name; (void)parent;
   return tya_function_raw(fn);
@@ -281,6 +291,10 @@ TyaValue tya_bind_method_raw(TyaValue receiver, TyaFunctionPtr fn) {
   TyaFunction *f = tya_alloc(sizeof(TyaFunction));
   f->fn = fn; f->receiver = receiver; f->bound = true; f->members = tya_dict(NULL, 0).dict;
   return (TyaValue){.kind = TYA_FUNCTION, .function = f};
+}
+TyaValue tya_bind_method_params_raw(TyaValue receiver, TyaFunctionPtr fn, const char **params, int param_count) {
+  (void)params; (void)param_count;
+  return tya_bind_method_raw(receiver, fn);
 }
 TyaValue tya_call0(TyaValue fn) {
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) return tya_nil();
@@ -296,6 +310,14 @@ TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second) {
   if (fn.function->bound) return fn.function->fn(fn.function->receiver, first, second, tya_nil(), tya_nil(), tya_nil(), tya_nil());
   return fn.function->fn(tya_nil(), first, second, tya_nil(), tya_nil(), tya_nil(), tya_nil());
 }
+TyaValue tya_call_keywords(TyaValue fn, const TyaValue *positional, int positional_count, TyaValue keywords) {
+  (void)keywords;
+  if (positional_count == 0) return tya_call0(fn);
+  if (positional_count == 1) return tya_call1(fn, positional[0]);
+  if (positional_count == 2) return tya_call2(fn, positional[0], positional[1]);
+  return tya_nil();
+}
+void tya_keywords_merge(TyaValue target, TyaValue source) { (void)target; (void)source; }
 static int dict_find(TyaDict *dict, const char *key) {
   if (dict == NULL) return -1;
   for (int i = 0; i < dict->len; i++) if (tya_streq(dict->entries[i].key, key)) return i;
