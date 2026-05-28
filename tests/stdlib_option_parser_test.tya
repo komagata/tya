@@ -2,54 +2,48 @@ import option_parser
 import unittest/*
 
 class StdlibOptionParserTest extends TestCase
-  spec: ->
-    options = {}
-    options["verbose"] = { type: "bool", alias: "v" }
-    options["output"] = { type: "string", alias: "o", required: true }
-    options["count"] = { type: "int", default: 1 }
-    options["ratio"] = { type: "float" }
-    options["tag"] = { type: "array", alias: "t" }
-    options["color"] = { type: "bool", default: true }
-    out =
-      options: options
-      positionals: ["input"]
-      stop_at_double_dash: true
-    out
+  test_arguments_and_double_dash: ->
+    result = option_parser.OptionParser.parse(["src", "--", "--literal", "-x"])
+    assert_equal(["src", "--literal", "-x"], result.arguments, "arguments")
+    assert_equal([], result.options, "options")
 
-  test_allow_unknown: ->
-    spec = spec()
-    spec["allow_unknown"] = true
-    result = option_parser.OptionParser(["--other", "-o", "out"]).parse(spec)
-    assert_equal(["--other"], result["rest"], "rest")
-    assert_equal([], result["errors"], "errors")
+  test_instance_parse_bang_resets_previous_state: ->
+    parser = option_parser.OptionParser.parse(["-a", "one"])
+    parser.parse!(["--name=tya", "two"])
+    assert_equal(["--name=tya", "two"], parser.args, "args")
+    assert_equal(1, parser.options.len(), "option count")
+    assert_equal("long", parser.options[0]["kind"], "kind")
+    assert_equal("name", parser.options[0]["name"], "name")
+    assert_equal("tya", parser.options[0]["value"], "value")
+    assert_equal(["two"], parser.arguments, "arguments")
 
-  test_long_and_equals: ->
-    result = option_parser
-      .OptionParser(["--verbose", "--output=dist", "--count", "3", "src"])
-      .parse(spec())
-    assert_equal(true, result["options"]["verbose"], "verbose")
-    assert_equal("dist", result["options"]["output"], "output")
-    assert_equal(3, result["options"]["count"], "count")
-    assert_equal(["src"], result["positionals"], "positionals")
-    assert_equal([], result["errors"], "errors")
+  test_long_options: ->
+    result = option_parser.OptionParser.parse(["--verbose", "--output=dist"])
+    assert_equal(["--verbose", "--output=dist"], result.args, "args")
+    assert_equal(2, result.options.len(), "option count")
+    assert_equal("long", result.options[0]["kind"], "verbose kind")
+    assert_equal("verbose", result.options[0]["name"], "verbose name")
+    assert_equal(true, result.options[0]["value"], "verbose value")
+    assert_equal("--verbose", result.options[0]["raw"], "verbose raw")
+    assert_equal("long", result.options[1]["kind"], "output kind")
+    assert_equal("output", result.options[1]["name"], "output name")
+    assert_equal("dist", result.options[1]["value"], "output value")
+    assert_equal("--output=dist", result.options[1]["raw"], "output raw")
 
-  test_no_flag_and_double_dash: ->
-    result = option_parser
-      .OptionParser(["--no-color", "-o", "out", "--", "--literal", "x"])
-      .parse(spec())
-    assert_equal(false, result["options"]["color"], "color")
-    assert_equal(["--literal", "x"], result["rest"], "rest")
+  test_short_cluster: ->
+    result = option_parser.OptionParser.parse(["-abc"])
+    assert_equal(3, result.options.len(), "option count")
+    assert_equal("short", result.options[0]["kind"], "a kind")
+    assert_equal("a", result.options[0]["name"], "a name")
+    assert_equal(true, result.options[0]["value"], "a value")
+    assert_equal("-a", result.options[0]["raw"], "a raw")
+    assert_equal("b", result.options[1]["name"], "b name")
+    assert_equal("-b", result.options[1]["raw"], "b raw")
+    assert_equal("c", result.options[2]["name"], "c name")
+    assert_equal("-c", result.options[2]["raw"], "c raw")
 
-  test_required_and_unknown_errors: ->
-    result = option_parser.OptionParser(["--missing"]).parse(spec())
-    assert_equal(2, result["errors"].len(), "error count")
-    assert_equal("unknown_option", result["errors"][0]["kind"], "unknown")
-    assert_equal("required", result["errors"][1]["kind"], "required")
-
-  test_short_grouped_bool_and_value: ->
-    result = option_parser
-      .OptionParser(["-v", "-t", "one", "-ttwo", "-o", "out"])
-      .parse(spec())
-    assert_equal(true, result["options"]["verbose"], "verbose")
-    assert_equal("out", result["options"]["output"], "output")
-    assert_equal(["one", "two"], result["options"]["tag"], "tag")
+  test_single_dash_is_argument: ->
+    result = option_parser.OptionParser.parse(["-", "-v"])
+    assert_equal(["-"], result.arguments, "arguments")
+    assert_equal(1, result.options.len(), "option count")
+    assert_equal("v", result.options[0]["name"], "name")

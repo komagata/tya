@@ -1,101 +1,50 @@
-# OptionParser provides the option_parser standard library API.
+# OptionParser parses command-line option tokens.
 class OptionParser
-  # OptionParser.value stores command-line args to parse.
-  # @type Nil
-  value: nil
+  # OptionParser.args stores the original command-line arguments.
+  # @type Array
+  args: []
 
-  # OptionParser.initialize stores command-line args to parse.
-  # @param value Array command-line args.
-  # @return Self the initialized object.
-  initialize: value_arg ->
-    self.value = value_arg
+  # OptionParser.arguments stores non-option arguments.
+  # @type Array
+  arguments: []
 
-  # OptionParser.apply_defaults provides the option_parser standard library operation.
-  # @param state Any state value_arg.
-  # @return Any the resulting value_arg.
-  apply_defaults: state ->
-    options = OptionParser(nil).spec_options(state["spec"])
-    names = options.keys()
-    for name in names
-      opt = options[name]
-      if opt.has("default")
-        state["options"][name] = opt["default"]
+  # OptionParser.options stores parsed option tokens.
+  # @type Array
+  options: []
+
+  # OptionParser.parse returns a parsed option parser object.
+  # @param args Array command-line argument strings.
+  # @return OptionParser parsed option parser.
+  static parse: args -> OptionParser().parse!(args)
+
+  # OptionParser.parse! parses args into this object.
+  # @param args Array command-line argument strings.
+  # @return Self this parser.
+  parse!: args ->
+    self.args = args
+    self.options = []
+    self.arguments = []
+    stop_options = false
+    for arg in args
+      if stop_options
+        self.arguments.push(arg)
+      elseif arg == "--"
+        stop_options = true
+      elseif arg == "-"
+        self.arguments.push(arg)
+      elseif arg.starts_with("--")
+        parse_long!(arg)
+      elseif arg.starts_with("-")
+        parse_short!(arg)
       else
-        typ = OptionParser(nil).option_type(opt)
-        if typ == "bool"
-          state["options"][name] = false
-        elseif typ == "array"
-          state["options"][name] = []
+        self.arguments.push(arg)
+    self
 
-  # OptionParser.assign_value provides the option_parser standard library operation.
-  # @param state Any state value.
-  # @param name String name value.
-  # @param opt Any opt value.
-  # @param value String value value.
-  # @return Any the resulting value.
-  assign_value: state, name, opt, value_arg ->
-    typ = OptionParser(nil).option_type(opt)
-    if typ == "string"
-      state["options"][name] = value_arg
-    elseif typ == "int"
-      try
-        state["options"][name] = value_arg.to_i()
-      catch _
-        OptionParser(nil).error(
-          state,
-          "invalid_value",
-          name,
-          "--{name} expects int"
-        )
-    elseif typ == "float"
-      try
-        state["options"][name] = value_arg.to_f()
-      catch _
-        OptionParser(nil).error(
-          state,
-          "invalid_value",
-          name,
-          "--{name} expects float"
-        )
-    elseif typ == "array"
-      if not state["options"].has(name)
-        state["options"][name] = []
-      state["options"][name].push(value_arg)
-    else
-      OptionParser(nil).error(
-        state,
-        "invalid_type",
-        name,
-        "unsupported option type {typ}"
-      )
-
-  # OptionParser.check_required provides the option_parser standard library operation.
-  # @param state Any state value_arg.
-  # @return Any the resulting value_arg.
-  check_required: state ->
-    options = OptionParser(nil).spec_options(state["spec"])
-    names = options.keys().sort()
-    for name in names
-      opt = options[name]
-      if (
-        OptionParser(nil).spec_bool(opt, "required", false) and not state["options"].has(name)
-      )
-        OptionParser(nil).error(state, "required", name, "--{name} is required")
-
-  # OptionParser.error provides the option_parser standard library operation.
-  # @param state Any state value.
-  # @param kind Any kind value.
-  # @param name String name value.
-  # @param message String message value.
-  # @return Any the resulting value.
-  error: state, kind, name, message ->
-    state["errors"].push({ kind: kind, option: name, message: message })
-
-  # OptionParser.index_of provides the option_parser standard library operation.
-  # @param text String text value.
-  # @param needle Any needle value.
-  # @return Any the resulting value.
-  index_of: text, needle ->
+  # OptionParser.index_of returns the byte index of needle in text.
+  # @param text String text to search.
+  # @param needle String one-byte text to find.
+  # @return Number byte index or -1 when not found.
+  private index_of: text, needle ->
     i = 0
     while i < text.byte_len()
       if text[i] == needle
@@ -103,223 +52,42 @@ class OptionParser
       i = i + 1
     -1
 
-  # OptionParser.name_for_alias provides the option_parser standard library operation.
-  # @param spec Any spec value.
-  # @param alias Any alias value.
-  # @return Any the resulting value.
-  name_for_alias: spec, alias ->
-    options = OptionParser(nil).spec_options(spec)
-    names = options.keys()
-    for name in names
-      opt = options[name]
-      if OptionParser(nil).spec_string(opt, "alias", "") == alias
-        return name
-    ""
+  # OptionParser.long_option builds a long option token.
+  # @param name String long option name.
+  # @param value Any parsed option value.
+  # @param raw String original option token.
+  # @return Dict parsed option token.
+  private long_option: name, value, raw ->
+    { kind: "long", name: name, value: value, raw: raw }
 
-  # OptionParser.option_type provides the option_parser standard library operation.
-  # @param opt Any opt value.
-  # @return Any the resulting value.
-  option_type: opt -> OptionParser(nil).spec_string(opt, "type", "string")
-
-  # OptionParser.parse provides the option_parser standard library operation.
-  # @param args Array args value.
-  # @param spec Any spec value.
-  # @return Any the resulting value.
-  parse: args, spec = nil ->
-    if self.value != nil
-      spec = args
-      args = self.value
-    state =
-      args: args
-      spec: spec
-      options: {}
-      positionals: []
-      rest: []
-      errors: []
-      stop_options: false
-    OptionParser(nil).apply_defaults(state)
-    i = 0
-    while i < args.len()
-      arg = args[i]
-      if state["stop_options"]
-        state["rest"].push(arg)
-      elseif arg == "--"
-        state["stop_options"] = true
-        if OptionParser(nil).spec_bool(spec, "stop_at_double_dash", true)
-          j = i + 1
-          while j < args.len()
-            state["rest"].push(args[j])
-            j = j + 1
-          i = args.len()
-      elseif arg.starts_with("--") and arg.byte_len() > 2
-        i = OptionParser(nil).parse_long(state, i)
-      elseif arg.starts_with("-") and arg != "-"
-        i = OptionParser(nil).parse_short(state, i)
-      else
-        state["positionals"].push(arg)
-      i = i + 1
-    OptionParser(nil).check_required(state)
-    result =
-      options: state["options"]
-      positionals: state["positionals"]
-      rest: state["rest"]
-      errors: state["errors"]
-    result
-
-  # OptionParser.parse_bool_value provides the option_parser standard library operation.
-  # @param state Any state value.
-  # @param name String name value.
-  # @param value String value value.
-  # @return Any the resulting value.
-  parse_bool_value: state, name, value_arg ->
-    if value_arg == "true" or value_arg == "1" or value_arg == "yes"
-      return true
-    if value_arg == "false" or value_arg == "0" or value_arg == "no"
-      return false
-    OptionParser(nil).error(
-      state,
-      "invalid_value",
-      name,
-      "--{name} expects bool"
-    )
-    false
-
-  # OptionParser.parse_long provides the option_parser standard library operation.
-  # @param state Any state value_arg.
-  # @param i Int i value_arg.
-  # @return Any the resulting value_arg.
-  parse_long: state, i ->
-    arg = state["args"][i]
-    raw = arg.slice(2, arg.len())
-    eq = OptionParser(nil).index_of(raw, "=")
-    name = raw
-    parsed_value = nil
-    has_value = false
+  # OptionParser.parse_long! parses one long option token.
+  # @param arg String command-line token.
+  # @return Nil no meaningful value.
+  private parse_long!: arg ->
+    raw_name = arg.slice(2, arg.len())
+    eq = index_of(raw_name, "=")
     if eq >= 0
-      name = raw.slice(0, eq)
-      parsed_value = raw.slice(eq + 1, raw.len())
-      has_value = true
-    negated = false
-    if name.starts_with("no-")
-      negated = true
-      name = name.slice(3, name.len())
-    options = OptionParser(nil).spec_options(state["spec"])
-    if not options.has(name)
-      OptionParser(nil).unknown(state, arg)
-      return i
-    opt = options[name]
-    typ = OptionParser(nil).option_type(opt)
-    if typ == "bool"
-      if negated
-        state["options"][name] = false
-      elseif has_value
-        state["options"][name] = OptionParser(nil).parse_bool_value(
-          state,
-          name,
-          parsed_value
-        )
-      else
-        state["options"][name] = true
-      return i
-    if negated
-      OptionParser(nil).error(
-        state,
-        "invalid_option",
-        name,
-        "--no-{name} is only valid for bool options"
-      )
-      return i
-    if not has_value
-      if i + 1 >= state["args"].len()
-        OptionParser(nil).error(
-          state,
-          "missing_value",
-          name,
-          "--{name} requires a value"
-        )
-        return i
-      i = i + 1
-      parsed_value = state["args"][i]
-    OptionParser(nil).assign_value(state, name, opt, parsed_value)
-    i
-
-  # OptionParser.parse_short provides the option_parser standard library operation.
-  # @param state Any state value.
-  # @param i Int i value.
-  # @return Any the resulting value.
-  parse_short: state, i ->
-    arg = state["args"][i]
-    raw = arg.slice(1, arg.len())
-    j = 0
-    while j < raw.byte_len()
-      alias = raw[j]
-      name = OptionParser(nil).name_for_alias(state["spec"], alias)
-      if name == ""
-        OptionParser(nil).unknown(state, "-{alias}")
-        j = j + 1
-      else
-        opt = OptionParser(nil).spec_options(state["spec"])[name]
-        typ = OptionParser(nil).option_type(opt)
-        if typ == "bool"
-          state["options"][name] = true
-          j = j + 1
-        else
-          if j + 1 < raw.byte_len()
-            value_local = raw.slice(j + 1, raw.len())
-            OptionParser(nil).assign_value(state, name, opt, value_local)
-            return i
-          if i + 1 >= state["args"].len()
-            OptionParser(nil).error(
-              state,
-              "missing_value",
-              name,
-              "-{alias} requires a value_local"
-            )
-            return i
-          i = i + 1
-          OptionParser(nil).assign_value(state, name, opt, state["args"][i])
-          return i
-    i
-
-  # OptionParser.spec_bool provides the option_parser standard library operation.
-  # @param spec Any spec value_local.
-  # @param name String name value_local.
-  # @param fallback Any fallback value_local.
-  # @return Any the resulting value_local.
-  spec_bool: spec, name, fallback ->
-    if spec.has(name)
-      return spec[name]
-    fallback
-
-  # OptionParser.spec_options provides the option_parser standard library operation.
-  # @param spec Any spec value.
-  # @return Dict the resulting value.
-  spec_options: spec ->
-    if spec.has("options")
-      return spec["options"]
-    {}
-
-  # OptionParser.spec_string provides the option_parser standard library operation.
-  # @param spec Any spec value.
-  # @param name String name value.
-  # @param fallback Any fallback value.
-  # @return String the resulting value.
-  spec_string: spec, name, fallback ->
-    if spec.has(name)
-      return spec[name]
-    fallback
-
-  # OptionParser.unknown provides the option_parser standard library operation.
-  # @param state Any state value.
-  # @param raw Any raw value.
-  # @return Any the resulting value.
-  unknown: state, raw ->
-    if OptionParser(nil).spec_bool(state["spec"], "allow_unknown", false)
-      state["rest"].push(raw)
+      name = raw_name.slice(0, eq)
+      value = raw_name.slice(eq + 1, raw_name.len())
+      self.options.push(long_option(name, value, arg))
     else
-      OptionParser(nil).error(
-        state,
-        "unknown_option",
-        raw,
-        "unknown option {raw}"
-      )
+      self.options.push(long_option(raw_name, true, arg))
+
+  # OptionParser.parse_short! parses one short option token or cluster.
+  # @param arg String command-line token.
+  # @return Nil no meaningful value.
+  private parse_short!: arg ->
+    raw = arg.slice(1, arg.len())
+    i = 0
+    while i < raw.byte_len()
+      name = raw[i]
+      self.options.push(short_option(name, true, "-{name}"))
+      i = i + 1
+
+  # OptionParser.short_option builds a short option token.
+  # @param name String short option name.
+  # @param value Any parsed option value.
+  # @param raw String original option token.
+  # @return Dict parsed option token.
+  private short_option: name, value, raw ->
+    { kind: "short", name: name, value: value, raw: raw }
