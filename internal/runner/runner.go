@@ -222,7 +222,7 @@ func LoadUserSourceWithOrigins(path string) (string, []string, map[string]map[st
 		base := filepath.Base(path)
 		return "", nil, nil, runnerError(codeClassFileRun, fmt.Sprintf("%s is a class file; tya run accepts only script files", base), 0, 0)
 	}
-	state := &loadState{loading: map[string]bool{}, loaded: map[string]bool{}, synthModules: map[string]string{}, classOrigins: map[string]map[string]string{}}
+	state := &loadState{loading: map[string]bool{}, loaded: map[string]bool{}, synthModules: map[string]string{}, namespaces: map[string]bool{}, classOrigins: map[string]map[string]string{}}
 	src, modules, err := loadSource(path, state, false, false)
 	if err != nil {
 		return "", nil, nil, err
@@ -240,7 +240,7 @@ func LoadUserSourceWithModules(path string) (string, []string, error) {
 		base := filepath.Base(path)
 		return "", nil, runnerError(codeClassFileRun, fmt.Sprintf("%s is a class file; tya run accepts only script files", base), 0, 0)
 	}
-	state := &loadState{loading: map[string]bool{}, loaded: map[string]bool{}, synthModules: map[string]string{}, classOrigins: map[string]map[string]string{}}
+	state := &loadState{loading: map[string]bool{}, loaded: map[string]bool{}, synthModules: map[string]string{}, namespaces: map[string]bool{}, classOrigins: map[string]map[string]string{}}
 	src, modules, err := loadSource(path, state, false, false)
 	if err != nil {
 		return "", nil, err
@@ -259,6 +259,8 @@ type importSpec struct {
 	binding     string
 	packageDir  bool
 	publicNames []string
+	classFile   bool
+	namespace   []string
 }
 
 type loadState struct {
@@ -272,6 +274,9 @@ type loadState struct {
 	// load fails with a clear collision error rather than silently
 	// overwriting the first.
 	synthModules map[string]string
+	// namespaces tracks generated namespace dicts such as `net` and
+	// `net.http` so separate imports extend the same namespace.
+	namespaces map[string]bool
 	// classOrigins tracks per-package class/interface origin files.
 	// Outer key is the synthesized package module name; inner key is
 	// the class or interface name; value is the source file path
@@ -364,13 +369,6 @@ func loadSource(path string, state *loadState, module bool, packageNamespace boo
 			return "", nil, fmt.Errorf("[TYA-E0853] package %s contains no class files", filepath.Base(path))
 		}
 		pkgName := filepath.Base(path)
-		// v0.44: detect aliased same-segment package collision. If
-		// another path already synthesized a module with this name,
-		// fail clearly rather than silently overwriting the first
-		// in the merged source.
-		if prev, taken := state.synthModules[pkgName]; taken && prev != abs {
-			return "", nil, fmt.Errorf("[TYA-E0855] package name conflict: both %s and %s would synthesize module %s; use distinct directory names or rename one", prev, abs, pkgName)
-		}
 		state.synthModules[pkgName] = abs
 		synth, origins, err := synthesizePackageSource(classFiles, pkgName, packageNamespace)
 		if err != nil {
@@ -396,10 +394,11 @@ func loadSource(path string, state *loadState, module bool, packageNamespace boo
 	var out strings.Builder
 	modules := []string{}
 	visibleImports := map[string]bool{}
+	exposedImports := map[string]bool{}
+	moduleSeen := map[string]bool{}
 	for i := range imports {
 		imp := &imports[i]
 		var modPath string
-		isPackage := imp.packageDir
 		if imp.packageDir {
 			pkgDir, classFiles, perr := resolvePackageDir(path, imp.path)
 			if perr != nil {
@@ -420,18 +419,65 @@ func loadSource(path string, state *loadState, module bool, packageNamespace boo
 			if err != nil {
 				return "", nil, err
 			}
+			classFile, err := isClassFile(modPath)
+			if err != nil {
+				return "", nil, err
+			}
+			imp.classFile = classFile
+			if classFile {
+				names, err := publicClassFileNames(modPath)
+				if err != nil {
+					return "", nil, err
+				}
+				imp.publicNames = names
+			}
 		}
-		modSrc, importedModules, err := loadSource(modPath, state, true, isPackage && imp.stmt.Alias != "")
+		if (imp.packageDir || imp.classFile) && imp.stmt.Alias == "" {
+			imp.namespace = importNamespace(imp)
+		}
+		modSrc, importedModules, err := loadSource(modPath, state, true, false)
 		if err != nil {
 			return "", nil, err
 		}
+		if imp.packageDir && imp.stmt.Alias == "" {
+			modSrc, err = synthesizeNamespacedPackageSource(modSrc, imp.namespace, imp.publicNames, state)
+			if err != nil {
+				return "", nil, err
+			}
+			registerRenamedPackageOrigins(state, filepath.Base(modPath), imp.namespace)
+		}
+		if imp.classFile && imp.stmt.Alias == "" {
+			modSrc, err = synthesizeNamespacedDirectClassFileSource(modSrc, modPath, imp.namespace, imp.publicNames, state)
+			if err != nil {
+				return "", nil, err
+			}
+		}
 		modules = append(modules, importedModules...)
 		visibleNames := []string{imp.binding}
-		if imp.packageDir && imp.stmt.Alias == "" {
+		if (imp.packageDir || imp.classFile) && imp.stmt.Alias == "" {
+			visibleNames = []string{}
+			if len(imp.namespace) > 0 {
+				visibleNames = []string{imp.namespace[0]}
+			}
+		}
+		if (imp.packageDir || imp.classFile) && imp.stmt.Alias != "" {
 			visibleNames = imp.publicNames
 		}
+		if (imp.packageDir || imp.classFile) && imp.stmt.Alias == "" {
+			for _, name := range imp.publicNames {
+				key := namespaceKey(append(append([]string{}, imp.namespace...), name))
+				if exposedImports[key] {
+					return "", nil, fmt.Errorf("import name conflict: %s", key)
+				}
+				exposedImports[key] = true
+			}
+			if len(imp.namespace) > 0 && !moduleSeen[imp.namespace[0]] {
+				moduleSeen[imp.namespace[0]] = true
+				modules = append(modules, imp.namespace[0])
+			}
+		}
 		for _, name := range visibleNames {
-			if visibleImports[name] {
+			if visibleImports[name] && !((imp.packageDir || imp.classFile) && imp.stmt.Alias == "") {
 				return "", nil, fmt.Errorf("import name conflict: %s", name)
 			}
 			visibleImports[name] = true
@@ -449,7 +495,7 @@ func loadSource(path string, state *loadState, module bool, packageNamespace boo
 	if err := validateBarePackageImportNamespaces(prog, imports); err != nil {
 		return "", nil, err
 	}
-	if err := validateAliasedPackageBareNames(prog, imports); err != nil {
+	if err := validateAliasedClassImportNamespaces(prog, imports); err != nil {
 		return "", nil, err
 	}
 	if !module {
@@ -493,7 +539,6 @@ func loadSource(path string, state *loadState, module bool, packageNamespace boo
 					continue
 				}
 				var modPath string
-				isPackage := imp.packageDir
 				if imp.packageDir {
 					pkgDir, classFiles, perr := resolvePackageDir(sib, imp.path)
 					if perr != nil {
@@ -514,15 +559,62 @@ func loadSource(path string, state *loadState, module bool, packageNamespace boo
 					if err != nil {
 						return "", nil, err
 					}
+					classFile, err := isClassFile(modPath)
+					if err != nil {
+						return "", nil, err
+					}
+					imp.classFile = classFile
+					if classFile {
+						names, err := publicClassFileNames(modPath)
+						if err != nil {
+							return "", nil, err
+						}
+						imp.publicNames = names
+					}
 				}
-				modSrc, importedModules, err := loadSource(modPath, state, true, isPackage && imp.stmt.Alias != "")
+				if (imp.packageDir || imp.classFile) && imp.stmt.Alias == "" {
+					imp.namespace = importNamespace(&imp)
+				}
+				modSrc, importedModules, err := loadSource(modPath, state, true, false)
 				if err != nil {
 					return "", nil, err
 				}
+				if imp.packageDir && imp.stmt.Alias == "" {
+					modSrc, err = synthesizeNamespacedPackageSource(modSrc, imp.namespace, imp.publicNames, state)
+					if err != nil {
+						return "", nil, err
+					}
+					registerRenamedPackageOrigins(state, filepath.Base(modPath), imp.namespace)
+				}
+				if imp.classFile && imp.stmt.Alias == "" {
+					modSrc, err = synthesizeNamespacedDirectClassFileSource(modSrc, modPath, imp.namespace, imp.publicNames, state)
+					if err != nil {
+						return "", nil, err
+					}
+				}
 				modules = append(modules, importedModules...)
 				visibleNames := []string{imp.binding}
-				if imp.packageDir && imp.stmt.Alias == "" {
+				if (imp.packageDir || imp.classFile) && imp.stmt.Alias == "" {
+					visibleNames = []string{}
+					if len(imp.namespace) > 0 {
+						visibleNames = []string{imp.namespace[0]}
+					}
+				}
+				if (imp.packageDir || imp.classFile) && imp.stmt.Alias != "" {
 					visibleNames = imp.publicNames
+				}
+				if (imp.packageDir || imp.classFile) && imp.stmt.Alias == "" {
+					for _, name := range imp.publicNames {
+						key := namespaceKey(append(append([]string{}, imp.namespace...), name))
+						if exposedImports[key] {
+							return "", nil, fmt.Errorf("import name conflict: %s", key)
+						}
+						exposedImports[key] = true
+					}
+					if len(imp.namespace) > 0 && !moduleSeen[imp.namespace[0]] {
+						moduleSeen[imp.namespace[0]] = true
+						modules = append(modules, imp.namespace[0])
+					}
 				}
 				for _, name := range visibleNames {
 					visibleImports[name] = true
@@ -1053,7 +1145,7 @@ func stripTopLevelImports(src string) string {
 func stripBarePackageImports(src string, imports []importSpec) string {
 	strip := map[string]bool{}
 	for _, imp := range imports {
-		if imp.packageDir && imp.stmt.Alias == "" {
+		if imp.packageDir || imp.classFile {
 			strip[importSourceKey(imp.stmt)] = true
 		}
 	}
@@ -1092,6 +1184,115 @@ func stripBarePackageImports(src string, imports []importSpec) string {
 		out.WriteString("\n")
 	}
 	return strings.TrimRight(out.String(), "\n") + "\n"
+}
+
+func importNamespace(imp *importSpec) []string {
+	parts := strings.Split(imp.path, "/")
+	if imp.packageDir {
+		return parts
+	}
+	if len(parts) == 1 {
+		return parts
+	}
+	return parts[:len(parts)-1]
+}
+
+func namespaceKey(parts []string) string {
+	return strings.Join(parts, ".")
+}
+
+func namespaceExpr(parts []string) string {
+	if len(parts) == 0 {
+		return ""
+	}
+	var out strings.Builder
+	out.WriteString(parts[0])
+	for _, part := range parts[1:] {
+		out.WriteString("[")
+		out.WriteString(strconv.Quote(part))
+		out.WriteString("]")
+	}
+	return out.String()
+}
+
+func synthesizeNamespacePrelude(parts []string, state *loadState) string {
+	if len(parts) == 0 {
+		return ""
+	}
+	var out strings.Builder
+	for i := 1; i <= len(parts); i++ {
+		cur := parts[:i]
+		key := namespaceKey(cur)
+		if state.namespaces[key] {
+			continue
+		}
+		state.namespaces[key] = true
+		expr := namespaceExpr(cur)
+		out.WriteString(expr)
+		out.WriteString(" = {}\n")
+		out.WriteString(expr)
+		out.WriteString("[\"__module_namespace\"] = true\n")
+	}
+	return out.String()
+}
+
+func synthesizeNamespacedPackageSource(src string, namespace []string, publicNames []string, state *loadState) (string, error) {
+	if len(namespace) == 0 {
+		return src, nil
+	}
+	renames := map[string]string{}
+	suffix := "TyaPkg" + pascalIdentifier(namespaceKey(namespace))
+	for _, name := range publicNames {
+		renames[name] = name + suffix
+	}
+	var out strings.Builder
+	out.WriteString(rewritePackageClassNames(src, renames))
+	out.WriteString(synthesizeNamespacePrelude(namespace, state))
+	target := namespaceExpr(namespace)
+	for _, name := range publicNames {
+		out.WriteString(target)
+		out.WriteString("[")
+		out.WriteString(strconv.Quote(name))
+		out.WriteString("] = ")
+		out.WriteString(renames[name])
+		out.WriteString("\n")
+	}
+	return out.String(), nil
+}
+
+func registerRenamedPackageOrigins(state *loadState, pkgName string, namespace []string) {
+	if state == nil || len(namespace) == 0 {
+		return
+	}
+	origins := state.classOrigins[pkgName]
+	if len(origins) == 0 {
+		return
+	}
+	suffix := "TyaPkg" + pascalIdentifier(namespaceKey(namespace))
+	for name, origin := range origins {
+		origins[name+suffix] = origin
+	}
+}
+
+func synthesizeNamespacedClassFileSource(src string, namespace []string, publicNames []string, state *loadState) (string, error) {
+	return synthesizeNamespacedPackageSource(src, namespace, publicNames, state)
+}
+
+func synthesizeNamespacedDirectClassFileSource(loadedSrc string, path string, namespace []string, publicNames []string, state *loadState) (string, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	direct := stripTopLevelImports(string(raw))
+	if strings.HasSuffix(loadedSrc, direct) {
+		prefix := strings.TrimSuffix(loadedSrc, direct)
+		wrapped, err := synthesizeNamespacedClassFileSource(direct, namespace, publicNames, state)
+		if err != nil {
+			return "", err
+		}
+		return prefix + wrapped, nil
+	}
+	return synthesizeNamespacedClassFileSource(loadedSrc, namespace, publicNames, state)
 }
 
 func importSourceKey(imp *ast.ImportStmt) string {
@@ -1206,8 +1407,10 @@ func synthesizePackageSource(classFiles []string, pkgName string, includeNamespa
 				}
 			case *ast.InterfaceDecl:
 				packageSymbols[n.Name] = true
-				publicSymbols[n.Name] = true
-				publicInterfaces[n.Name] = true
+				if relName == checker.SnakeCaseName(n.Name)+".tya" {
+					publicSymbols[n.Name] = true
+					publicInterfaces[n.Name] = true
+				}
 			}
 		}
 		bodies = append(bodies, stripTopLevelImports(text))
@@ -1359,13 +1562,49 @@ func publicPackageNames(classFiles []string) ([]string, error) {
 				if seen[n.Name] {
 					continue
 				}
+				if filepath.Base(file) != checker.SnakeCaseName(n.Name)+".tya" {
+					continue
+				}
 				seen[n.Name] = true
 				names = append(names, n.Name)
 			case *ast.InterfaceDecl:
 				if seen[n.Name] {
 					continue
 				}
+				if filepath.Base(file) != checker.SnakeCaseName(n.Name)+".tya" {
+					continue
+				}
 				seen[n.Name] = true
+				names = append(names, n.Name)
+			}
+		}
+	}
+	sort.Strings(names)
+	return names, nil
+}
+
+func publicClassFileNames(path string) ([]string, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	prog, err := parseSource(string(raw))
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", path, err)
+	}
+	if err := checker.CheckClassFileStructure(prog, path); err != nil {
+		return nil, err
+	}
+	want := strings.TrimSuffix(filepath.Base(path), ".tya")
+	names := []string{}
+	for _, stmt := range prog.Stmts {
+		switch n := stmt.(type) {
+		case *ast.ClassDecl:
+			if checker.SnakeCaseName(n.Name) == want {
+				names = append(names, n.Name)
+			}
+		case *ast.InterfaceDecl:
+			if checker.SnakeCaseName(n.Name) == want {
 				names = append(names, n.Name)
 			}
 		}
@@ -1546,12 +1785,14 @@ func validateBarePackageImportNamespaces(prog *ast.Program, imports []importSpec
 	hidden := map[string]bool{}
 	topLevel := map[string]bool{}
 	for _, imp := range imports {
-		if !imp.packageDir || imp.stmt.Alias != "" {
+		if (!imp.packageDir && !imp.classFile) || imp.stmt.Alias != "" {
 			continue
 		}
-		hidden[imp.stmt.ModuleName()] = true
 		for _, name := range imp.publicNames {
-			topLevel[name] = true
+			hidden[name] = true
+		}
+		if len(imp.namespace) > 0 {
+			topLevel[imp.namespace[0]] = true
 		}
 	}
 	if len(hidden) == 0 {
@@ -1622,6 +1863,49 @@ func validateAliasedPackageBareNames(prog *ast.Program, imports []importSpec) er
 	}
 	if len(hidden) == 0 {
 		return nil
+	}
+	for _, stmt := range prog.Stmts {
+		if err := rejectHiddenImportUseStmt(stmt, hidden, topLevel); err != nil {
+			return err
+		}
+		if err := rejectHiddenImportUseClassRefs(stmt, hidden); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateAliasedClassImportNamespaces(prog *ast.Program, imports []importSpec) error {
+	hidden := map[string]bool{}
+	topLevel := map[string]bool{}
+	for _, imp := range imports {
+		if (!imp.packageDir && !imp.classFile) || imp.stmt.Alias == "" {
+			continue
+		}
+		hidden[imp.stmt.Alias] = true
+		for _, name := range imp.publicNames {
+			topLevel[name] = true
+		}
+	}
+	if len(hidden) == 0 {
+		return nil
+	}
+	for _, stmt := range prog.Stmts {
+		switch n := stmt.(type) {
+		case *ast.AssignStmt:
+			for _, target := range n.Targets {
+				if id, ok := target.(*ast.Ident); ok {
+					topLevel[id.Name] = true
+				}
+			}
+		case *ast.ClassDecl:
+			topLevel[n.Name] = true
+		case *ast.InterfaceDecl:
+			topLevel[n.Name] = true
+		}
+	}
+	for name := range topLevel {
+		delete(hidden, name)
 	}
 	for _, stmt := range prog.Stmts {
 		if err := rejectHiddenImportUseStmt(stmt, hidden, topLevel); err != nil {

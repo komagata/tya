@@ -29,7 +29,7 @@ stderr 'module not found: never_exists'
 -- good_entry/main.tya --
 import lib/*
 
-print(Lib.greet())
+print(lib.Lib.greet())
 
 -- good_entry/lib/lib.tya --
 class Lib

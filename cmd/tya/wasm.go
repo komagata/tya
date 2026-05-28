@@ -75,11 +75,15 @@ func buildWasmExecutable(path string, output string, target string) (*codegen.Co
 }
 
 func checkWasmImports(path string, target string) error {
+	raw, rawErr := os.ReadFile(path)
+	if rawErr != nil {
+		return rawErr
+	}
 	source, modules, _, err := runner.LoadSourceWithOrigins(path)
 	if err != nil {
 		return err
 	}
-	all := source + "\n" + strings.Join(modules, "\n")
+	all := string(raw) + "\n" + source + "\n" + strings.Join(modules, "\n")
 	blocked := []string{"import process", "import net", "import socket", "import http"}
 	if target == "wasm32-browser" {
 		blocked = append(blocked, "import file", "import io")

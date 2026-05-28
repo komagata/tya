@@ -70,19 +70,19 @@ class Network
   parse: cidr ->
     slash = Address(nil, nil, nil, false).last_index(cidr, "/")
     if slash < 0
-      raise error("ip.Network.parse: missing prefix_local")
+      raise error("net.ip.Network.parse: missing prefix_local")
     addr = Address(nil, nil, nil, false).parse(cidr.slice(0, slash))
     prefix_text = cidr.slice(slash + 1, cidr.len())
     if (
       prefix_text == "" or not Address(nil, nil, nil, false).decimal?(prefix_text)
     )
-      raise error("ip.Network.parse: invalid prefix_local")
+      raise error("net.ip.Network.parse: invalid prefix_local")
     prefix_local = prefix_text.to_i()
     max = 32
     if addr.version == 6
       max = 128
     if prefix_local < 0 or prefix_local > max
-      raise error("ip.Network.parse: invalid prefix_local")
+      raise error("net.ip.Network.parse: invalid prefix_local")
     Network(addr, prefix_local)
 
   # Network.pow2 provides the net/ip/Network standard library operation.

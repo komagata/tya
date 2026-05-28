@@ -2404,7 +2404,10 @@ func checkCallKeywords(call *ast.CallExpr, params []string) error {
 // info key, returning just the class name segment.
 func bareClassName(key string) string {
 	if i := strings.LastIndexByte(key, '.'); i >= 0 {
-		return key[i+1:]
+		key = key[i+1:]
+	}
+	if i := strings.Index(key, "TyaPkg"); i > 0 {
+		return key[:i]
 	}
 	return key
 }

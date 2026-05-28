@@ -22,9 +22,9 @@ import x/y/z/*
 import solo/*
 import api/v2/*
 
-print(Tag.label())
-print(Solo.greet())
-client = Client()
+print(x.y.z.Tag.label())
+print(solo.Solo.greet())
+client = api.v2.Client()
 print(client.summary())
 
 -- x/y/z/tag.tya --
@@ -64,7 +64,7 @@ class Request
 -- bad/bad_main.tya --
 import mixed_pkg/*
 
-print(Helper())
+print(mixed_pkg.Helper())
 
 -- bad/mixed_pkg/helper.tya --
 class Helper

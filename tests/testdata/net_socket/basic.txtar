@@ -22,9 +22,9 @@ exec go run ./cmd/tya run $WORK/refused.tya
 stdout 'refused'
 
 -- echo_server.tya --
-import net/socket/* as socket
+import net/socket/*
 
-server = socket.Server(nil).listen("127.0.0.1", 18180, {})
+server = net.socket.Server(nil).listen("127.0.0.1", 18180, {})
 conn = server.accept()
 line = conn.read_line()
 conn.write("echo:")
@@ -33,18 +33,18 @@ conn.close()
 server.close()
 
 -- echo_client.tya --
-import net/socket/* as socket
+import net/socket/*
 
-client = socket.Socket(nil, false).connect("127.0.0.1", 18180, {})
+client = net.socket.Socket(nil, false).connect("127.0.0.1", 18180, {})
 client.write_line("hello")
 print(client.read_line().trim())
 print(client.remote_address()["port"] == 18180)
 client.close()
 
 -- binary_server.tya --
-import net/socket/* as socket
+import net/socket/*
 
-server = socket.Server(nil).listen("127.0.0.1", 18181, { mode: "binary" })
+server = net.socket.Server(nil).listen("127.0.0.1", 18181, { mode: "binary" })
 conn = server.accept()
 data = conn.read(3)
 conn.write(data)
@@ -53,9 +53,9 @@ server.close()
 
 -- binary_client.tya --
 import bytes
-import net/socket/* as socket
+import net/socket/*
 
-client = socket.Socket(nil, false).connect("127.0.0.1", 18181, { mode: "binary" })
+client = net.socket.Socket(nil, false).connect("127.0.0.1", 18181, { mode: "binary" })
 client.write(b"abc")
 data = client.read(3)
 print(data.len())
@@ -63,9 +63,9 @@ print(bytes.Bytes(data).to_string())
 client.close()
 
 -- timeout_server.tya --
-import net/socket/* as socket
+import net/socket/*
 
-server = socket.Server(nil).listen("127.0.0.1", 18182, { timeout: 0.5 })
+server = net.socket.Server(nil).listen("127.0.0.1", 18182, { timeout: 0.5 })
 conn = server.accept()
 try
   conn.read_line()
@@ -75,17 +75,17 @@ conn.close()
 server.close()
 
 -- timeout_client.tya --
-import net/socket/* as socket
+import net/socket/*
 import time
 
-client = socket.Socket(nil, false).connect("127.0.0.1", 18182, {})
+client = net.socket.Socket(nil, false).connect("127.0.0.1", 18182, {})
 time.Time().sleep(0.7)
 client.close()
 
 -- refused.tya --
-import net/socket/* as socket
+import net/socket/*
 
 try
-  socket.Socket(nil, false).connect("127.0.0.1", 1, { timeout: 0.1 })
+  net.socket.Socket(nil, false).connect("127.0.0.1", 1, { timeout: 0.1 })
 catch err
   print("refused")

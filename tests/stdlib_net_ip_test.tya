@@ -1,12 +1,12 @@
-import unittest/*
-import net/ip/* as ip
+import unittest/* as unittest
+import net/ip/*
 
 class StdlibNetIpTest extends TestCase
 
   test_ipv4_parse_format_and_classify: ->
-    parser = ip.Address()
+    parser = net.ip.Address()
     addr = parser.parse("192.168.1.10")
-    self.assert_equal(ip.Address, addr.class, "class")
+    self.assert_equal(net.ip.Address, addr.class, "class")
     self.assert_equal(4, addr.version_of(), "version")
     self.assert_equal("192.168.1.10", addr.to_s(), "format")
     self.assert(addr.private_address?(), "private")
@@ -14,7 +14,7 @@ class StdlibNetIpTest extends TestCase
     self.assert(parser.parse("0.0.0.0").unspecified?(), "unspecified")
 
   test_ipv6_parse_format_and_classify: ->
-    parser = ip.Address()
+    parser = net.ip.Address()
     addr = parser.parse("2001:0db8:0000:0000:0000:0000:0000:0001")
     self.assert_equal(6, addr.version_of(), "version")
     self.assert_equal("2001:db8::1", addr.to_s(), "format")
@@ -23,20 +23,20 @@ class StdlibNetIpTest extends TestCase
     self.assert(parser.parse("fd00::1").private_address?(), "private")
 
   test_ipv4_mapped_ipv6: ->
-    addr = ip.Address().parse("::ffff:192.0.2.1")
+    addr = net.ip.Address().parse("::ffff:192.0.2.1")
     self.assert_equal("::ffff:192.0.2.1", addr.to_s(), "mapped")
 
   test_cidr_contains: ->
-    net4 = ip.Network(nil, 0).parse("192.168.1.0/24")
-    self.assert_equal(ip.Network, net4.class, "class")
-    parser = ip.Address()
+    net4 = net.ip.Network(nil, 0).parse("192.168.1.0/24")
+    self.assert_equal(net.ip.Network, net4.class, "class")
+    parser = net.ip.Address()
     self.assert(net4.contains?(parser.parse("192.168.1.99")), "ipv4 contains")
     self.assert_falsy(net4.contains?(parser.parse("192.168.2.1")), "ipv4 misses")
-    net6 = ip.Network(nil, 0).parse("2001:db8::/32")
+    net6 = net.ip.Network(nil, 0).parse("2001:db8::/32")
     self.assert(net6.contains?(parser.parse("2001:db8::1")), "ipv6 contains")
     self.assert_falsy(net6.contains?(parser.parse("2001:db9::1")), "ipv6 misses")
 
   test_invalid: ->
-    parser = ip.Address()
+    parser = net.ip.Address()
     self.assert_falsy(parser.valid?("999.1.1.1"), "invalid v4")
     self.assert_falsy(parser.valid?("2001:::1"), "invalid v6")

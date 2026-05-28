@@ -35,6 +35,22 @@ func BuildSymbols(prog *ast.Program) *SymbolIndex {
 		return idx
 	}
 	for _, stmt := range prog.Stmts {
+		if imp, ok := stmt.(*ast.ImportStmt); ok && imp.Alias == "" {
+			parts := importNamespaceParts(imp)
+			if len(parts) > 0 {
+				name := parts[0]
+				if _, exists := idx.byName[name]; !exists {
+					idx.order = append(idx.order, name)
+					idx.byName[name] = Symbol{
+						Name:      name,
+						Kind:      "module",
+						Signature: "import " + strings.Join(parts, "/"),
+						NameTok:   imp.NameTok,
+						DocBody:   "Import namespace.",
+					}
+				}
+			}
+		}
 		sym, ok := symbolFromStmt(stmt, prog)
 		if !ok {
 			continue

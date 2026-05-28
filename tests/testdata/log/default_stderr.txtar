@@ -8,10 +8,10 @@ stderr ' error bad\n'
 ! stderr 'debug'
 
 -- default_stderr.tya --
-import logger as log
+import logger
 
-logger = log.Logger(nil).default()
-logger.debug("debug", {})
-logger.info("hello", { app: "tya" })
-logger.warn("careful", {})
-logger.error("bad", {})
+log = logger.Logger(nil).default()
+log.debug("debug", {})
+log.info("hello", { app: "tya" })
+log.warn("careful", {})
+log.error("bad", {})

@@ -61,6 +61,13 @@ func DefinitionAt(ctx DefinitionContext, line, character int) ([]Location, error
 			if !ok {
 				continue
 			}
+			if imp.Wildcard && imp.Alias != "" && definitionClassNameRE.MatchString(id.Name) {
+				if path := resolvePackageClassFile(ctx.Workspace, imp.Name, id.Name); path != "" {
+					if loc := symbolLocation(ctx.Workspace, path, id.Name); loc != nil {
+						return []Location{*loc}, nil
+					}
+				}
+			}
 			if imp.Alias == "" && definitionClassNameRE.MatchString(id.Name) {
 				if path := resolvePackageClassFile(ctx.Workspace, imp.Name, id.Name); path != "" {
 					if loc := symbolLocation(ctx.Workspace, path, id.Name); loc != nil {
@@ -139,6 +146,9 @@ func resolveCrossFileMember(ws *Workspace, prog *ast.Program, id *ast.Ident, lin
 	}
 	recv, ok := match.Target.(*ast.Ident)
 	if !ok {
+		if loc := resolveNamespacedImportMember(ws, prog, match, id); loc != nil {
+			return loc
+		}
 		return nil
 	}
 	importName := ""
@@ -178,6 +188,70 @@ func resolveCrossFileMember(ws *Workspace, prog *ast.Program, id *ast.Ident, lin
 		URI:   uri,
 		Range: rangeAt(sym.NameTok.Line, sym.NameTok.Col, len(sym.Name)),
 	}
+}
+
+func resolveNamespacedImportMember(ws *Workspace, prog *ast.Program, match *ast.MemberExpr, id *ast.Ident) *Location {
+	if !definitionClassNameRE.MatchString(id.Name) {
+		return nil
+	}
+	parts := memberPath(match.Target)
+	if len(parts) == 0 {
+		return nil
+	}
+	for _, stmt := range prog.Stmts {
+		imp, ok := stmt.(*ast.ImportStmt)
+		if !ok || imp.Alias != "" {
+			continue
+		}
+		if !sameStringSlice(importNamespaceParts(imp), parts) {
+			continue
+		}
+		if imp.Wildcard {
+			if path := resolvePackageClassFile(ws, imp.Name, id.Name); path != "" {
+				return symbolLocation(ws, path, id.Name)
+			}
+			continue
+		}
+		if path := resolveModuleFile(ws, imp.Name); path != "" {
+			return symbolLocation(ws, path, id.Name)
+		}
+	}
+	return nil
+}
+
+func memberPath(expr ast.Expr) []string {
+	switch n := expr.(type) {
+	case *ast.Ident:
+		return []string{n.Name}
+	case *ast.MemberExpr:
+		parts := memberPath(n.Target)
+		if len(parts) == 0 {
+			return nil
+		}
+		return append(parts, n.Name)
+	default:
+		return nil
+	}
+}
+
+func importNamespaceParts(imp *ast.ImportStmt) []string {
+	parts := strings.Split(imp.Name, "/")
+	if imp.Wildcard || len(parts) == 1 {
+		return parts
+	}
+	return parts[:len(parts)-1]
+}
+
+func sameStringSlice(left, right []string) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	for i := range left {
+		if left[i] != right[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func symbolLocation(ws *Workspace, path string, name string) *Location {

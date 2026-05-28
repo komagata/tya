@@ -12,13 +12,13 @@ stdout 'hi from app\n'
 # emit-c produces C source that includes the synthesized class
 # methods from the imported package
 exec go run ./cmd/tya emit-c $WORK/main.tya
-stdout 'tya_fn_Lib_greet'
+stdout 'tya_fn_LibTyaPkgLib_greet'
 ! stderr .
 
 -- main.tya --
 import lib/*
 
-print(Lib.greet())
+print(lib.Lib.greet())
 
 -- lib/lib.tya --
 class Lib

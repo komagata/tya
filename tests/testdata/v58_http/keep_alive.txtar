@@ -14,9 +14,9 @@ stdout 'close=/close:false'
 stdout 'close-conn=close'
 
 -- main.tya --
-import net/http/* as http
+import net/http/*
 
-app = http.Server()
+app = net.http.Server()
 
 class App
   static show: req ->

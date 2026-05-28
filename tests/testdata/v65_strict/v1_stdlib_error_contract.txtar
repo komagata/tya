@@ -15,7 +15,7 @@ stdout 'serialization'
 import file
 import json
 import process
-import serializer as serialization
+import serializer
 
 try
   file.File("__missing__.txt").stat()
@@ -36,7 +36,7 @@ catch err
     print("process")
 
 try
-  serialization.Serializer(nil).serialize(-> nil)
+  serializer.Serializer(nil).serialize(-> nil)
 catch err
   if err["message"] != ""
     print("serialization")

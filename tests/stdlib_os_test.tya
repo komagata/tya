@@ -1,4 +1,4 @@
-import unittest/*
+import unittest/* as unittest
 import os
 
 class StdlibOsTest extends TestCase

@@ -93,7 +93,7 @@ class User
 -- main.tya --
 import user
 
-class Admin extends User
+class Admin extends user.User
   greeting: ->
     "{super()} (admin)"
 

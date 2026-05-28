@@ -1,4 +1,4 @@
-import unittest/*
+import unittest/* as unittest
 import process
 
 class StdlibProcessTest extends TestCase

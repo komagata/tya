@@ -11,7 +11,7 @@ stdout 'json-encoded\n'
 -- main.tya --
 import codec/*
 
-print(JsonEncoder().encode())
+print(codec.JsonEncoder().encode())
 
 -- codec/encodable.tya --
 interface Encodable

@@ -1,5 +1,5 @@
-import unittest/*
-import logger as log
+import unittest/* as unittest
+import logger
 
 class StdlibLogTest extends TestCase
 
@@ -7,7 +7,7 @@ class StdlibLogTest extends TestCase
     path = "logger_text.log"
     if file_exists(path)
       file_remove(path)
-    log_obj = log.Logger({ file: path })
+    log_obj = logger.Logger({ file: path })
     log_obj.debug("skip", { z: 1 })
     log_obj.info("hello", { z: 1, a: "first" })
     text = read_file(path)
@@ -19,7 +19,7 @@ class StdlibLogTest extends TestCase
     path = "logger_debug.log"
     if file_exists(path)
       file_remove(path)
-    log_obj = log.Logger({ file: path })
+    log_obj = logger.Logger({ file: path })
     log_obj.level("debug")
     log_obj.debug("debugging", {})
     text = read_file(path)
@@ -30,7 +30,7 @@ class StdlibLogTest extends TestCase
     path = "logger_json.log"
     if file_exists(path)
       file_remove(path)
-    log_obj = log.Logger({ file: path, format: "json", fields: { app: "tya" } })
+    log_obj = logger.Logger({ file: path, format: "json", fields: { app: "tya" } })
     child = log_obj.with({ request: "42" })
     child.error("bad", { user: "ada" })
     text = read_file(path)

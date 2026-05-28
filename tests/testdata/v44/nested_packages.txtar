@@ -13,7 +13,7 @@ stdout 'GET / -> 200\n'
 -- main.tya --
 import api/v1/*
 
-client = Client()
+client = api.v1.Client()
 print(client.fetch("/"))
 
 -- api/v1/client.tya --

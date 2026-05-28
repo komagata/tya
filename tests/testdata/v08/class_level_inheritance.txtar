@@ -84,7 +84,7 @@ print(User.name)
 print(User.parent)
 print(admin.class.parent)
 
--- account.tya --
+-- account/account.tya --
 class Account
   name: ""
   static kind: "account"
@@ -101,11 +101,12 @@ class Account
   static kind_name: ->
     Self.kind
 
+-- account/editor.tya --
 class Editor extends Account
   static kind: "editor"
 
 -- main.tya --
-import account
+import account/*
 
 editor = account.Editor.build("Ada")
 print(editor.name)

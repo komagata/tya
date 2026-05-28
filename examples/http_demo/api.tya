@@ -10,7 +10,7 @@ show_user = req -> { status: 200, body: "User " + req["params"]["id"] }
 create_user = req ->
   payload = bytes.Bytes(req["body"]).to_string()
   { status: 201, body: "got: " + payload }
-app = http.Server()
+app = net.http.Server()
 app.get("/users/:id", show_user)
 app.post("/users", create_user)
 app.run(8080)

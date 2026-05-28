@@ -51,7 +51,7 @@ func TestPlatformDependentStdlibImportsEverywhere(t *testing.T) {
 	dir := t.TempDir()
 	main := filepath.Join(dir, "main.tya")
 	src := strings.Join([]string{
-		"import net/socket/* as socket",
+		"import net/socket/*",
 		"import process",
 		"print(true)",
 		"",

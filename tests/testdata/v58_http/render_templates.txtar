@@ -26,11 +26,11 @@ File {{ name }}
 Escaped {{ value }}
 
 -- main.tya --
-import net/http/* as http
+import net/http/*
 
 embed "embedded.html" as embedded_view
 
-app = http.Server()
+app = net.http.Server()
 
 class App
   static file: _req ->

@@ -36,7 +36,7 @@ broken_native = { path = "../broken_native" }
 -- missing_app/src/main.tya --
 import broken_native/*
 
-print(BrokenNative.value())
+print(broken_native.BrokenNative.value())
 
 -- broken_native/tya.toml --
 name = "broken_native"
@@ -64,7 +64,7 @@ dep_two = { path = "../dep_two" }
 -- dup_app/src/main.tya --
 import dep_one/*
 
-print(DepOne.value())
+print(dep_one.DepOne.value())
 
 -- dep_one/tya.toml --
 name = "dep_one"

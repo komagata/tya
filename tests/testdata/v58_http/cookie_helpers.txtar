@@ -11,9 +11,9 @@ stdout 'bad-samesite'
 stdout 'none-secure'
 
 -- main.tya --
-import net/http/* as http
+import net/http/*
 
-app = http.Server()
+app = net.http.Server()
 
 class Check
   static run: ->

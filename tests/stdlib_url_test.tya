@@ -1,4 +1,4 @@
-import unittest/*
+import unittest/* as unittest
 import url
 
 class StdlibUrlTest extends TestCase

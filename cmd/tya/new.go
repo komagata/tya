@@ -237,12 +237,12 @@ TyaValue tya_%s_version(TyaValue __this, TyaValue a0, TyaValue a1, TyaValue a2, 
 		return err
 	}
 	test := fmt.Sprintf(`import %s/*
-import unittest/*
+import unittest/* as unittest
 
 class %sTest extends TestCase
   test_version: ->
-    self.assert_equal("0.1.0", %s.version(), "native version")
-`, pkgName, pascal, pascal)
+    self.assert_equal("0.1.0", %s.%s.version(), "native version")
+`, pkgName, pascal, pkgName, pascal)
 	return os.WriteFile(filepath.Join(target, "tests", pkgName+"_test.tya"), []byte(test), 0644)
 }
 
@@ -252,7 +252,7 @@ func writeAppTemplate(target, name string) error {
 	if err := os.WriteFile(filepath.Join(target, "src", "main.tya"), []byte(main), 0644); err != nil {
 		return err
 	}
-	mainTest := `import unittest/*
+	mainTest := `import unittest/* as unittest
 
 class MainTest < TestCase
   test_main: ->
@@ -281,13 +281,13 @@ func writeLibTemplate(target, name string) error {
 		return err
 	}
 	test := fmt.Sprintf(`import %s/*
-import unittest/*
+import unittest/* as unittest
 
 class %sTest extends TestCase
   test_greet: ->
-    inst = %s()
+    inst = %s.%s()
     self.assert_equal("Hello, Tya from %s", inst.greet("Tya"), "greeting")
-`, pkgName, pascal, pascal, name)
+`, pkgName, pascal, pkgName, pascal, name)
 	return os.WriteFile(filepath.Join(target, "tests", pkgName+"_test.tya"), []byte(test), 0644)
 }
 

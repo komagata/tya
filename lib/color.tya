@@ -59,7 +59,7 @@ class Color
   # @param name String channel name for error messages.
   # @return Number the validated integer channel.
   static channel: value, name ->
-    Validation
+    validation.Validation
       .number(value, name, "color.channel")
       .integer()
       .between(0, 255)
@@ -216,22 +216,22 @@ class Color
   # @param a Number alpha channel.
   # @return Self the initialized object.
   initialize: r, g, b, a ->
-    self.r = Validation
+    self.r = validation.Validation
       .number(r, "r", "color.channel")
       .integer()
       .between(0, 255)
       .validate!()
-    self.g = Validation
+    self.g = validation.Validation
       .number(g, "g", "color.channel")
       .integer()
       .between(0, 255)
       .validate!()
-    self.b = Validation
+    self.b = validation.Validation
       .number(b, "b", "color.channel")
       .integer()
       .between(0, 255)
       .validate!()
-    self.a = Validation
+    self.a = validation.Validation
       .number(a, "a", "color.channel")
       .integer()
       .between(0, 255)

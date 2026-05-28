@@ -1488,7 +1488,7 @@ func synthesizeTestSuite(files []string) (string, error) {
 		moduleNames = append(moduleNames, mod)
 	}
 	var b strings.Builder
-	b.WriteString("import unittest/*\n")
+	b.WriteString("import unittest/* as unittest\n")
 	for _, m := range moduleNames {
 		b.WriteString("import ")
 		b.WriteString(m)

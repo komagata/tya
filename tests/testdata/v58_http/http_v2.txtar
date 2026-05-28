@@ -14,14 +14,14 @@ exec go run ./cmd/tya build $WORK/concurrent_server.tya -o $WORK/concurrent_serv
 exec sh -c '$WORK/concurrent_server & pid=$!; (i=0; while [ $i -lt 20 ]; do curl -s -m 2 http://localhost:18092/slow >/tmp/tya-slow-$$ && exit 0; sleep 0.25; i=$((i + 1)); done; exit 1) & slow=$!; sleep 0.1; fast=""; fast_status=1; i=0; while [ $i -lt 20 ]; do fast=$(curl -s -m 0.4 http://localhost:18092/fast); fast_status=$?; [ "$fast_status" -eq 0 ] && break; sleep 0.25; i=$((i + 1)); done; wait $slow; slow_status=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; test "$fast" = fast && exit $((fast_status + slow_status))'
 
 -- client_server.tya --
-import net/socket/* as socket
+import net/socket/*
 
 class HttpText
   static cr: ->
     chr(13)
 
 crlf = HttpText.cr() + "\n"
-server = socket.Server(nil).listen("127.0.0.1", 18091, {})
+server = net.socket.Server(nil).listen("127.0.0.1", 18091, {})
 conn = server.accept()
 line = conn.read_line()
 while line != nil and line != crlf and line != "\n"
@@ -48,20 +48,20 @@ conn.close()
 server.close()
 
 -- client.tya --
-import net/http/* as http
+import net/http/*
 
-posted = http.Client("http://127.0.0.1:18091/submit").post("payload")
+posted = net.http.Client("http://127.0.0.1:18091/submit").post("payload")
 print(posted["status"])
 print(posted["body"])
 
-chunked = http.Client("http://127.0.0.1:18091/chunked").get()
+chunked = net.http.Client("http://127.0.0.1:18091/chunked").get()
 print(chunked["body"])
 
 -- concurrent_server.tya --
-import net/http/* as http
+import net/http/*
 import time
 
-app = http.Server()
+app = net.http.Server()
 slow = _req ->
   time.Time().sleep(1)
   return { status: 200, body: "slow" }

@@ -83,7 +83,7 @@ class Address
       return code - 55
     if code >= 97 and code <= 102
       return code - 87
-    raise error("ip.Address.parse: invalid IPv6 address")
+    raise error("net.ip.Address.parse: invalid IPv6 address")
 
   # Address.hex_to_int provides the net/ip/Address standard library operation.
   # @param text String text value.
@@ -152,16 +152,16 @@ class Address
   parse_v4: text ->
     parts = text.split(".")
     if parts.len() != 4
-      raise error("ip.Address.parse: invalid IPv4 address")
+      raise error("net.ip.Address.parse: invalid IPv4 address")
     bytes_local = []
     for part in parts
       if part == "" or not decimal?(part)
-        raise error("ip.Address.parse: invalid IPv4 address")
+        raise error("net.ip.Address.parse: invalid IPv4 address")
       n = part.to_i()
       if n < 0 or n > 255
-        raise error("ip.Address.parse: invalid IPv4 address")
+        raise error("net.ip.Address.parse: invalid IPv4 address")
       if n.to_s() != part and not (n == 0 and part == "0")
-        raise error("ip.Address.parse: invalid IPv4 address")
+        raise error("net.ip.Address.parse: invalid IPv4 address")
       bytes_local.push(n)
     Address(4, bytes_local, nil, false)
 
@@ -170,13 +170,13 @@ class Address
   # @return Any the resulting value.
   parse_v6: text ->
     if text == ""
-      raise error("ip.Address.parse: invalid IPv6 address")
+      raise error("net.ip.Address.parse: invalid IPv6 address")
     mapped_local = false
     ipv4_groups = []
     if text.contains(".")
       last_colon = last_index(text, ":")
       if last_colon < 0
-        raise error("ip.Address.parse: invalid IPv6 address")
+        raise error("net.ip.Address.parse: invalid IPv6 address")
       ipv4_text = text.slice(last_colon + 1, text.len())
       ipv4 = parse_v4(ipv4_text)
       b = ipv4.bytes
@@ -185,7 +185,7 @@ class Address
       mapped_local = true
     parts = text.split("::")
     if parts.len() > 2
-      raise error("ip.Address.parse: invalid IPv6 address")
+      raise error("net.ip.Address.parse: invalid IPv6 address")
     left = []
     right = []
     if parts[0] != ""
@@ -197,14 +197,14 @@ class Address
     groups_local = []
     if parts.len() == 1
       if left.len() + ipv4_groups.len() != 8
-        raise error("ip.Address.parse: invalid IPv6 address")
+        raise error("net.ip.Address.parse: invalid IPv6 address")
       groups_local = left
       for g in ipv4_groups
         groups_local.push(g)
     else
       zeros = 8 - left.len() - right.len()
       if zeros < 1
-        raise error("ip.Address.parse: invalid IPv6 address")
+        raise error("net.ip.Address.parse: invalid IPv6 address")
       for g in left
         groups_local.push(g)
       i = 0
@@ -214,7 +214,7 @@ class Address
       for g in right
         groups_local.push(g)
     if groups_local.len() != 8
-      raise error("ip.Address.parse: invalid IPv6 address")
+      raise error("net.ip.Address.parse: invalid IPv6 address")
     Address(6, nil, groups_local, mapped_local)
 
   # Address.parse_v6_side provides the net/ip/Address standard library operation.
@@ -225,7 +225,7 @@ class Address
     out = []
     for part in parts
       if part == "" or part.byte_len() > 4
-        raise error("ip.Address.parse: invalid IPv6 address")
+        raise error("net.ip.Address.parse: invalid IPv6 address")
       out.push(hex_to_int(part))
     out
 

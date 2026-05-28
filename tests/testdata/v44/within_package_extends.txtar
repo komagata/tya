@@ -11,7 +11,7 @@ stdout 'animal:dog\n'
 -- main.tya --
 import zoo/*
 
-d = Dog()
+d = zoo.Dog()
 print(d.describe())
 
 -- zoo/animal.tya --

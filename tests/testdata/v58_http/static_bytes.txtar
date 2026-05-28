@@ -13,10 +13,10 @@ stdout 'Content-Type: text/css'
 body { color: blue; }
 
 -- main.tya --
-import net/http/* as http
+import net/http/*
 
 embed "static/**" as assets
 
-app = http.Server()
+app = net.http.Server()
 app.serve_static("/assets", assets)
 app.run(18085)

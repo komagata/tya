@@ -1,5 +1,5 @@
-import unittest/*
-import binary/* as binary
+import unittest/* as unittest
+import binary/*
 
 class StdlibBinaryTest extends TestCase
 

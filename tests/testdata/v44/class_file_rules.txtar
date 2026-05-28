@@ -66,7 +66,7 @@ x = 1
 -- ok_main.tya --
 import ok_pkg/*
 
-s = Server()
+s = ok_pkg.Server()
 print(s.run("hello"))
 
 -- ok_pkg/server.tya --

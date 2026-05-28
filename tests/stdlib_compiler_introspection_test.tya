@@ -1,9 +1,9 @@
-import unittest/*
-import compiler/lexer/*
-import compiler/parser/*
-import compiler/ast/*
-import compiler/checker/*
-import compiler/format/*
+import unittest/* as unittest
+import compiler/lexer/* as compiler_lexer
+import compiler/parser/* as compiler_parser
+import compiler/ast/* as compiler_ast
+import compiler/checker/* as compiler_checker
+import compiler/format/* as compiler_format
 
 class StdlibCompilerIntrospectionTest extends TestCase
 

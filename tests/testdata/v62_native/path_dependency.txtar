@@ -54,15 +54,15 @@ native_dep = { path = "../native_dep" }
 -- app/src/main.tya --
 import native_dep/*
 
-print(NativeDep.version())
+print(native_dep.NativeDep.version())
 
 -- app/tests/native_dep_test.tya --
 import native_dep/*
-import unittest/*
+import unittest/* as unittest
 
 class NativeDepTest extends TestCase
   test_version: ->
-    self.assert_equal("native-ok", NativeDep.version(), "native wrapper")
+    self.assert_equal("native-ok", native_dep.NativeDep.version(), "native wrapper")
 
 -- native_dep/tya.toml --
 name = "native_dep"
@@ -115,7 +115,7 @@ git_dep = { git = "../git_dep", tag = "v0.1.0" }
 -- git_app/src/main.tya --
 import git_dep/*
 
-print(GitDep.version())
+print(git_dep.GitDep.version())
 
 -- git_dep/tya.toml --
 name = "git_dep"

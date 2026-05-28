@@ -1,4 +1,4 @@
-import unittest/*
+import unittest/* as unittest
 import hex
 
 class StdlibHexTest extends TestCase

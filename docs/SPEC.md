@@ -1190,43 +1190,45 @@ invalid.
 
 A directory package is a directory resolved by import path containing snake_case class/interface files. It must contain at least one class/interface file and must not contain script files at the package leaf.
 
-Unaliased wildcard directory imports expose public class and interface names directly.
-They do not create a lowercase namespace binding for the import path or terminal
-directory segment.
+Unaliased wildcard directory imports expose public class and interface names
+through the import path namespace. They do not import public names bare.
 
 ```tya
 import net/http/*
 
-server = Server()
-http = "local label"
+server = net.http.Server()
 ```
 
-In the example above, `http` is an ordinary local binding. `http.Server()` is
-invalid because unaliased directory imports do not expose a namespace object.
-If a namespace is desired, use an alias.
+In the example above, `Server()` is invalid. The first namespace segment is
+reserved for qualified access, so a top-level `net` binding in the importing
+file is invalid.
 
-Aliased wildcard directory imports expose a namespace binding and do not import public
-names bare.
+Aliased wildcard directory imports explicitly expose package public names bare.
+The alias is an import-group label for duplicate import diagnostics; it is not
+a runtime or compile-time namespace binding.
 
 ```tya
 import net/http/* as http
 
-server = http.Server()
+server = Server()
 ```
 
-With an alias, package public names are only available through the alias
-namespace. `Server()` is invalid in the example above; use `http.Server()`.
+With an alias, `http.Server()` is invalid in the example above.
 
-Imported public names are reserved in the importing scope. Reassigning or
-redeclaring an imported public class or interface name is invalid, and importing
-two packages that expose the same public name is invalid. Importing the same
-path twice is invalid even when aliases differ.
+Unaliased namespace imports reserve their qualified public names. Two imports
+that expose the same qualified public name are invalid, but `net.http.Server`
+and `net.tcp.Server` may coexist. Aliased imports reserve bare public names, so
+two aliased imports that expose `Server` are invalid. Importing the same path
+twice is invalid even when aliases differ.
 
 ```tya
 import net/http/*
 
-Request = -> "local" # invalid: Request is imported from net/http
+net = "local" # invalid: net is an import namespace
 ```
+
+An unaliased namespace import does not reserve the bare public name. A local
+top-level class named `Server` may coexist with `net.http.Server`.
 
 Within the same directory package, sibling public classes are visible by bare
 PascalCase name without import.

@@ -1,9 +1,9 @@
-import geometry/* as geo
+import geometry/*
 import transform2_d as transform2d
 
-move = transform2d.Transform2D(1, 0, 0, 1, 0, 0).translation(10, 20)
-scale = transform2d.Transform2D(1, 0, 0, 1, 0, 0).uniform_scale(2)
+move = Transform2D(1, 0, 0, 1, 0, 0).translation(10, 20)
+scale = Transform2D(1, 0, 0, 1, 0, 0).uniform_scale(2)
 world = move.compose(scale)
 
-point = world.apply_point(geo.Point(3, 4))
+point = world.apply_point(geometry.Point(3, 4))
 print(point.to_vector().to_array())

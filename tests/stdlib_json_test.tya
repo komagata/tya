@@ -1,4 +1,4 @@
-import unittest/*
+import unittest/* as unittest
 import json
 
 class StdlibJsonTest extends TestCase

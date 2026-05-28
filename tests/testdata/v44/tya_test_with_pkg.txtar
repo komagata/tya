@@ -12,12 +12,12 @@ stdout '1 tests, 1 passed, 0 failed'
 ! stderr .
 
 -- feature_test.tya --
-import unittest/*
+import unittest/* as unittest
 import feature/*
 
 class FeatureTest extends TestCase
   test_greet: ->
-    self.assert_equal("hi", Feature.greet(), "greet")
+    self.assert_equal("hi", feature.Feature.greet(), "greet")
 
 -- feature/feature.tya --
 class Feature

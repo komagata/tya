@@ -1,4 +1,4 @@
-import binary/* as binary
+import binary/*
 import bytes
 
 data = b"Tya\x00\x02\x01"

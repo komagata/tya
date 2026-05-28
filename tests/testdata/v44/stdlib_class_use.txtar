@@ -10,6 +10,6 @@ stdout '3.14159\n2\n9\n'
 -- main.tya --
 import math
 
-print(Math.PI)
-print(Math().abs(0 - 2))
-print(Math().pow(3, 2))
+print(math.Math.PI)
+print(math.Math().abs(0 - 2))
+print(math.Math().pow(3, 2))

@@ -12,24 +12,24 @@ stdout 'trusted:secure'
 stdout 'insecure:secure'
 
 -- server.tya --
-import net/http/* as http
+import net/http/*
 
-app = http.Server()
+app = net.http.Server()
 app.get("/", _req -> { status: 200, body: "secure" })
 app.run_tls(18098, "cert.pem", "key.pem", { host: "127.0.0.1" })
 
 -- client.tya --
-import net/http/* as http
+import net/http/*
 
 url = "https://127.0.0.1:18098/"
 try
-  http.Client(url).get()
+  net.http.Client(url).get()
   print("unexpected")
 catch err
   print("verify_failed")
 
-trusted = http.Client(url).request("GET", { ca_file: "cert.pem" })
+trusted = net.http.Client(url).request("GET", { ca_file: "cert.pem" })
 print("trusted:" + trusted["body"])
 
-insecure = http.Client(url).request("GET", { insecure_skip_verify: true })
+insecure = net.http.Client(url).request("GET", { insecure_skip_verify: true })
 print("insecure:" + insecure["body"])

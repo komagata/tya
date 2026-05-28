@@ -1,5 +1,5 @@
-import unittest/*
-import collections/* as collections
+import unittest/* as unittest
+import collections/*
 
 class StdlibCollectionsTest extends TestCase
 

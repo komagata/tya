@@ -1597,7 +1597,7 @@ func (g *cgen) assignModuleDecl(module *ast.ModuleDecl) error {
 		// constructor.
 		g.classes[module.Name+"_"+class.Name] = sym
 		g.globalLine(fmt.Sprintf("TyaValue %s;", classTarget))
-		g.line(fmt.Sprintf("%s = tya_class(%s, %s, %s);", classTarget, sym, strconv.Quote(class.Name), g.parentExpr(module.Name+"_"+class.Name, class)))
+		g.line(fmt.Sprintf("%s = tya_class(%s, %s, %s);", classTarget, sym, strconv.Quote(displayClassName(class.Name)), g.parentExpr(module.Name+"_"+class.Name, class)))
 		g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", target, strconv.Quote(class.Name), classTarget))
 		if err := g.emitClassMembers(classTarget, module.Name+"_"+class.Name, class); err != nil {
 			return err
@@ -1614,11 +1614,11 @@ func (g *cgen) assignClassDecl(name string, class *ast.ClassDecl) error {
 	}
 	g.classes[name] = sym
 	if g.vars[name] {
-		g.line(fmt.Sprintf("%s = tya_class(%s, %s, %s);", target, sym, strconv.Quote(name), g.parentExpr(name, class)))
+		g.line(fmt.Sprintf("%s = tya_class(%s, %s, %s);", target, sym, strconv.Quote(displayClassName(name)), g.parentExpr(name, class)))
 	} else {
 		g.vars[name] = true
 		g.globalLine(fmt.Sprintf("TyaValue %s;", target))
-		g.line(fmt.Sprintf("%s = tya_class(%s, %s, %s);", target, sym, strconv.Quote(name), g.parentExpr(name, class)))
+		g.line(fmt.Sprintf("%s = tya_class(%s, %s, %s);", target, sym, strconv.Quote(displayClassName(name)), g.parentExpr(name, class)))
 	}
 	return g.emitClassMembers(target, name, class)
 }
@@ -1675,7 +1675,7 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 	out.WriteString("  (void)__this;\n")
 	out.WriteString("  TyaValue __obj = tya_object();\n")
 	out.WriteString(fmt.Sprintf("  tya_set_member(__obj, \"class\", %s);\n", classRef))
-	out.WriteString(fmt.Sprintf("  tya_set_member(__obj, \"class_name\", tya_string(%s));\n", strconv.Quote(class.Name)))
+	out.WriteString(fmt.Sprintf("  tya_set_member(__obj, \"class_name\", tya_string(%s));\n", strconv.Quote(displayClassName(class.Name))))
 	if parentKey != "" {
 		if err := g.emitParentDefaults(&out, parentKey); err != nil {
 			return "", err
@@ -1834,6 +1834,9 @@ func (g *cgen) parentKey(name string, class *ast.ClassDecl) string {
 		return ""
 	}
 	if class.Parent.Module != "" {
+		if key := aliasedPackageSymbolKey(class.Parent.Module, class.Parent.Name); g.classDecls[key] != nil {
+			return key
+		}
 		return class.Parent.Module + "." + class.Parent.Name
 	}
 	if strings.Contains(name, "_") {
@@ -1858,6 +1861,13 @@ func (g *cgen) parentExpr(name string, class *ast.ClassDecl) string {
 
 func (g *cgen) cClassName(key string) string {
 	return strings.ReplaceAll(key, ".", "_")
+}
+
+func displayClassName(name string) string {
+	if i := strings.Index(name, "TyaPkg"); i > 0 {
+		return name[:i]
+	}
+	return name
 }
 
 func (g *cgen) emitParentDefaults(out *strings.Builder, parentKey string) error {

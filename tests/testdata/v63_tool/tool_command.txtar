@@ -123,7 +123,7 @@ for arg in args()
   println("arg:{arg}")
 
 -- tool_pkg/tools/stdin.tya --
-import io/* as io
+import io/*
 
 input_line = io.Io().stdin().read_line()
 println("stdin:{input_line}")

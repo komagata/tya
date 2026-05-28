@@ -1,7 +1,7 @@
-import geometry/* as geo
+import geometry/*
 
-player = geo.Circle(8, 8, 4)
-wall = geo.Rect(10, 0, 8, 20)
+player = geometry.Circle(8, 8, 4)
+wall = geometry.Rect(10, 0, 8, 20)
 
 print(player.intersects_rect?(wall))
 print(player.center().to_vector().to_array())

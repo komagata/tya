@@ -480,7 +480,7 @@ func TestEmitCCompilesAliasedPackageClassWithSameNamedLocalClass(t *testing.T) {
 		t.Fatal(err)
 	}
 	writeFile(t, filepath.Join(dir, "commands", "cli.tya"), "class Cli\n  static parse_or_exit: args, spec ->\n    return Cli.parse(args, spec)\n\n  static parse: args, spec ->\n    return { args: args, spec: spec }\n")
-	writeFile(t, filepath.Join(dir, "cli.tya"), "import commands/* as commands\n\nclass Cli\n  static main: argv ->\n    parsed = commands.Cli.parse_or_exit(argv, Self.option_spec())\n    println(\"ok\")\n\n  static option_spec: ->\n    return { command: \"demo\", options: {} }\n")
+	writeFile(t, filepath.Join(dir, "cli.tya"), "import commands/*\n\nclass Cli\n  static main: argv ->\n    parsed = commands.Cli.parse_or_exit(argv, Self.option_spec())\n    println(\"ok\")\n\n  static option_spec: ->\n    return { command: \"demo\", options: {} }\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "Cli.main(args())\n")
 	out := compileAndRunFile(t, main)

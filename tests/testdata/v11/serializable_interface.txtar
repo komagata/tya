@@ -26,9 +26,9 @@ class Player implements Serializable
 print(Player("Ada").to_data()["name"])
 
 -- construct_serializable.tya --
-import serializer as serialization
+import serializer
 
-value = serialization.Serializable()
+value = serializer.Serializable()
 
 -- missing_to_data.tya --
 interface Serializable

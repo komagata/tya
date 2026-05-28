@@ -12,7 +12,7 @@ stdout 'helper-info\n'
 -- main.tya --
 import api/v3/*
 
-print(Client.get_info())
+print(api.v3.Client.get_info())
 
 -- api/v3/helper.tya --
 class Helper

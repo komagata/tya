@@ -1137,7 +1137,8 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 		}
 		return module, nil
 	case *ast.ClassDecl:
-		class := Dict{"__module_namespace": true, "__class_name": n.Name, "name": n.Name, "__instance_methods": Dict{}}
+		className := displayClassName(n.Name)
+		class := Dict{"__module_namespace": true, "__class_name": className, "name": className, "__instance_methods": Dict{}}
 		env.set(n.Name, class)
 		for _, constant := range n.Constants {
 			value, err := evalExpr(constant.Value, env)
@@ -2954,7 +2955,15 @@ func primitiveClass(name string) Dict {
 	if class, ok := primitiveClasses[name]; ok {
 		return class
 	}
-	return Dict{"__module_namespace": true, "__class_name": name, "name": name}
+	display := displayClassName(name)
+	return Dict{"__module_namespace": true, "__class_name": display, "name": display}
+}
+
+func displayClassName(name string) string {
+	if i := strings.Index(name, "TyaPkg"); i > 0 {
+		return name[:i]
+	}
+	return name
 }
 
 func toIntValue(value Value) (Value, error) {

@@ -1,7 +1,6 @@
-import unittest/*
+import unittest/* as unittest
 import validation
-import validation/number_validator
-import validation/string_validator
+import validation/* as validation_validators
 
 class StdlibValidationTest extends TestCase
   assert_error_message: body, message, desc ->
@@ -13,12 +12,12 @@ class StdlibValidationTest extends TestCase
 
   test_individual_imports: ->
     self.assert_equal(
-      number_validator.NumberValidator(1).validate!(),
+      1,
       NumberValidator(1).validate!(),
       "number import"
     )
     self.assert_equal(
-      string_validator.StringValidator("x").validate!(),
+      "x",
       StringValidator("x").validate!(),
       "string import"
     )

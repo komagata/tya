@@ -1,4 +1,4 @@
-import unittest/*
+import unittest/* as unittest
 import matrix
 
 class StdlibMatrixTest extends TestCase

@@ -28,7 +28,7 @@ print([1, {name: "tya"}].equal?([1, {name: "tya"}]))
 print({nested: [1, 2]}.equal?({nested: [1, 2]}))
 
 -- read.tya --
-import io/* as io
+import io/*
 
 input_line = io.Io().stdin().read_line()
 if input_line == nil

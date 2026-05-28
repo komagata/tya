@@ -8,8 +8,8 @@ exec sh -c '$WORK/server & pid=$!; sleep 1; curl -s -m 5 -o /dev/null -w "%{http
 stdout '^404$'
 
 -- main.tya --
-import net/http/* as http
+import net/http/*
 
-app = http.Server()
+app = net.http.Server()
 app.get("/", _req -> { status: 200, body: "root" })
 app.run(18083)

@@ -1,4 +1,4 @@
-import unittest/*
+import unittest/* as unittest
 import path
 
 class StdlibPathTest extends TestCase

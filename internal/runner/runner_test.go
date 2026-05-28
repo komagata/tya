@@ -69,19 +69,18 @@ func TestRunFileLoadsImportedModuleAlias(t *testing.T) {
 	}
 }
 
-func TestRunFileRejectsTopLevelClassInImportedModule(t *testing.T) {
+func TestRunFileLoadsNamespacedClassFileImport(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  initialize: name ->\n    name\n")
+	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  name: \"\"\n\n  initialize: name ->\n    self.name = name\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import user\nuser = User(\"komagata\")\nprint(user.name)\n")
+	writeFile(t, main, "import user\nitem = user.User(\"komagata\")\nprint(item.name)\n")
 
 	var out strings.Builder
-	_, err := RunFile(main, nil, &out, nil)
-	if err == nil {
-		t.Fatal("expected module shape rejection")
+	if _, err := RunFile(main, nil, &out, nil); err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(err.Error(), "import name conflict: user") {
-		t.Fatalf("unexpected error: %v", err)
+	if out.String() != "komagata\n" {
+		t.Fatalf("got %q", out.String())
 	}
 }
 
@@ -130,24 +129,24 @@ func TestLoadSourceSynthesizesMultiplePublicBindings(t *testing.T) {
 	}
 }
 
-func TestLoadSourceRejectsTopLevelClassInImportedModule(t *testing.T) {
+func TestLoadSourceSynthesizesNamespacedClassFileImport(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  initialize: name ->\n    name\n")
+	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  initialize: name ->\n    nil\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import user\nuser = User(\"komagata\")\nprint(user.name)\n")
+	writeFile(t, main, "import user\nitem = user.User(\"komagata\")\n")
 
-	_, err := LoadSource(main)
-	if err == nil {
-		t.Fatal("expected module shape rejection")
+	source, err := LoadSource(main)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(err.Error(), "import name conflict: user") {
-		t.Fatalf("unexpected error: %v", err)
+	if !strings.Contains(source, "user[\"User\"] = UserTyaPkgUser") {
+		t.Fatalf("source does not synthesize class namespace:\n%s", source)
 	}
 }
 
 func TestLoadSourceLoadsModuleClassDeclaration(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  initialize: name ->\n    self.name = name\n")
+	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  name: \"\"\n\n  initialize: name ->\n    self.name = name\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "import user\nitem = user.User(\"komagata\")\n")
 
@@ -155,7 +154,7 @@ func TestLoadSourceLoadsModuleClassDeclaration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("load source: %v", err)
 	}
-	if !strings.Contains(source, "class User") {
+	if !strings.Contains(source, "class UserTyaPkgUser") {
 		t.Fatalf("source does not include module class: %s", source)
 	}
 }
@@ -616,29 +615,29 @@ func TestResolvePackageDirIgnoresFileOnlyMatch(t *testing.T) {
 	}
 }
 
-func TestLoadSourceImportsPackagePublicClassesBare(t *testing.T) {
+func TestLoadSourceImportsPackagePublicClassesNamespaced(t *testing.T) {
 	dir := t.TempDir()
 	pkgDir := filepath.Join(dir, "net", "http")
 	if err := os.MkdirAll(pkgDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  initialize: url ->\n    self.url = url\n")
-	writeFile(t, filepath.Join(pkgDir, "response.tya"), "class Response\n  initialize: status ->\n    self.status = status\n")
+	writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  url: \"\"\n\n  initialize: url ->\n    self.url = url\n")
+	writeFile(t, filepath.Join(pkgDir, "response.tya"), "class Response\n  status: 0\n\n  initialize: status ->\n    self.status = status\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import net/http/*\nreq = Request(\"/ok\")\nprint(req.url)\n")
+	writeFile(t, main, "import net/http/*\nreq = net.http.Request(\"/ok\")\nprint(req.url)\n")
 
 	source, modules, err := LoadSourceWithModules(main)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(source, "class Request") || !strings.Contains(source, "req = Request(\"/ok\")") {
-		t.Fatalf("source does not expose bare package class:\n%s", source)
+	if !strings.Contains(source, "class RequestTyaPkgNetHttp") || !strings.Contains(source, "net[\"http\"][\"Request\"] = RequestTyaPkgNetHttp") {
+		t.Fatalf("source does not expose namespaced package class:\n%s", source)
 	}
-	if strings.Contains(source, "http = {}") || strings.Contains(source, "import net/http/*") {
-		t.Fatalf("source should not create unaliased package namespace:\n%s", source)
+	if strings.Contains(source, "import net/http/*") {
+		t.Fatalf("source should strip resolved package import:\n%s", source)
 	}
-	if len(modules) != 0 {
-		t.Fatalf("unaliased package import should not bind a module, got %v", modules)
+	if strings.Join(modules, ",") != "net" {
+		t.Fatalf("got modules %v", modules)
 	}
 }
 
@@ -661,29 +660,29 @@ func TestLoadSourceRejectsDirectoryPackageImportWithoutWildcard(t *testing.T) {
 	}
 }
 
-func TestLoadSourceImportsAliasedPackageAsNamespace(t *testing.T) {
+func TestLoadSourceImportsAliasedPackageBare(t *testing.T) {
 	dir := t.TempDir()
 	pkgDir := filepath.Join(dir, "net", "http")
 	if err := os.MkdirAll(pkgDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  initialize: url ->\n    self.url = url\n")
+	writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  url: \"\"\n\n  initialize: url ->\n    self.url = url\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import net/http/* as http\nreq = http.Request(\"/ok\")\nprint(req.url)\n")
+	writeFile(t, main, "import net/http/* as http\nreq = Request(\"/ok\")\nprint(req.url)\n")
 
 	source, modules, err := LoadSourceWithModules(main)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(source, "http = {}") || !strings.Contains(source, "http[\"Request\"] = Request") {
-		t.Fatalf("source does not synthesize aliased package namespace:\n%s", source)
+	if strings.Contains(source, "http = {}") || !strings.Contains(source, "class Request") {
+		t.Fatalf("source should expose aliased package classes bare:\n%s", source)
 	}
-	if strings.Join(modules, ",") != "http" {
+	if strings.Join(modules, ",") != "Request" {
 		t.Fatalf("got modules %v", modules)
 	}
 }
 
-func TestLoadSourceRejectsAliasedPackageBareClassUse(t *testing.T) {
+func TestLoadSourceRejectsAliasedPackageNamespaceUse(t *testing.T) {
 	dir := t.TempDir()
 	pkgDir := filepath.Join(dir, "net", "http")
 	if err := os.MkdirAll(pkgDir, 0755); err != nil {
@@ -691,18 +690,18 @@ func TestLoadSourceRejectsAliasedPackageBareClassUse(t *testing.T) {
 	}
 	writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  initialize: url ->\n    self.url = url\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import net/http/* as http\nreq = Request(\"/ok\")\n")
+	writeFile(t, main, "import net/http/* as http\nreq = http.Request(\"/ok\")\n")
 
 	_, err := LoadSource(main)
 	if err == nil {
-		t.Fatal("expected bare class rejection")
+		t.Fatal("expected alias namespace rejection")
 	}
-	if !strings.Contains(err.Error(), "undefined variable Request") {
+	if !strings.Contains(err.Error(), "undefined variable http") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
-func TestLoadSourceRejectsBarePackageNamespaceUse(t *testing.T) {
+func TestLoadSourceRejectsUnaliasedPackageBareClassUse(t *testing.T) {
 	dir := t.TempDir()
 	pkgDir := filepath.Join(dir, "net", "http")
 	if err := os.MkdirAll(pkgDir, 0755); err != nil {
@@ -710,13 +709,13 @@ func TestLoadSourceRejectsBarePackageNamespaceUse(t *testing.T) {
 	}
 	writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  initialize: url ->\n    self.url = url\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import net/http/*\nreq = http.Request(\"/ok\")\n")
+	writeFile(t, main, "import net/http/*\nreq = Request(\"/ok\")\n")
 
 	_, err := LoadSource(main)
 	if err == nil {
-		t.Fatal("expected bare package namespace rejection")
+		t.Fatal("expected bare package class rejection")
 	}
-	if !strings.Contains(err.Error(), "undefined variable http") {
+	if !strings.Contains(err.Error(), "undefined variable Request") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -731,7 +730,7 @@ func TestLoadSourceRejectsBarePackageImportNameConflict(t *testing.T) {
 		writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  initialize: ->\n    self.path = \"\"\n")
 	}
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import api/*\nimport web/*\n")
+	writeFile(t, main, "import api/* as api\nimport web/* as web\n")
 
 	_, err := LoadSource(main)
 	if err == nil {
@@ -750,7 +749,7 @@ func TestLoadSourceRejectsLocalBarePackageImportNameConflict(t *testing.T) {
 	}
 	writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  initialize: ->\n    self.path = \"\"\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import api/*\nRequest = -> \"local\"\n")
+	writeFile(t, main, "import api/* as api\nRequest = -> \"local\"\n")
 
 	_, err := LoadSource(main)
 	if err == nil {

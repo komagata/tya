@@ -11,7 +11,7 @@ stdout 'GET /\n'
 -- main.tya --
 import api/web/*
 
-req = Request("GET", "/")
+req = api.web.Request("GET", "/")
 print(req.summary())
 
 -- api/web/request.tya --

@@ -1,7 +1,7 @@
-import unittest/*
+import unittest/* as unittest
 import color
 import file
-import image/* as image
+import image/*
 
 class StdlibImageTest extends TestCase
 

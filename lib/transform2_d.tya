@@ -1,5 +1,5 @@
 import matrix
-import geometry/* as geo
+import geometry/*
 
 # Transform2D provides the transform2d/Transform2D standard library API.
 class Transform2D
@@ -61,7 +61,7 @@ class Transform2D
       transform = self
     expect(transform, "transform")
     expect_point(point, "point")
-    geo.Point(
+    geometry.Point(
       transform.a * point.x + transform.c * point.y + transform.tx,
       transform.b * point.x + transform.d * point.y + transform.ty
     )
@@ -76,18 +76,18 @@ class Transform2D
       transform = self
     expect(transform, "transform")
     expect_rect(rect, "rect")
-    geometry_p1 = apply_point(transform, geo.Point(rect.x, rect.y))
+    geometry_p1 = apply_point(transform, geometry.Point(rect.x, rect.y))
     geometry_p2 = apply_point(
       transform,
-      geo.Point(rect.x + rect.width, rect.y)
+      geometry.Point(rect.x + rect.width, rect.y)
     )
     geometry_p3 = apply_point(
       transform,
-      geo.Point(rect.x, rect.y + rect.height)
+      geometry.Point(rect.x, rect.y + rect.height)
     )
     geometry_p4 = apply_point(
       transform,
-      geo.Point(rect.x + rect.width, rect.y + rect.height)
+      geometry.Point(rect.x + rect.width, rect.y + rect.height)
     )
     geometry_left = min(
       min(geometry_p1.x, geometry_p2.x),
@@ -105,7 +105,7 @@ class Transform2D
       max(geometry_p1.y, geometry_p2.y),
       max(geometry_p3.y, geometry_p4.y)
     )
-    geo.Rect(
+    geometry.Rect(
       geometry_left,
       geometry_top,
       geometry_right - geometry_left,
@@ -123,9 +123,9 @@ class Transform2D
     expect_size(size, "size")
     geometry_rect = apply_rect(
       transform,
-      geo.Rect(0, 0, size.width, size.height)
+      geometry.Rect(0, 0, size.width, size.height)
     )
-    geo.Size(geometry_rect.width, geometry_rect.height)
+    geometry.Size(geometry_rect.width, geometry_rect.height)
 
   # Transform2D.apply_vector2 provides the transform2d/Transform2D standard library operation.
   # @param transform Any transform value.
@@ -137,7 +137,7 @@ class Transform2D
       transform = self
     expect(transform, "transform")
     expect_vector2(vector, "vector")
-    geo.Vector2(
+    geometry.Vector2(
       transform.a * vector.x + transform.c * vector.y,
       transform.b * vector.x + transform.d * vector.y
     )
@@ -193,7 +193,7 @@ class Transform2D
   # @param name String name value.
   # @return Any the resulting value.
   expect_point: value, name ->
-    if value.class != geo.Point
+    if value.class != geometry.Point
       raise error("transform2d: " + name + " must be a geometry.Point")
 
   # Transform2D.expect_rect provides the transform2d/Transform2D standard library operation.
@@ -201,7 +201,7 @@ class Transform2D
   # @param name String name value.
   # @return Any the resulting value.
   expect_rect: value, name ->
-    if value.class != geo.Rect
+    if value.class != geometry.Rect
       raise error("transform2d: " + name + " must be a geometry.Rect")
 
   # Transform2D.expect_size provides the transform2d/Transform2D standard library operation.
@@ -209,7 +209,7 @@ class Transform2D
   # @param name String name value.
   # @return Any the resulting value.
   expect_size: value, name ->
-    if value.class != geo.Size
+    if value.class != geometry.Size
       raise error("transform2d: " + name + " must be a geometry.Size")
 
   # Transform2D.expect_vector2 provides the transform2d/Transform2D standard library operation.
@@ -217,7 +217,7 @@ class Transform2D
   # @param name String name value.
   # @return Any the resulting value.
   expect_vector2: value, name ->
-    if value.class != geo.Vector2
+    if value.class != geometry.Vector2
       raise error("transform2d: " + name + " must be a geometry.Vector2")
 
   # Transform2D.from_array provides the transform2d/Transform2D standard library operation.

@@ -1,4 +1,4 @@
-import validation/*
+import validation/* as validation
 
 # Validation provides facade helpers for the validation standard library.
 class Validation

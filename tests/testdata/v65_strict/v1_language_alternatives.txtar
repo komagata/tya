@@ -72,7 +72,7 @@ print(left.value)
 -- package_api.tya --
 import pkg/*
 
-greeter = Greeter("Tya")
+greeter = pkg.Greeter("Tya")
 print(greeter.greet())
 
 -- pkg/greeter.tya --

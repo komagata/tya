@@ -9,7 +9,7 @@ stderr 'private class'
 -- main.tya --
 import pkg/*
 
-print(Util.run())
+print(pkg.Util.run())
 
 -- pkg/util.tya --
 class Util

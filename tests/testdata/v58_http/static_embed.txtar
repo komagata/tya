@@ -18,10 +18,10 @@ body {
 }
 
 -- main.tya --
-import net/http/* as http
+import net/http/*
 
 embed "static/**" as assets with { hash: true, minify: true, gzip: true }
 
-app = http.Server()
+app = net.http.Server()
 app.serve_static("/assets", assets)
 app.run(18084)

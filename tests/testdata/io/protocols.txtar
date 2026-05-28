@@ -20,7 +20,7 @@ stderr 'class BrokenClosable must implement interface method close'
 stderr 'class BrokenFlushable must implement interface method flush'
 
 -- protocols.tya --
-import io/* as io
+import io/*
 import file
 
 path = "io_protocols.txt"
@@ -35,7 +35,7 @@ file.File(path).remove()
 print(count)
 
 -- construct_readable.tya --
-import io/* as io
+import io/*
 
 reader = io.Readable()
 

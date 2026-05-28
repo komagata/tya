@@ -103,7 +103,7 @@ stdout '3: unsupported codegen: await'
 -- imports.tya --
 import greeting
 import net/http/*
-import net/http/* as http
+import net/http/*
 name = "imports parsed"
 
 -- reserved.tya --
@@ -220,7 +220,7 @@ interface Named
   abstract label: ->
 
 -- valid_semantics.tya --
-import net/http/* as http
+import net/http/*
 
 embed "templates/index.html" as index_html
 

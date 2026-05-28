@@ -1,5 +1,5 @@
-import unittest/*
-import serializer as serialization
+import unittest/* as unittest
+import serializer
 
 class SavePlayer
   name: nil
@@ -47,30 +47,30 @@ class StdlibSerializationTest extends TestCase
   static cyclic_to_data: ->
     values = []
     values.push(values)
-    return serialization.Serializer(nil).serialize(values)
+    return serializer.Serializer(nil).serialize(values)
 
   test_bytes: ->
     value = bytes_of("tya")
     self.assert_raises(
-      () -> serialization.Serializer(nil).serialize(bytes_of("tya")),
+      () -> serializer.Serializer(nil).serialize(bytes_of("tya")),
       "bytes require"
     )
     self.assert_equal(
       [116, 121, 97],
-      serialization.Serializer(nil).serialize(value, { bytes: "array" }),
+      serializer.Serializer(nil).serialize(value, { bytes: "array" }),
       "bytes array"
     )
     self.assert_equal(
       "dHlh",
-      serialization.Serializer(nil).serialize(value, { bytes: "base64" }),
+      serializer.Serializer(nil).serialize(value, { bytes: "base64" }),
       "bytes base64"
     )
 
   test_class_fields: ->
     player = SavePlayer("Ada", 7)
-    data = serialization.Serializer(nil).serialize(player)
+    data = serializer.Serializer(nil).serialize(player)
     self.assert_equal({ name: "Ada", score: 7 }, data, "class data")
-    restored = serialization.Serializer(nil).deserialize(data, SavePlayer)
+    restored = serializer.Serializer(nil).deserialize(data, SavePlayer)
     self.assert_equal(SavePlayer, restored.class, "class")
     self.assert_equal("Ada", restored.name, "name")
     self.assert_equal(7, restored.score, "score")
@@ -79,28 +79,28 @@ class StdlibSerializationTest extends TestCase
     cycle = ->
       values = []
       values.push(values)
-      serialization.Serializer(nil).serialize(values)
+      serializer.Serializer(nil).serialize(values)
     self.assert_raises(cycle, "cycle detected")
     self.assert_raises(
-      () -> serialization.Serializer(nil).serialize(() -> 1),
+      () -> serializer.Serializer(nil).serialize(() -> 1),
       "unsupported function"
     )
 
   test_data_and_json_primitives: ->
     data = { name: "tya", nums: [1, 2], ok: true, none: nil }
-    out = serialization.Serializer(nil).serialize(data)
+    out = serializer.Serializer(nil).serialize(data)
     self.assert_equal(data, out, "to_data")
-    parsed = serialization.Serializer(nil).from_json(
-      serialization.Serializer(nil).to_json(data),
+    parsed = serializer.Serializer(nil).from_json(
+      serializer.Serializer(nil).to_json(data),
       nil
     )
     self.assert_equal(data, parsed, "json")
 
   test_hooks: ->
     player = HookedPlayer("ada")
-    data = serialization.Serializer(nil).serialize(player)
+    data = serializer.Serializer(nil).serialize(player)
     self.assert_equal({ name: "ADA" }, data, "hook data")
-    restored = serialization.Serializer(nil).deserialize(
+    restored = serializer.Serializer(nil).deserialize(
       { name: "ADA" },
       HookedPlayer
     )
@@ -109,29 +109,29 @@ class StdlibSerializationTest extends TestCase
 
   test_options: ->
     player = SavePlayer("Ada", 7)
-    data = serialization.Serializer(nil).serialize(
+    data = serializer.Serializer(nil).serialize(
       player,
       { include_class: true, class_key: "_type", fields: ["name"] }
     )
     self.assert_equal({ _type: "SavePlayer", name: "Ada" }, data, "options")
-    restored = serialization.Serializer(nil).deserialize(
+    restored = serializer.Serializer(nil).deserialize(
       { name: "Ada" },
       SavePlayer,
       { defaults: { score: 10 } }
     )
     self.assert_equal(10, restored.score, "default")
     self.assert_raises(
-      () -> serialization.Serializer(nil).deserialize({ extra: 1 }, SavePlayer, { strict_fields: true }),
+      () -> serializer.Serializer(nil).deserialize({ extra: 1 }, SavePlayer, { strict_fields: true }),
       "unknown field"
     )
     self.assert_raises(
-      () -> serialization.Serializer(nil).serialize(SavePlayer("Ada", 7), { unknown: true }),
+      () -> serializer.Serializer(nil).serialize(SavePlayer("Ada", 7), { unknown: true }),
       "unknown option"
     )
 
   test_serializable_interface: ->
     player = SerializablePlayer("Ada", 7)
-    data = serialization.Serializer(nil).serialize(player)
+    data = serializer.Serializer(nil).serialize(player)
     self.assert_equal(
       { name: "Ada", score: 7, kind: "serializable" },
       data,
@@ -139,16 +139,16 @@ class StdlibSerializationTest extends TestCase
     )
     self.assert_equal(
       { hook: "to_data" },
-      serialization.Serializer(nil).serialize(DualHookPlayer()),
+      serializer.Serializer(nil).serialize(DualHookPlayer()),
       "to_data precedence"
     )
     self.assert_raises(
-      () -> serialization.Serializer(nil).serialize(ObjectData()),
+      () -> serializer.Serializer(nil).serialize(ObjectData()),
       "to_data returned unsupported object"
     )
 
   test_toml: ->
-    text = serialization.Serializer(nil).to_toml({ name: "tya", port: 8080 })
-    restored = serialization.Serializer(nil).from_toml(text, nil)
+    text = serializer.Serializer(nil).to_toml({ name: "tya", port: 8080 })
+    restored = serializer.Serializer(nil).from_toml(text, nil)
     self.assert_equal("tya", restored["name"], "toml name")
     self.assert_equal(8080, restored["port"], "toml port")

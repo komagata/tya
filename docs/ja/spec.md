@@ -761,21 +761,35 @@ import
 
 ディレクトリパッケージは、インポートパスによって解決される、`snake_case` クラス/インターフェイスファイルを含むディレクトリである。少なくとも 1 つのクラス/インターフェイスファイルを含まなければならず、パッケージの leaf にスクリプトファイルを含んではならない。
 
-alias なしの wildcard ディレクトリインポートは、公開クラス名とインターフェイス名を直接公開する。
+alias なしの wildcard ディレクトリインポートは、公開クラス名とインターフェイス名を import path namespace 経由で公開する。公開名は裸の名前としては import されない。
 
 ```tya
 import net/http/*
 
-server = Server()
+server = net.http.Server()
 ```
 
-alias 付き wildcard ディレクトリインポートは namespace 束縛を公開し、公開名を裸の名前としてインポートしない。
+上の例では `Server()` は不正である。qualified access に必要な最初の namespace segment は予約されるため、import する file の top-level `net` 束縛も不正である。
+
+alias 付き wildcard ディレクトリインポートは、package の公開名を明示的に裸の名前として公開する。alias は duplicate import diagnostic のための import group label であり、runtime または compile-time namespace 束縛ではない。
 
 ```tya
 import net/http/* as http
 
-server = http.Server()
+server = Server()
 ```
+
+上の例では `http.Server()` は不正である。
+
+alias なし namespace import は qualified public name を予約する。同じ qualified public name を公開する 2 つの import は不正だが、`net.http.Server` と `net.tcp.Server` は共存できる。alias 付き import は裸の public name を予約するため、`Server` を公開する alias 付き import が 2 つある場合は不正である。同じ path を 2 回 import することは alias が異なっていても不正である。
+
+```tya
+import net/http/*
+
+net = "local" # invalid: net is an import namespace
+```
+
+alias なし namespace import は裸の public name を予約しない。`Server` という local top-level class は `net.http.Server` と共存できる。
 
 同じディレクトリパッケージ内では、兄弟の公開クラスがインポートなしの裸の `PascalCase` 名で見える。
 

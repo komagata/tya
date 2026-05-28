@@ -1,4 +1,4 @@
-import unittest/*
+import unittest/* as unittest
 
 class StdlibArrayTest extends TestCase
 

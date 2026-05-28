@@ -5,7 +5,7 @@ stdout 'out\n'
 stderr 'err\n'
 
 -- stdout_stderr.tya --
-import io/* as io
+import io/*
 
 out = io.Io().stdout()
 err = io.Io().stderr()

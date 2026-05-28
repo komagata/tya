@@ -9,7 +9,7 @@ stdout 'helper used\n'
 -- main.tya --
 import tools/*
 
-print(Helper.use())
+print(tools.Helper.use())
 
 -- tools/helper.tya --
 class Helper

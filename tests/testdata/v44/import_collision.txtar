@@ -1,22 +1,22 @@
-# v0.44 directory-package name collision: two imports whose
-# directories share a terminal segment would synthesize the same
-# module name. The runner detects this at synthesis time and fails
-# with a clear message naming both directories. The check fires
-# before the visibleImports binding check, so it covers both
-# unaliased and aliased same-segment imports.
+# Directory-package imports expose public names through the import
+# path namespace, so same terminal directory names can coexist when
+# their qualified names differ. Aliased package imports still expose
+# public names bare, so duplicate public names conflict.
 cd $REPO
 
-! exec go run ./cmd/tya run $WORK/main.tya
-stderr 'package name conflict.*module net'
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'a\nb\n'
+! stderr .
 
 ! exec go run ./cmd/tya run $WORK/aliased.tya
-stderr 'package name conflict.*module net'
+stderr 'import name conflict'
 
 -- main.tya --
 import a/net/*
 import b/net/*
 
-print("unreachable")
+print(a.net.Request().label)
+print(b.net.Request().label)
 
 -- aliased.tya --
 import a/net/* as a_net

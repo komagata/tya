@@ -3,6 +3,6 @@
 # Then in another shell: curl http://localhost:8080/
 import net/http/*
 
-app = http.Server()
+app = net.http.Server()
 app.get("/", _req -> { status: 200, body: "Hello, Tya HTTP" })
 app.run(8080)

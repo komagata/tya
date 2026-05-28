@@ -1,6 +1,6 @@
-# Bare package imports expose public class names directly. Aliased
-# package imports keep the package namespace and do not expose bare
-# class names.
+# Unaliased package imports expose public class names through their
+# import-path namespace. Aliased package imports expose public class
+# names bare and do not create an alias namespace.
 cd $REPO
 
 exec go run ./cmd/tya run $WORK/bare.tya
@@ -19,32 +19,36 @@ stdout 'aliased\n'
 stderr 'undefined variable http'
 
 ! exec go run ./cmd/tya run $WORK/aliased_bare.tya
-stderr 'undefined variable Request'
+stderr 'undefined variable http'
 
 ! exec go run ./cmd/tya run $WORK/conflict_imports.tya
 stderr 'import name conflict: Request'
 
-! exec go run ./cmd/tya run $WORK/conflict_local.tya
-stderr 'import name conflict: Request'
+exec go run ./cmd/tya run $WORK/local_bare_name.tya
+stdout 'local\nbare\n'
+! stderr .
+
+! exec go run ./cmd/tya run $WORK/conflict_namespace.tya
+stderr 'import name conflict: net'
 
 -- bare.tya --
 import net/http/*
 
-request = Request("bare")
+request = net.http.Request("bare")
 print(request.label())
 
 -- bare_path_name_local.tya --
 import net/http/*
 
 http = "local http"
-request = Request("bare")
+request = net.http.Request("bare")
 print(http)
 print(request.label())
 
 -- aliased.tya --
 import net/http/* as http
 
-request = http.Request("aliased")
+request = Request("aliased")
 print(request.label())
 
 -- bare_namespace.tya --
@@ -56,20 +60,31 @@ print(request.label())
 -- aliased_bare.tya --
 import net/http/* as http
 
-request = Request("hidden")
+request = http.Request("hidden")
 print(request.label())
 
 -- conflict_imports.tya --
-import api/*
-import web/*
+import api/* as api
+import web/* as web
 
 print("unreachable")
 
--- conflict_local.tya --
+-- local_bare_name.tya --
 import net/http/*
 
-Request = -> "local"
-print(Request())
+class Server
+  static label: ->
+    "local"
+
+print(Server.label())
+request = net.http.Request("bare")
+print(request.label())
+
+-- conflict_namespace.tya --
+import net/http/*
+
+net = "local"
+print(net)
 
 -- net/http/request.tya --
 class Request

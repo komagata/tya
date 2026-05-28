@@ -34,7 +34,7 @@ stdout '0.72.0\n'
 ! stderr .
 
 -- pass/nested/one_test.tya --
-import unittest/*
+import unittest/* as unittest
 
 class OneTest extends TestCase
   test_truthy: ->
@@ -43,7 +43,7 @@ class OneTest extends TestCase
     self.assert_equal([1, {name: "tya"}], [1, {name: "tya"}], "deep")
 
 -- pass/two_test.tya --
-import unittest/*
+import unittest/* as unittest
 
 class TwoTest extends TestCase
   test_arithmetic: ->
@@ -57,14 +57,14 @@ class TwoTest extends TestCase
 print("ignored")
 
 -- fail/fail_assert_test.tya --
-import unittest/*
+import unittest/* as unittest
 
 class FailAssertTest extends TestCase
   test_fails: ->
     self.assert(false, "intentional")
 
 -- fail/fail_equal_test.tya --
-import unittest/*
+import unittest/* as unittest
 
 class FailEqualTest extends TestCase
   test_unequal: ->

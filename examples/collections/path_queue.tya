@@ -1,4 +1,4 @@
-import collections/* as collections
+import collections/*
 
 queue = collections.Queue(nil)
 queue.push("assets")

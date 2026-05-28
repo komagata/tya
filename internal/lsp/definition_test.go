@@ -6,12 +6,12 @@ import (
 	"testing"
 )
 
-func TestDefinitionAtBarePackageClassImport(t *testing.T) {
+func TestDefinitionAtNamespacedPackageClassImport(t *testing.T) {
 	dir := t.TempDir()
 	writeLSPFile(t, filepath.Join(dir, "tya.toml"), "name = \"demo\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n")
 	writeLSPFile(t, filepath.Join(dir, "src", "net", "http", "request.tya"), "class Request\n  initialize: ->\n    self.path = \"\"\n")
 	mainPath := filepath.Join(dir, "src", "main.tya")
-	mainSrc := "import net/http\n\nrequest = Request()\n"
+	mainSrc := "import net/http/*\n\nrequest = net.http.Request()\n"
 	writeLSPFile(t, mainPath, mainSrc)
 	mainURI, _ := PathToURI(mainPath)
 	wantURI, _ := PathToURI(filepath.Join(dir, "src", "net", "http", "request.tya"))
@@ -21,7 +21,7 @@ func TestDefinitionAtBarePackageClassImport(t *testing.T) {
 	locs, err := DefinitionAt(DefinitionContext{
 		Doc:       &Document{URI: mainURI, Path: mainPath, Text: mainSrc},
 		Workspace: ws,
-	}, 2, 11)
+	}, 2, 25)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,12 +33,12 @@ func TestDefinitionAtBarePackageClassImport(t *testing.T) {
 	}
 }
 
-func TestDefinitionAtAliasedPackageClassImport(t *testing.T) {
+func TestDefinitionAtAliasedPackageBareClassImport(t *testing.T) {
 	dir := t.TempDir()
 	writeLSPFile(t, filepath.Join(dir, "tya.toml"), "name = \"demo\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n")
 	writeLSPFile(t, filepath.Join(dir, "src", "net", "http", "request.tya"), "class Request\n  initialize: ->\n    self.path = \"\"\n")
 	mainPath := filepath.Join(dir, "src", "main.tya")
-	mainSrc := "import net/http as http\n\nrequest = http.Request()\n"
+	mainSrc := "import net/http/* as http\n\nrequest = Request()\n"
 	writeLSPFile(t, mainPath, mainSrc)
 	mainURI, _ := PathToURI(mainPath)
 	wantURI, _ := PathToURI(filepath.Join(dir, "src", "net", "http", "request.tya"))
@@ -48,7 +48,7 @@ func TestDefinitionAtAliasedPackageClassImport(t *testing.T) {
 	locs, err := DefinitionAt(DefinitionContext{
 		Doc:       &Document{URI: mainURI, Path: mainPath, Text: mainSrc},
 		Workspace: ws,
-	}, 2, 15)
+	}, 2, 11)
 	if err != nil {
 		t.Fatal(err)
 	}

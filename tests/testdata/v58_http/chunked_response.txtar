@@ -24,10 +24,10 @@ grep 'Content-Length: 6' $WORK/normal.out
 ! grep 'Transfer-Encoding: chunked' $WORK/normal.out
 
 -- main.tya --
-import net/http/* as http
+import net/http/*
 import channel
 
-app = http.Server()
+app = net.http.Server()
 
 class App
   static chunked: _req ->

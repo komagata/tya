@@ -1,5 +1,5 @@
 import csv
-import unittest/*
+import unittest/* as unittest
 
 class StdlibCsvTest extends TestCase
   test_dump_arrays: ->

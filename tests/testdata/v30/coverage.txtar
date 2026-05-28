@@ -52,7 +52,7 @@ stdout 'missed'
 stderr 'below minimum'
 
 -- probe_test.tya --
-import unittest/*
+import unittest/* as unittest
 
 class ProbeTest extends TestCase
   test_one: ->

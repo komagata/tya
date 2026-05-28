@@ -9,9 +9,9 @@ exec go run ./cmd/tya build $WORK/main.tya -o $WORK/server
 exec sh -c '$WORK/server & pid=$!; sleep 1; before=$(ps -o rss= -p $pid); python3 $WORK/client.py; after=$(ps -o rss= -p $pid); kill $pid 2>/dev/null; wait $pid 2>/dev/null; delta=$((after - before)); test $delta -lt 20000'
 
 -- main.tya --
-import net/http/* as http
+import net/http/*
 
-app = http.Server()
+app = net.http.Server()
 app.get("/echo/:id", req -> { status: 200, body: req["path_params"]["id"] + ":" + req["query"].get("q", "") + ":" + req["cookies"].get("a", "") })
 app.run(18096)
 

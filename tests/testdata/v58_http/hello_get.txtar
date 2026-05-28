@@ -14,8 +14,8 @@ exec sh -c '$WORK/server & pid=$!; sleep 1; curl -s -m 5 --retry 5 --retry-connr
 stdout 'Hello v58'
 
 -- main.tya --
-import net/http/* as http
+import net/http/*
 
-app = http.Server()
+app = net.http.Server()
 app.get("/", _req -> { status: 200, body: "Hello v58" })
 app.run(18080)

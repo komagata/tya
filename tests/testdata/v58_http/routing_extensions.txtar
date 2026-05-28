@@ -12,7 +12,7 @@ exec sh -c '$WORK/server & pid=$!; sleep 1; curl -s -m 5 --retry 5 --retry-connr
 exec sh -c '$WORK/server & pid=$!; sleep 1; curl -s -m 5 --retry 5 --retry-connrefused -X OPTIONS -D $WORK/options_headers -o /dev/null http://localhost:18086/hello; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; test $ret -eq 0 && grep -q "Allow: .*GET" $WORK/options_headers && grep -q "Allow: .*HEAD" $WORK/options_headers'
 
 -- main.tya --
-import net/http/* as http
+import net/http/*
 
 class App
   static hello: req ->
@@ -24,7 +24,7 @@ class App
   static asset: req ->
     return { status: 200, body: req["params"]["path"] }
 
-app = http.Server()
+app = net.http.Server()
 app.get("/hello", App.hello)
 app.patch("/users/:id", App.user)
 app.get("/assets/*path", App.asset)
