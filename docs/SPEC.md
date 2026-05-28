@@ -644,11 +644,11 @@ their names begin with `_`.
 `Comparable` is the standard ordering protocol. A class implements it by
 providing `compare(other)`, which returns a negative number, zero, or a
 positive number when the receiver sorts before, equal to, or after `other`.
-Numbers conform to `Comparable` as primitive values. Strings do not define
-ordering operators; string ordering, collation, or locale-aware comparison must
-use explicit methods or standard-library APIs. The ordering operators `<`,
-`<=`, `>`, and `>=` keep their primitive numeric behavior and do not dispatch
-to user-defined `compare`.
+Numbers conform to `Comparable` as primitive values. Strings also support the
+primitive ordering operators using lexicographic Unicode code point ordering;
+locale-aware collation must use explicit methods or standard-library APIs. The
+ordering operators `<`, `<=`, `>`, and `>=` keep their primitive behavior and
+do not dispatch to user-defined `compare`.
 
 `Equatable` is the standard domain equality protocol. A class implements it by
 providing `equal?(other)`, which must return a boolean. Primitive values expose
@@ -820,8 +820,9 @@ with different runtime kinds compare unequal. Arrays and dictionaries compare
 by contents; functions, classes, objects, resources, tasks, and channels
 compare by identity unless their documented primitive surface says otherwise.
 Numeric int and float values compare as one number kind, so `1 == 1.0` is
-true. Ordering operators `<`, `<=`, `>`, and `>=` require numbers; string
-ordering is not defined by these operators.
+true. Ordering operators `<`, `<=`, `>`, and `>=` require numbers or strings of
+the same kind. Strings compare lexicographically by Unicode code point
+sequence.
 
 Deep equality on cyclic arrays or dictionaries is a runtime error. Display of
 cyclic arrays or dictionaries must terminate with a stable cycle marker.

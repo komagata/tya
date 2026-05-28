@@ -161,14 +161,11 @@ func TestCheckRejectsNegativeLiteralIndexes(t *testing.T) {
 	}
 }
 
-func TestCheckRejectsStringOrdering(t *testing.T) {
+func TestCheckAllowsStringOrdering(t *testing.T) {
 	prog := parse(t, "print(\"a\" < \"b\")\n")
 	err := Check(prog)
-	if err == nil {
-		t.Fatal("expected string ordering error")
-	}
-	if !strings.Contains(err.Error(), "< expects numbers") {
-		t.Fatalf("unexpected error: %v", err)
+	if err != nil {
+		t.Fatalf("unexpected string ordering error: %v", err)
 	}
 }
 

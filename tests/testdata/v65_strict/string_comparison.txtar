@@ -1,0 +1,40 @@
+# String ordering operators compare lexicographically by code point.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_LIB_DIR=$REPO/lib
+cd $WORK
+
+exec $WORK/tya check string_comparison.tya
+
+exec $WORK/tya run string_comparison.tya
+stdout 'string comparison ok'
+
+exec $WORK/tya build string_comparison.tya -o string_comparison
+exec ./string_comparison
+stdout 'string comparison ok'
+
+! exec $WORK/tya check mixed_string_number.tya
+stderr 'expects numbers or strings of the same kind'
+
+! exec $WORK/tya run dynamic_mixed.tya
+stderr 'expects numbers or strings of the same kind'
+
+-- string_comparison.tya --
+assert("a" < "b")
+assert("a" <= "a")
+assert("b" > "a")
+assert("b" >= "b")
+assert(not ("a" > "b"))
+assert(not ("a" < "a"))
+assert("a" < "aa")
+assert("aa" < "b")
+assert("あ" < "い")
+println("string comparison ok")
+
+-- mixed_string_number.tya --
+print("a" < 1)
+
+-- dynamic_mixed.tya --
+value = ["a"][0]
+print(value < 1)

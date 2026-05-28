@@ -1474,8 +1474,13 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 				return fmt.Errorf("%d:%d: %% expects integers", n.Op.Line, n.Op.Col)
 			}
 		case "<", "<=", ">", ">=":
-			if isStringLiteral(n.Left) || isStringLiteral(n.Right) {
-				return fmt.Errorf("%d:%d: %s expects numbers", n.Op.Line, n.Op.Col, n.Op.Lexeme)
+			leftKind := kindOf(n.Left, scope)
+			rightKind := kindOf(n.Right, scope)
+			if leftKind != kindUnknown && rightKind != kindUnknown {
+				if leftKind == rightKind && (leftKind == kindNumber || leftKind == kindString) {
+					break
+				}
+				return fmt.Errorf("%d:%d: %s expects numbers or strings of the same kind", n.Op.Line, n.Op.Col, n.Op.Lexeme)
 			}
 		}
 		if n.Op.Lexeme == "+" {

@@ -123,8 +123,7 @@ stderr '% expects integers'
 ! exec $WORK/tya check negative_index.tya
 stderr 'negative indexes are invalid'
 
-! exec $WORK/tya check string_ordering.tya
-stderr '< expects numbers'
+exec $WORK/tya check string_ordering.tya
 
 ! exec $WORK/tya check required_after_default.tya
 stderr 'required parameter b after default parameter'

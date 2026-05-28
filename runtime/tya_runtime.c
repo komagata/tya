@@ -1987,13 +1987,19 @@ TyaValue tya_order_compare(TyaValue left, TyaValue right) {
     if (left.number > right.number) return tya_number(1);
     return tya_number(0);
   }
+  if (left.kind == TYA_STRING && right.kind == TYA_STRING) {
+    int cmp = strcmp(left.string == NULL ? "" : left.string, right.string == NULL ? "" : right.string);
+    if (cmp < 0) return tya_number(-1);
+    if (cmp > 0) return tya_number(1);
+    return tya_number(0);
+  }
   if (left.kind == TYA_NIL && right.kind == TYA_NUMBER) {
     return tya_number(-1);
   }
   if (left.kind == TYA_NUMBER && right.kind == TYA_NIL) {
     return tya_number(1);
   }
-  tya_raise(tya_string("< expects numbers"));
+  tya_raise(tya_string("< expects numbers or strings of the same kind"));
   return tya_nil();
 }
 

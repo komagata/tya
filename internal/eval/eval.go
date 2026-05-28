@@ -3265,10 +3265,27 @@ func deepEqualValue(l, r Value, seen map[visitPair]bool) (bool, error) {
 }
 
 func compare(op string, l, r Value) (Value, error) {
+	if ls, ok := l.(string); ok {
+		rs, ok := r.(string)
+		if !ok {
+			return nil, fmt.Errorf("%s expects numbers or strings of the same kind", op)
+		}
+		cmp := strings.Compare(ls, rs)
+		switch op {
+		case "<":
+			return cmp < 0, nil
+		case "<=":
+			return cmp <= 0, nil
+		case ">":
+			return cmp > 0, nil
+		case ">=":
+			return cmp >= 0, nil
+		}
+	}
 	lf, lok := asFloat(l)
 	rf, rok := asFloat(r)
 	if !lok || !rok {
-		return nil, fmt.Errorf("%s expects numbers", op)
+		return nil, fmt.Errorf("%s expects numbers or strings of the same kind", op)
 	}
 	switch op {
 	case "<":
