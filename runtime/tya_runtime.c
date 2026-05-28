@@ -637,6 +637,7 @@ typedef struct {
 static char *tya_substr(const char *text, int start, int len);
 static int tya_string_len(const char *text);
 static bool tya_deep_equal_bool(TyaValue left, TyaValue right);
+static bool tya_data_object_equal(TyaValue left, TyaValue right);
 static void tya_write_value(FILE *out, TyaValue value);
 static void tya_build_value(TyaStringBuilder *builder, TyaValue value);
 static void tya_builder_append(TyaStringBuilder *builder, const char *text);
@@ -1858,6 +1859,9 @@ bool tya_equal(TyaValue left, TyaValue right) {
   case TYA_DICT:
     return tya_deep_equal_bool(left, right);
   case TYA_OBJECT:
+    if (tya_member_optional(left, "__data_type").kind == TYA_STRING || tya_member_optional(right, "__data_type").kind == TYA_STRING) {
+      return tya_data_object_equal(left, right);
+    }
     return left.dict == right.dict;
   case TYA_FUNCTION:
     return left.function == right.function;
@@ -1886,6 +1890,54 @@ bool tya_equal(TyaValue left, TyaValue right) {
 
 TyaValue tya_deep_equal(TyaValue left, TyaValue right) {
   return tya_bool(tya_deep_equal_bool(left, right));
+}
+
+static bool tya_data_object_equal(TyaValue left, TyaValue right) {
+  if (left.kind != TYA_OBJECT || right.kind != TYA_OBJECT || left.dict == NULL || right.dict == NULL) {
+    return false;
+  }
+  TyaValue left_type = tya_member_optional(left, "__data_type");
+  TyaValue right_type = tya_member_optional(right, "__data_type");
+  if (left_type.kind != TYA_STRING || right_type.kind != TYA_STRING || left_type.string == NULL || right_type.string == NULL) {
+    return false;
+  }
+  if (strcmp(left_type.string, right_type.string) != 0) {
+    return false;
+  }
+  for (int i = 0; i < left.dict->len; i++) {
+    const char *key = left.dict->entries[i].key;
+    if (key == NULL || strncmp(key, "__", 2) == 0 || strcmp(key, "with") == 0) {
+      continue;
+    }
+    bool found = false;
+    TyaValue right_value = tya_nil();
+    for (int j = 0; j < right.dict->len; j++) {
+      if (right.dict->entries[j].key != NULL && strcmp(right.dict->entries[j].key, key) == 0) {
+        found = true;
+        right_value = right.dict->entries[j].value;
+        break;
+      }
+    }
+    if (!found) return false;
+    if (!tya_deep_equal_bool(left.dict->entries[i].value, right_value)) {
+      return false;
+    }
+  }
+  for (int i = 0; i < right.dict->len; i++) {
+    const char *key = right.dict->entries[i].key;
+    if (key == NULL || strncmp(key, "__", 2) == 0 || strcmp(key, "with") == 0) {
+      continue;
+    }
+    bool found = false;
+    for (int j = 0; j < left.dict->len; j++) {
+      if (left.dict->entries[j].key != NULL && strcmp(left.dict->entries[j].key, key) == 0) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) return false;
+  }
+  return true;
 }
 
 static bool tya_deep_equal_bool(TyaValue left, TyaValue right) {

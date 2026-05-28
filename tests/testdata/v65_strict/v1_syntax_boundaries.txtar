@@ -29,12 +29,6 @@ stderr 'module declarations were removed'
 ! exec $WORK/tya check enum.tya
 stderr 'enum syntax is not part of Tya v1.0.0'
 
-! exec $WORK/tya check record.tya
-stderr 'record syntax is not part of Tya v1.0.0'
-
-! exec $WORK/tya check struct.tya
-stderr 'struct syntax is not part of Tya v1.0.0'
-
 ! exec $WORK/tya check macro.tya
 stderr 'macro syntax is not part of Tya v1.0.0'
 
@@ -85,11 +79,11 @@ enum Role
 
 -- record.tya --
 record User
-  name = ""
+  name
 
 -- struct.tya --
 struct Point
-  x = 0
+  x
 
 -- macro.tya --
 macro debug(value)

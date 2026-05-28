@@ -436,6 +436,26 @@ func TestParseProtectedClassMethods(t *testing.T) {
 	}
 }
 
+func TestParseStructAndRecordDeclarations(t *testing.T) {
+	src := "struct User\n  name\n  age: 0\n\nrecord Point\n  x\n  y\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := Parse(toks)
+	if err != nil {
+		t.Fatalf("parse struct/record: %v", err)
+	}
+	user := prog.Stmts[0].(*ast.StructDecl)
+	if user.Record || user.Name != "User" || len(user.Fields) != 2 || user.Fields[0].HasDefault || !user.Fields[1].HasDefault {
+		t.Fatalf("user = %#v", user)
+	}
+	point := prog.Stmts[1].(*ast.StructDecl)
+	if !point.Record || point.Name != "Point" || len(point.Fields) != 2 {
+		t.Fatalf("point = %#v", point)
+	}
+}
+
 func TestParseRejectsOldClassAndInterfaceMemberAssignmentSyntax(t *testing.T) {
 	tests := []struct {
 		name string
@@ -589,14 +609,6 @@ func TestParseRejectsModuleEnumRecordStructMacroAsyncSyntax(t *testing.T) {
 		{
 			src:  "enum Role\n  Admin\n",
 			want: "enum syntax is not part of Tya v1.0.0",
-		},
-		{
-			src:  "record User\n  name: \"\"\n",
-			want: "record syntax is not part of Tya v1.0.0",
-		},
-		{
-			src:  "struct Point\n  x = 0\n",
-			want: "struct syntax is not part of Tya v1.0.0",
 		},
 		{
 			src:  "macro debug(value)\n  value\n",

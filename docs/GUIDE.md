@@ -193,7 +193,7 @@ print([1, 2, 3].len())
 Use `snake_case` for values, functions, methods, files, import paths, and
 dictionary keys.
 
-Use `PascalCase` for classes and interfaces.
+Use `PascalCase` for classes, interfaces, structs, and records.
 
 Use `SCREAMING_SNAKE_CASE` for constants.
 
@@ -367,6 +367,25 @@ class User
 user = User("Ada")
 print(user.label())
 ```
+
+Use `struct` or `record` for plain named-field data.
+
+```tya
+struct User
+  name
+  age: 0
+
+record Point
+  x
+  y
+
+user = User(name: "Ada")
+point = Point(1, 2)
+next = point.with(x: 3)
+```
+
+Struct fields can be reassigned. Record fields are immutable; use `with(...)`
+with keyword arguments to derive a changed record value.
 
 Use `private` for private class members.
 

@@ -190,7 +190,7 @@ func requiresBlankBefore(cur, prev ast.Stmt) bool {
 
 func isTopDefinition(s ast.Stmt) bool {
 	switch n := s.(type) {
-	case *ast.ModuleDecl, *ast.ClassDecl, *ast.InterfaceDecl:
+	case *ast.ModuleDecl, *ast.ClassDecl, *ast.InterfaceDecl, *ast.StructDecl:
 		return true
 	case *ast.AssignStmt:
 		if len(n.Values) == 1 {
@@ -396,6 +396,8 @@ func (u *unparser) stmt(s ast.Stmt) error {
 		return u.moduleDecl(n)
 	case *ast.ClassDecl:
 		return u.classDecl(n)
+	case *ast.StructDecl:
+		return u.structDecl(n)
 	case *ast.InterfaceDecl:
 		return u.interfaceDecl(n)
 	}
@@ -581,6 +583,29 @@ func (u *unparser) classDecl(n *ast.ClassDecl) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func (u *unparser) structDecl(n *ast.StructDecl) error {
+	kw := "struct"
+	if n.Record {
+		kw = "record"
+	}
+	u.line(kw + " " + n.Name)
+	u.indent++
+	for _, f := range n.Fields {
+		u.leadingComments(f.Comments)
+		if f.HasDefault {
+			val, err := u.expr(f.Value)
+			if err != nil {
+				return err
+			}
+			u.line(f.Name + ": " + val)
+		} else {
+			u.line(f.Name)
+		}
+	}
+	u.indent--
 	return nil
 }
 

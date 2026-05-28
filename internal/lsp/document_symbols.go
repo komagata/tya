@@ -24,6 +24,8 @@ func DocumentSymbolsFor(doc *Document) []DocumentSymbol {
 		switch n := stmt.(type) {
 		case *ast.ClassDecl:
 			out = append(out, classSymbol(n))
+		case *ast.StructDecl:
+			out = append(out, structSymbol(n))
 		case *ast.ModuleDecl:
 			out = append(out, moduleSymbol(n))
 		case *ast.InterfaceDecl:
@@ -170,6 +172,30 @@ func classSymbol(c *ast.ClassDecl) DocumentSymbol {
 	return DocumentSymbol{
 		Name:           c.Name,
 		Kind:           SymbolKindClass,
+		Range:          enclosingRange(selection, children),
+		SelectionRange: selection,
+		Children:       children,
+	}
+}
+
+func structSymbol(s *ast.StructDecl) DocumentSymbol {
+	children := []DocumentSymbol{}
+	for _, f := range s.Fields {
+		children = append(children, DocumentSymbol{
+			Name:           f.Name,
+			Kind:           SymbolKindField,
+			Range:          tokenRange(f.Tok, len(f.Name)),
+			SelectionRange: tokenRange(f.Tok, len(f.Name)),
+		})
+	}
+	selection := tokenRange(s.NameTok, len(s.Name))
+	kind := SymbolKindStruct
+	if s.Record {
+		kind = SymbolKindObject
+	}
+	return DocumentSymbol{
+		Name:           s.Name,
+		Kind:           kind,
 		Range:          enclosingRange(selection, children),
 		SelectionRange: selection,
 		Children:       children,

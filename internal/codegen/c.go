@@ -141,7 +141,7 @@ type CoverageRegistry struct {
 // Returns (csource, registry, diags, err). diags is nil on success,
 // or the same payload as err.(*CodegenError).Diags on failure.
 func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOptions) (string, *CoverageRegistry, []diag.Diagnostic, error) {
-	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, funcParams: map[string][]string{}, classes: map[string]string{}, classParams: map[string][]string{}, classMethods: map[string]string{}, methodParams: map[string][]string{}, classDecls: map[string]*ast.ClassDecl{}, interfaceDecls: map[string]*ast.InterfaceDecl{}, moduleClasses: map[string]string{}, sourcePath: sourcePath}
+	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, funcParams: map[string][]string{}, classes: map[string]string{}, classParams: map[string][]string{}, classMethods: map[string]string{}, methodParams: map[string][]string{}, classDecls: map[string]*ast.ClassDecl{}, structDecls: map[string]*ast.StructDecl{}, interfaceDecls: map[string]*ast.InterfaceDecl{}, moduleClasses: map[string]string{}, sourcePath: sourcePath}
 	if opt != nil {
 		g.coverEnabled = true
 		g.coverOpt = opt
@@ -251,6 +251,7 @@ type cgen struct {
 	classMethods   map[string]string
 	methodParams   map[string][]string
 	classDecls     map[string]*ast.ClassDecl
+	structDecls    map[string]*ast.StructDecl
 	interfaceDecls map[string]*ast.InterfaceDecl
 	// moduleClasses maps a module-class key ("module_ClassName") to
 	// its module name. Populated for every v0.44 module class so the
@@ -305,6 +306,8 @@ func (g *cgen) collectClasses(stmts []ast.Stmt) {
 		switch n := stmt.(type) {
 		case *ast.ClassDecl:
 			g.classDecls[n.Name] = n
+		case *ast.StructDecl:
+			g.structDecls[n.Name] = n
 		case *ast.InterfaceDecl:
 			g.interfaceDecls[n.Name] = n
 		case *ast.ModuleDecl:
@@ -338,6 +341,9 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 	case *ast.ClassDecl:
 		g.sourceLine(n.NameTok.Line)
 		return g.assignClassDecl(n.Name, n)
+	case *ast.StructDecl:
+		g.sourceLine(n.NameTok.Line)
+		return g.assignStructDecl(n.Name, n)
 	case *ast.InterfaceDecl:
 		g.sourceLine(n.NameTok.Line)
 		return g.assignInterfaceDecl(n.Name)
@@ -683,6 +689,92 @@ func (g *cgen) assignInterfaceDecl(name string) error {
 	g.vars[name] = true
 	g.globalLine(fmt.Sprintf("TyaValue %s;", target))
 	g.line(fmt.Sprintf("%s = tya_string(%s);", target, strconv.Quote("interface "+name)))
+	return nil
+}
+
+func (g *cgen) assignStructDecl(name string, decl *ast.StructDecl) error {
+	withSym := ""
+	params := make([]string, len(decl.Fields))
+	for i, field := range decl.Fields {
+		params[i] = field.Name
+	}
+	if decl.Record {
+		withSym = cFuncName(name+"_record_with", g.temp)
+		g.temp++
+		var with strings.Builder
+		with.WriteString("TyaValue ")
+		with.WriteString(withSym)
+		with.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3, TyaValue __arg4, TyaValue __arg5) {\n")
+		with.WriteString("  TyaValue __obj = tya_object();\n")
+		with.WriteString(fmt.Sprintf("  tya_set_member(__obj, \"__data_type\", tya_string(%s));\n", strconv.Quote(name)))
+		with.WriteString("  tya_set_member(__obj, \"__record\", tya_bool(true));\n")
+		for i, field := range decl.Fields {
+			arg := fmt.Sprintf("__arg%d", i)
+			if i >= 6 {
+				continue
+			}
+			with.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, %s.kind == TYA_MISSING ? tya_member(__this, %s) : %s);\n", strconv.Quote(field.Name), arg, strconv.Quote(field.Name), arg))
+		}
+		with.WriteString(fmt.Sprintf("  tya_set_member(__obj, \"with\", tya_bind_method_params(__obj, %s, %s));\n", withSym, cParamArray(params)))
+		with.WriteString("  return __obj;\n")
+		with.WriteString("}\n")
+		g.funcOut.WriteString(with.String())
+	}
+	sym := cFuncName(name+"_struct_ctor", g.temp)
+	g.temp++
+	required := 0
+	for _, field := range decl.Fields {
+		if !field.HasDefault {
+			required++
+		}
+	}
+	var out strings.Builder
+	out.WriteString("TyaValue ")
+	out.WriteString(sym)
+	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3, TyaValue __arg4, TyaValue __arg5) {\n")
+	child := &cgen{vars: map[string]bool{}, funcs: g.funcs, funcParams: g.funcParams, classes: g.classes, classParams: g.classParams, classMethods: g.classMethods, methodParams: g.methodParams, classDecls: g.classDecls, structDecls: g.structDecls, interfaceDecls: g.interfaceDecls, moduleClasses: g.moduleClasses, sourcePath: g.sourcePath, temp: g.temp, indent: 1, inFunc: true}
+	child.line("(void)__this;")
+	child.line("TyaValue __obj = tya_object();")
+	child.line(fmt.Sprintf("tya_set_member(__obj, \"__data_type\", tya_string(%s));", strconv.Quote(name)))
+	if decl.Record {
+		child.line("tya_set_member(__obj, \"__record\", tya_bool(true));")
+	} else {
+		child.line("tya_set_member(__obj, \"__struct\", tya_bool(true));")
+	}
+	for i, field := range decl.Fields {
+		arg := fmt.Sprintf("__arg%d", i)
+		if i >= 6 {
+			continue
+		}
+		if field.HasDefault {
+			def, _, err := child.expr(field.Value)
+			if err != nil {
+				return err
+			}
+			child.line(fmt.Sprintf("if (%s.kind == TYA_MISSING) { %s = %s; }", arg, arg, def))
+		} else {
+			child.line(fmt.Sprintf("if (%s.kind == TYA_MISSING) { tya_panic(tya_string(%s)); }", arg, strconv.Quote("missing required argument "+field.Name)))
+		}
+		child.line(fmt.Sprintf("tya_set_member(__obj, %s, %s);", strconv.Quote(field.Name), arg))
+	}
+	if decl.Record {
+		child.line(fmt.Sprintf("tya_set_member(__obj, \"with\", tya_bind_method_params(__obj, %s, %s));", withSym, cParamArray(params)))
+	}
+	child.line("return __obj;")
+	out.WriteString(child.out.String())
+	out.WriteString("}\n")
+	g.funcOut.WriteString(out.String())
+	g.temp = child.temp
+	target := cName(name)
+	if !g.vars[name] {
+		g.vars[name] = true
+		g.globalLine(fmt.Sprintf("TyaValue %s;", target))
+	}
+	g.line(fmt.Sprintf("%s = tya_function_params(%s, %s);", target, sym, cParamArray(params)))
+	g.funcs[name] = sym
+	g.funcParams[name] = params
+	g.classParams[name] = params
+	_ = required
 	return nil
 }
 
@@ -1157,6 +1249,7 @@ func (g *cgen) emitFuncWithCaptures(name string, fn *ast.FuncLit, classRef strin
 		classMethods:      g.classMethods,
 		methodParams:      g.methodParams,
 		classDecls:        g.classDecls,
+		structDecls:       g.structDecls,
 		interfaceDecls:    g.interfaceDecls,
 		moduleClasses:     g.moduleClasses,
 		sourcePath:        g.sourcePath,

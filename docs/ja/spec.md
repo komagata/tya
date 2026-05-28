@@ -33,7 +33,7 @@ Tya がユーザー向けに約束することは次の通りである。
 ```text
 snake_case            変数、関数、メソッド、インポートパスセグメント
 SCREAMING_SNAKE_CASE  定数
-PascalCase            クラスとインターフェイス
+PascalCase            class、interface、struct、record
 ```
 
 「must」「must not」「may」「should」は、プログラムの妥当性または実装の振る舞いを記述する場合に規範的な意味を持つ。
@@ -180,11 +180,11 @@ while count < 3
 
 `.tya` ファイルの役割は、ファイル名と文脈によって決まる。
 
-`snake_case` の `.tya` ファイルは、内容がクラス/インターフェイスファイル規則を満たさない限りスクリプトファイルである。スクリプトファイルは `tya run` のエントリファイルにでき、直接インポートすることもできる。インポートされた場合、そのトップレベル名はインポート束縛を通して公開される。
+`snake_case` の `.tya` ファイルは、内容が class/interface/struct/record の型ファイル規則を満たさない限りスクリプトファイルである。スクリプトファイルは `tya run` のエントリファイルにでき、直接インポートすることもできる。インポートされた場合、そのトップレベル名はインポート束縛を通して公開される。
 
-クラス/インターフェイスファイルは `snake_case` のファイル名を使い、ライブラリ専用であり、エントリファイルにはできない。クラス/インターフェイスファイルは、`base64.tya` が `class Base64` を宣言するように、ファイル名に対応する `PascalCase` 名の公開クラスまたは公開インターフェイスをちょうど 1 つ宣言しなければならない。`Base64.tya` のような PascalCase ファイル名はクラスファイルではない。
+型ファイルは `snake_case` のファイル名を使い、ライブラリ専用であり、エントリファイルにはできない。型ファイルは、`base64.tya` が `class Base64` を宣言するように、ファイル名に対応する `PascalCase` 名の public class、interface、struct、record のいずれかをちょうど 1 つ宣言しなければならない。`Base64.tya` のような PascalCase ファイル名は型ファイルではない。
 
-クラスファイルは、ディレクトリパッケージの一部として明示的に読み込まれる場合も、エントリスクリプトと同じディレクトリにある兄弟として暗黙に読み込まれる場合もある。スクリプトエントリは、同じディレクトリの `snake_case` クラス/インターフェイスファイルをインポートなしで見る。
+型ファイルは、ディレクトリパッケージの一部として明示的に読み込まれる場合も、エントリスクリプトと同じディレクトリにある兄弟として暗黙に読み込まれる場合もある。スクリプトエントリは、同じディレクトリの `snake_case` 型ファイルをインポートなしで見る。
 
 このファイル名規約は、従来の PascalCase クラスファイル規約からのマイナーバージョンの言語/パッケージ規約変更である。既存の `Base64.tya` 形式のファイルは、対応する `snake_case.tya` 形式にリネームしなければならない。
 
@@ -342,9 +342,29 @@ class Admin extends User
     "admin:{self.name}"
 ```
 
-クラスファイルは `snake_case` の `.tya` ファイルである。ファイル名に対応する `PascalCase` 名の公開クラスまたは公開インターフェイスをちょうど 1 つ宣言しなければならない。private な補助クラスとインターフェイスも宣言できる。クラスファイルはライブラリファイルであり、エントリスクリプトとして実行できない。
+型ファイルは `snake_case` の `.tya` ファイルである。ファイル名に対応する `PascalCase` 名の公開 class、interface、struct、record のいずれかをちょうど 1 つ宣言しなければならない。private な補助型も宣言できる。型ファイルはライブラリファイルであり、エントリスクリプトとして実行できない。
 
-クラスファイル内の追加クラスはそのファイルに private である。同じディレクトリパッケージ内であっても、他のファイルからは見えない。
+型ファイル内の追加型はそのファイルに private である。同じディレクトリパッケージ内であっても、他のファイルからは見えない。
+
+### Struct と Record
+
+`struct` と `record` は named field だけを持つ軽量なデータ型を宣言する。
+
+```tya
+struct User
+  name
+  age: 0
+
+record Point
+  x
+  y
+```
+
+default を持たない field は必須 constructor parameter である。`: value` を持つ field は省略可能で、必須 field は default field より前に置かなければならない。constructor は通常の call binding と keyword argument を使う。
+
+`struct` の field は構築後に代入できる。`record` の field は読み取り専用であり、変更した値が必要な場合は `point.with(x: 3)` のように keyword argument または `**dictionary` expansion を使う。struct と record は宣言された型と field 値で比較され、異なる宣言型の値は field が同じでも等しくない。
+
+struct/record body には field 宣言だけを書ける。method、static member、private/protected member、継承、interface、class variable、class constant、runtime type generation は持たない。
 
 ### インターフェイス
 
@@ -723,7 +743,7 @@ collection helper は `value.to_s()`, `value.to_i()`, `dict.delete(key)`,
 language feature             Tya に組み込まれた構文または semantics
 built-in function            import なしで利用できる関数
 built-in class               import なしで利用できる class。現在は存在しない
-user package                 snake_case class/interface file の import 可能な directory
+user package                 snake_case 型ファイルの import 可能な directory
 user library                 user package の再利用可能な directory tree
 standard-library package     Tya に同梱され、通常通り import される .tya source
 bundled library              toolchain と一緒に配布される library または support file
@@ -759,9 +779,9 @@ import
 
 ### ディレクトリパッケージ
 
-ディレクトリパッケージは、インポートパスによって解決される、`snake_case` クラス/インターフェイスファイルを含むディレクトリである。少なくとも 1 つのクラス/インターフェイスファイルを含まなければならず、パッケージの leaf にスクリプトファイルを含んではならない。
+ディレクトリパッケージは、インポートパスによって解決される、`snake_case` の型ファイルを含むディレクトリである。型ファイルは public な class、interface、struct、record のいずれか 1 つを持つ。少なくとも 1 つの型ファイルを含まなければならず、パッケージの leaf にスクリプトファイルを含んではならない。
 
-alias なしの wildcard ディレクトリインポートは、公開クラス名とインターフェイス名を import path namespace 経由で公開する。公開名は裸の名前としては import されない。
+alias なしの wildcard ディレクトリインポートは、公開 class、interface、struct、record 名を import path namespace 経由で公開する。公開名は裸の名前としては import されない。
 
 ```tya
 import net/http/*
@@ -791,9 +811,9 @@ net = "local" # invalid: net is an import namespace
 
 alias なし namespace import は裸の public name を予約しない。`Server` という local top-level class は `net.http.Server` と共存できる。
 
-同じディレクトリパッケージ内では、兄弟の公開クラスがインポートなしの裸の `PascalCase` 名で見える。
+同じディレクトリパッケージ内では、兄弟の公開型がインポートなしの裸の `PascalCase` 名で見える。
 
-directory package の public API は、その `snake_case` class/interface file に含まれる public class と interface の集合である。class または interface は PascalCase name が filename に対応する場合に public である。class file 内の追加 class はその file に private である。
+directory package の public API は、その `snake_case` 型ファイルに含まれる public class、interface、struct、record の集合である。型は PascalCase name が filename に対応する場合に public である。型ファイル内の追加型はその file に private である。
 
 ### ユーザーライブラリ
 
@@ -1160,9 +1180,9 @@ runtime kind errors、不正な操作、失敗した assertions、失敗した I
 
 標準ライブラリは `lib/` の下で Tya に同梱され、ユーザーファイルやパッケージと同じ import 構文でインポートされる。
 
-標準ライブラリは言語配布物の一部である。公開 surface は、`lib/` 以下の `snake_case` class/interface file から import 可能な PascalCase package class と interface の集合である。標準ライブラリ import は、local package、lock された package dependency、`TYA_PATH` entries の後に解決される。
+標準ライブラリは言語配布物の一部である。公開 surface は、`lib/` 以下の `snake_case` 型ファイルから import 可能な PascalCase package class、interface、struct、record の集合である。標準ライブラリ import は、local package、lock された package dependency、`TYA_PATH` entries の後に解決される。
 
-public な標準ライブラリ class、interface、user-facing method は source doc comment を持つ。生成される stdlib API documentation はそれらの comment から `tya doc` で作られる。例えば `tya doc --json lib` は package path、signature、rendered comment、source path、source line を含む machine-readable reference を出力する。
+public な標準ライブラリ class、interface、struct、record、user-facing method は source doc comment を持つ。生成される stdlib API documentation はそれらの comment から `tya doc` で作られる。例えば `tya doc --json lib` は package path、signature、rendered comment、source path、source line を含む machine-readable reference を出力する。
 
 現在の標準ライブラリ surface:
 

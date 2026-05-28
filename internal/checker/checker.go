@@ -164,9 +164,9 @@ func IsScriptFileName(path string) bool {
 }
 
 // CheckClassFileStructure validates the file-level shape of a class
-// file: snake_case filename, exactly one public class or interface
+// file: snake_case filename, exactly one public class, interface, struct, or record
 // whose PascalCase name maps to the filename, additional declarations
-// allowed as private siblings, imports preceding class/interface
+// allowed as private siblings, imports preceding type
 // declarations, and no other top-level statements. It does NOT
 // recurse into class bodies, so cross-class references inside method
 // bodies are deferred to the full checker pass on the merged
@@ -184,7 +184,7 @@ func CheckClassFileStructure(prog *ast.Program, path string) error {
 		switch n := stmt.(type) {
 		case *ast.ImportStmt, *ast.ImportBlockStmt:
 			if inDeclarations {
-				return fmt.Errorf("[TYA-E0403] class file %s imports must precede class and interface declarations", base)
+				return fmt.Errorf("[TYA-E0403] class file %s imports must precede type declarations", base)
 			}
 		case *ast.InterfaceDecl:
 			inDeclarations = true
@@ -202,12 +202,20 @@ func CheckClassFileStructure(prog *ast.Program, path string) error {
 				}
 				publicSeen = true
 			}
+		case *ast.StructDecl:
+			inDeclarations = true
+			if SnakeCaseName(n.Name) == want {
+				if publicSeen {
+					return fmt.Errorf("[TYA-E0405] class file %s declares public type %s more than once", base, want)
+				}
+				publicSeen = true
+			}
 		default:
-			return fmt.Errorf("[TYA-E0402] class file %s may only contain import, class, and interface declarations", base)
+			return fmt.Errorf("[TYA-E0402] class file %s may only contain import and type declarations", base)
 		}
 	}
 	if !publicSeen {
-		return fmt.Errorf("[TYA-E0400] class file %s must define a class or interface that maps to %s", base, want)
+		return fmt.Errorf("[TYA-E0400] class file %s must define a public type that maps to %s", base, want)
 	}
 	return nil
 }
@@ -584,6 +592,7 @@ type scope struct {
 	objectClasses    map[string]string
 	funcParams       map[string][]string
 	classes          map[string]classInfo
+	structs          map[string]structInfo
 	interfaces       map[string]interfaceInfo
 	inInstanceMethod bool
 	inClassMethod    bool
@@ -632,6 +641,14 @@ type classInfo struct {
 	originFile string
 }
 
+type structInfo struct {
+	name       string
+	record     bool
+	fields     []string
+	defaults   map[string]bool
+	originFile string
+}
+
 type arityRange struct {
 	required int
 	max      int
@@ -659,6 +676,7 @@ func newScope(parent *scope) *scope {
 	s := &scope{parent: parent, names: map[string]bool{}, kinds: map[string]valueKind{}, objectClasses: map[string]string{}, funcParams: map[string][]string{}}
 	if parent != nil {
 		s.classes = parent.classes
+		s.structs = parent.structs
 		s.interfaces = parent.interfaces
 		s.objectClasses = parent.objectClasses
 		s.funcParams = parent.funcParams
@@ -670,6 +688,7 @@ func newScope(parent *scope) *scope {
 		s.currentClass = parent.currentClass
 	} else {
 		s.classes = map[string]classInfo{}
+		s.structs = map[string]structInfo{}
 		s.interfaces = map[string]interfaceInfo{}
 	}
 	return s
@@ -683,6 +702,8 @@ const (
 	kindDict
 	kindModule
 	kindClass
+	kindStruct
+	kindRecord
 	kindInterface
 	kindObject
 	kindNil
@@ -885,6 +906,10 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 			if err := checkClass(n, scope, ""); err != nil {
 				return err
 			}
+		case *ast.StructDecl:
+			if err := checkStruct(n, scope); err != nil {
+				return err
+			}
 		case *ast.InterfaceDecl:
 			if err := checkInterface(n, scope, ""); err != nil {
 				return err
@@ -1075,6 +1100,10 @@ func predeclareFunctionBindings(stmts []ast.Stmt, scope *scope) error {
 			if err := predeclareClass(n, scope); err != nil {
 				return err
 			}
+		case *ast.StructDecl:
+			if err := predeclareStruct(n, scope); err != nil {
+				return err
+			}
 		case *ast.InterfaceDecl:
 			if err := predeclareInterface("", n, scope); err != nil {
 				return err
@@ -1245,6 +1274,30 @@ func predeclareClass(class *ast.ClassDecl, scope *scope) error {
 	collectPrivateClassMembers(&info, class)
 	scope.define(class.Name, kindClass)
 	scope.classes[key] = info
+	return nil
+}
+
+func predeclareStruct(decl *ast.StructDecl, scope *scope) error {
+	if !classNameRE.MatchString(decl.Name) {
+		return fmt.Errorf("%d:%d: invalid struct or record name %s", decl.NameTok.Line, decl.NameTok.Col, decl.Name)
+	}
+	key := decl.Name
+	if scope.kind(key) == kindStruct || scope.kind(key) == kindRecord {
+		return fmt.Errorf("%d:%d: duplicate struct or record %s", decl.NameTok.Line, decl.NameTok.Col, decl.Name)
+	}
+	info := structInfo{name: key, record: decl.Record, defaults: map[string]bool{}, originFile: decl.OriginFile}
+	for _, field := range decl.Fields {
+		info.fields = append(info.fields, field.Name)
+		if field.HasDefault {
+			info.defaults[field.Name] = true
+		}
+	}
+	if decl.Record {
+		scope.define(key, kindRecord)
+	} else {
+		scope.define(key, kindStruct)
+	}
+	scope.structs[key] = info
 	return nil
 }
 
@@ -1793,6 +1846,23 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			if err := removedPrimitiveModuleCallError(member, scope); err != nil {
 				return err
 			}
+			if id, ok := member.Target.(*ast.Ident); ok {
+				if key := scope.objectClass(id.Name); key != "" {
+					if info, ok := scope.structs[key]; ok && member.Name == "with" {
+						if !info.record {
+							return fmt.Errorf("%d:%d: struct values do not provide with", member.NameTok.Line, member.NameTok.Col)
+						}
+						for _, arg := range n.EffectiveArgs() {
+							if arg.Name == "" && !arg.Expand {
+								return fmt.Errorf("%d:%d: record with expects keyword arguments", member.NameTok.Line, member.NameTok.Col)
+							}
+						}
+						if err := checkCallKeywords(n, info.fields); err != nil {
+							return err
+						}
+					}
+				}
+			}
 		}
 		if id, ok := n.Callee.(*ast.Ident); ok && !scope.defined(id.Name) && scope.currentClass != "" {
 			if scope.inInstanceMethod {
@@ -1844,6 +1914,12 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			}
 			if err := checkClassCall(id.Name, id.Name, id.Tok.Line, id.Tok.Col, len(n.Args), scope); err != nil {
 				return err
+			}
+		}
+		if id, ok := n.Callee.(*ast.Ident); ok && (scope.kind(id.Name) == kindStruct || scope.kind(id.Name) == kindRecord) {
+			info := scope.structs[id.Name]
+			if err := checkStructCall(n, info); err != nil {
+				return fmt.Errorf("%d:%d: %w", id.Tok.Line, id.Tok.Col, err)
 			}
 		}
 		if id, ok := n.Callee.(*ast.Ident); ok {
@@ -1926,6 +2002,32 @@ func removedConcurrencyHelperError(member *ast.MemberExpr) error {
 		}
 	case "sync.Sync":
 		return fmt.Errorf("%d:%d: [TYA-E0820] removed concurrency helper API; use instance method style", member.NameTok.Line, member.NameTok.Col)
+	}
+	return nil
+}
+
+func checkStruct(decl *ast.StructDecl, scope *scope) error {
+	if !classNameRE.MatchString(decl.Name) {
+		return fmt.Errorf("%d:%d: invalid struct or record name %s", decl.NameTok.Line, decl.NameTok.Col, decl.Name)
+	}
+	seen := map[string]bool{}
+	seenDefault := false
+	for _, field := range decl.Fields {
+		if !valueNameRE.MatchString(field.Name) || strings.HasPrefix(field.Name, "_") {
+			return fmt.Errorf("%d:%d: invalid struct or record field %s", field.Tok.Line, field.Tok.Col, field.Name)
+		}
+		if seen[field.Name] {
+			return fmt.Errorf("%d:%d: duplicate struct or record field %s", field.Tok.Line, field.Tok.Col, field.Name)
+		}
+		seen[field.Name] = true
+		if field.HasDefault {
+			seenDefault = true
+			if err := checkExpr(field.Value, scope); err != nil {
+				return err
+			}
+		} else if seenDefault {
+			return fmt.Errorf("%d:%d: required struct and record fields must precede default fields", field.Tok.Line, field.Tok.Col)
+		}
 	}
 	return nil
 }
@@ -2474,6 +2576,43 @@ func checkCallKeywords(call *ast.CallExpr, params []string) error {
 			return fmt.Errorf("%d:%d: argument %s supplied multiple times", arg.NameTok.Line, arg.NameTok.Col, arg.Name)
 		}
 		filled[index] = arg.Name
+	}
+	return nil
+}
+
+func checkStructCall(call *ast.CallExpr, info structInfo) error {
+	params := info.fields
+	required := 0
+	for _, name := range params {
+		if !info.defaults[name] {
+			required++
+		}
+	}
+	if err := checkCallKeywords(call, params); err != nil {
+		return err
+	}
+	positional := 0
+	filled := map[string]bool{}
+	for _, arg := range call.EffectiveArgs() {
+		if arg.Expand {
+			continue
+		}
+		if arg.Name == "" {
+			positional++
+			continue
+		}
+		filled[arg.Name] = true
+	}
+	if positional > len(params) {
+		return fmt.Errorf("too many positional arguments")
+	}
+	for i := 0; i < positional && i < len(params); i++ {
+		filled[params[i]] = true
+	}
+	for i := 0; i < required; i++ {
+		if !filled[params[i]] {
+			return fmt.Errorf("missing required argument %s", params[i])
+		}
 	}
 	return nil
 }
@@ -3381,6 +3520,12 @@ func effectiveMethodArity(className string, method string, scope *scope) (int, b
 		return 0, false
 	}
 	for className != "" {
+		if info, ok := scope.structs[className]; ok {
+			if method == "with" && info.record {
+				return 0, true
+			}
+			return 0, false
+		}
 		info, ok := scope.classes[className]
 		if !ok {
 			return 0, false
@@ -3675,6 +3820,25 @@ func checkAssignmentTarget(target ast.Expr, values []ast.Expr, constants map[str
 		if id, ok := n.Target.(*ast.Ident); ok && constants[id.Name] {
 			return fmt.Errorf("%d:%d: cannot mutate constant %s", n.NameTok.Line, n.NameTok.Col, id.Name)
 		}
+		if id, ok := n.Target.(*ast.Ident); ok {
+			if key := scope.objectClass(id.Name); key != "" {
+				if info, ok := scope.structs[key]; ok {
+					found := false
+					for _, field := range info.fields {
+						if field == n.Name {
+							found = true
+							break
+						}
+					}
+					if !found {
+						return fmt.Errorf("%d:%d: undeclared struct or record field %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+					}
+					if info.record {
+						return fmt.Errorf("%d:%d: cannot assign to record field %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+					}
+				}
+			}
+		}
 		if err := checkExpr(n.Target, scope); err != nil {
 			return err
 		}
@@ -3825,6 +3989,9 @@ func exprKind(values []ast.Expr, scope *scope) valueKind {
 		if id, ok := call.Callee.(*ast.Ident); ok && scope.kind(id.Name) == kindClass {
 			return kindObject
 		}
+		if id, ok := call.Callee.(*ast.Ident); ok && (scope.kind(id.Name) == kindStruct || scope.kind(id.Name) == kindRecord) {
+			return kindObject
+		}
 		if member, ok := call.Callee.(*ast.MemberExpr); ok && kindOf(member.Target, scope) == kindModule && classNameRE.MatchString(member.Name) {
 			return kindObject
 		}
@@ -3843,6 +4010,9 @@ func exprObjectClassKey(values []ast.Expr, scope *scope) string {
 	switch callee := call.Callee.(type) {
 	case *ast.Ident:
 		if scope.kind(callee.Name) == kindClass {
+			return callee.Name
+		}
+		if scope.kind(callee.Name) == kindStruct || scope.kind(callee.Name) == kindRecord {
 			return callee.Name
 		}
 	case *ast.MemberExpr:

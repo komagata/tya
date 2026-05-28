@@ -211,6 +211,24 @@ type ClassDecl struct {
 
 func (*ClassDecl) stmt() {}
 
+type StructDecl struct {
+	Name       string
+	NameTok    token.Token
+	Record     bool
+	Fields     []StructField
+	OriginFile string
+}
+
+func (*StructDecl) stmt() {}
+
+type StructField struct {
+	Name       string
+	Tok        token.Token
+	Value      Expr
+	HasDefault bool
+	Comments   StmtComments
+}
+
 type InterfaceDecl struct {
 	Name    string
 	NameTok token.Token

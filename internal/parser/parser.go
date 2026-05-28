@@ -424,6 +424,12 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 		}
 		return p.interfaceDecl()
 	}
+	if p.startsStructDecl() {
+		if p.blockDepth != 0 {
+			return nil, p.err(p.peek().Lexeme + " must be top-level")
+		}
+		return p.structDecl()
+	}
 	if p.startsClassDecl() {
 		if p.blockDepth != 0 {
 			return nil, p.err("class must be top-level")
@@ -853,6 +859,69 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 	return decl, nil
 }
 
+func (p *Parser) structDecl() (ast.Stmt, error) {
+	record := p.peek().Lexeme == "record"
+	if !p.matchWord("struct") && !p.matchWord("record") {
+		return nil, p.err("expected struct or record")
+	}
+	name, err := p.expectName("expected struct or record name")
+	if err != nil {
+		return nil, err
+	}
+	if p.at(token.IDENT) {
+		switch p.peek().Lexeme {
+		case "extends", "implements":
+			return nil, p.err("struct and record declarations do not support " + p.peek().Lexeme)
+		}
+	}
+	if !p.match(token.NEWLINE) || !p.match(token.INDENT) {
+		return nil, p.err("expected indented block after struct or record")
+	}
+	p.blockDepth++
+	defer func() { p.blockDepth-- }()
+	decl := &ast.StructDecl{Name: name.Lexeme, NameTok: name, Record: record}
+	seenDefault := false
+	p.skipNewlines()
+	for !p.at(token.DEDENT) && !p.at(token.EOF) {
+		if p.at(token.IDENT) {
+			switch p.peek().Lexeme {
+			case "private", "protected", "static", "abstract", "override":
+				return nil, p.err(p.peek().Lexeme + " is not allowed in struct or record")
+			}
+		}
+		field, err := p.expectName("expected struct or record field name")
+		if err != nil {
+			return nil, err
+		}
+		if p.at(token.ARROW) || p.peekN(1).Type == token.ARROW {
+			return nil, p.err("methods are not allowed in struct or record")
+		}
+		sf := ast.StructField{Name: field.Lexeme, Tok: field}
+		if p.match(token.COLON) {
+			value, err := p.exprLine()
+			if err != nil {
+				return nil, err
+			}
+			sf.Value = value
+			sf.HasDefault = true
+			seenDefault = true
+		} else {
+			if seenDefault {
+				return nil, p.err("required struct and record fields must precede default fields")
+			}
+			if !p.match(token.NEWLINE) {
+				return nil, p.err("expected newline after struct or record field")
+			}
+		}
+		decl.Fields = append(decl.Fields, sf)
+		p.skipNewlines()
+	}
+	if !p.match(token.DEDENT) {
+		return nil, p.err("expected dedent after struct or record")
+	}
+	return decl, nil
+}
+
 func isConstName(name string) bool {
 	if name == "" || name[0] < 'A' || name[0] > 'Z' {
 		return false
@@ -997,6 +1066,21 @@ func (p *Parser) startsClassDecl() bool {
 		return true
 	}
 	return false
+}
+
+func (p *Parser) startsStructDecl() bool {
+	if !p.at(token.IDENT) {
+		return false
+	}
+	if p.peek().Lexeme != "struct" && p.peek().Lexeme != "record" {
+		return false
+	}
+	name := p.peekN(1)
+	if name.Type != token.IDENT || name.Lexeme == "" {
+		return false
+	}
+	r := rune(name.Lexeme[0])
+	return r >= 'A' && r <= 'Z'
 }
 
 func (p *Parser) abstractMethodParams() ([]string, []token.Token, error) {
@@ -2692,7 +2776,7 @@ func (p *Parser) rejectV1ExcludedStatementSyntax() error {
 		return nil
 	}
 	switch p.peek().Lexeme {
-	case "enum", "record", "struct", "macro", "async", "protected", "friend", "defer", "assert", "cancel":
+	case "enum", "macro", "async", "protected", "friend", "defer", "assert", "cancel":
 		if p.peekN(1).Type != token.IDENT {
 			return nil
 		}

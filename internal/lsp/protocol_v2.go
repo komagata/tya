@@ -122,6 +122,7 @@ type SemanticTokensOptions struct {
 const (
 	SymbolKindFunction    = 12
 	SymbolKindClass       = 5
+	SymbolKindStruct      = 23
 	SymbolKindModule      = 2
 	SymbolKindInterface   = 11
 	SymbolKindMethod      = 6
@@ -130,6 +131,7 @@ const (
 	SymbolKindConstant    = 14
 	SymbolKindVariable    = 13
 	SymbolKindProperty    = 7
+	SymbolKindObject      = 19
 )
 
 // DocumentSymbolParams matches LSP textDocument/documentSymbol.

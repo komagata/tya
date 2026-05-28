@@ -276,12 +276,12 @@ allowed by the file kind. Class files are more restrictive than script files.
 
 A `.tya` file's role is determined by its filename and context.
 
-`snake_case` `.tya` files are script files unless their contents satisfy the class/interface file rules. Script files may be entry files for `tya run` and may also be imported directly. When imported, their top-level names are exposed through the import binding.
+`snake_case` `.tya` files are script files unless their contents satisfy the class/interface/struct/record file rules. Script files may be entry files for `tya run` and may also be imported directly. When imported, their top-level names are exposed through the import binding.
 
-Class/interface files use `snake_case` filenames and are library-only; they cannot be entry files. A class/interface file must declare exactly one public class or interface whose PascalCase name maps to the filename without `.tya`, such as `base64.tya` declaring `class Base64` or `http_server.tya` declaring `class HTTPServer`. PascalCase filenames such as `Base64.tya` are not class files.
+Class/interface/struct/record files use `snake_case` filenames and are library-only; they cannot be entry files. Such a file must declare exactly one public class, interface, struct, or record whose PascalCase name maps to the filename without `.tya`, such as `base64.tya` declaring `class Base64` or `http_server.tya` declaring `class HTTPServer`. PascalCase filenames such as `Base64.tya` are not class files.
 
 Class files may be loaded explicitly as part of a directory package or
-implicitly as same-directory siblings of an entry script. A script entry sees snake_case class/interface files in its own directory without import.
+implicitly as same-directory siblings of an entry script. A script entry sees snake_case type files in its own directory without import.
 
 This filename convention is a minor-version language/package convention
 change from the older PascalCase class-file convention. Existing
@@ -357,8 +357,8 @@ are not part of v1.0.0 and must fail before code generation:
   type-argument calls;
 - public `module` declarations; use script files, class files, directory
   packages, and import aliases;
-- dedicated `enum`, `record`, or `struct` declarations; use classes,
-  dictionaries, constants, or standard-library value classes;
+- dedicated `enum` declarations; use classes, dictionaries, constants, or
+  standard-library value classes;
 - macro and general compile-time metaprogramming syntax; `embed` remains a
   dedicated declaration;
 - async function coloring such as `async fn`; use `spawn`, `await`, `scope`,
@@ -584,12 +584,55 @@ Subclasses may override a protected method as protected or public. A subclass
 may not reduce visibility by overriding a protected method as private or a
 public method as protected/private.
 
-A class file is a snake_case `.tya` file. It must declare exactly one public class or interface whose PascalCase name maps to the filename. It may also declare private
-helper classes and interfaces. Class files are library files and cannot be run
-as entry scripts.
+A type file is a snake_case `.tya` file. It must declare exactly one public
+class, interface, struct, or record whose PascalCase name maps to the filename.
+It may also declare private helper types. Type files are library files and
+cannot be run as entry scripts.
 
-Additional classes in a class file are private to that file. They are not
+Additional types in a type file are private to that file. They are not
 visible from other files, even inside the same directory package.
+
+### Structs And Records
+
+`struct` and `record` declare lightweight named-field data types.
+
+```tya
+struct User
+  name
+  age: 0
+
+record Point
+  x
+  y
+```
+
+Fields without defaults are required constructor parameters. Fields with
+`:` defaults may be omitted. Required fields must precede defaulted fields, and
+field order defines positional constructor order. Constructors use ordinary call
+binding, including keyword arguments:
+
+```tya
+user1 = User("komagata", 45)
+user2 = User(name: "komagata", age: 45)
+user3 = User("komagata")
+```
+
+Struct fields are mutable. Record fields are read-only after construction.
+Both reject assignments to undeclared fields. Structs and records compare by
+declared type and field values; two different declarations are unequal even when
+their fields match.
+
+Records provide `with(...)`, which accepts only keyword arguments or
+`**dictionary` keyword expansion and returns a new record value with selected
+fields replaced. Structs do not provide `with(...)`.
+
+Struct and record bodies may contain only field declarations. They do not
+support methods, static members, private/protected members, inheritance,
+interfaces, class variables, class constants, or runtime type generation.
+
+Structs and records may be the public type in snake_case type files and are
+exported by directory packages under the same public-name rules as classes and
+interfaces.
 
 ### Interfaces
 
@@ -1159,7 +1202,7 @@ Current Tya documentation uses these terms normatively:
 language feature             syntax or semantics built into Tya
 built-in function            function available without import
 built-in class               class available without import; none currently
-user package                 importable directory of snake_case class/interface files
+user package                 importable directory of snake_case type files
 user library                 reusable directory tree of user packages
 standard-library package     .tya source shipped with Tya and imported normally
 bundled library              library or support file shipped with the toolchain
@@ -1200,9 +1243,9 @@ invalid.
 
 ### Directory Packages
 
-A directory package is a directory resolved by import path containing snake_case class/interface files. It must contain at least one class/interface file and must not contain script files at the package leaf.
+A directory package is a directory resolved by import path containing snake_case type files. It must contain at least one type file and must not contain script files at the package leaf.
 
-Unaliased wildcard directory imports expose public class and interface names
+Unaliased wildcard directory imports expose public class, interface, struct, and record names
 through the import path namespace. They do not import public names bare.
 
 ```tya
@@ -1245,9 +1288,10 @@ top-level class named `Server` may coexist with `net.http.Server`.
 Within the same directory package, sibling public classes are visible by bare
 PascalCase name without import.
 
-The public API of a directory package is the set of public classes and
-interfaces in its snake_case class/interface files. A class or interface is public when its PascalCase name maps to its filename. Additional classes in a class file are private to that
-file.
+The public API of a directory package is the set of public classes,
+interfaces, structs, and records in its snake_case type files. A type is public
+when its PascalCase name maps to its filename. Additional types in a type file
+are private to that file.
 
 ### User Libraries
 
@@ -1745,11 +1789,11 @@ The standard library is shipped with Tya under `lib/` and is imported using
 the same import syntax as user files and packages.
 
 The standard library is part of the language distribution. Its public surface
-is the set of importable PascalCase package classes and interfaces from snake_case class/interface files under
+is the set of importable PascalCase package classes, interfaces, structs, and records from snake_case type files under
 `lib/`. Standard-library imports are resolved after local packages, locked
 package dependencies, and `TYA_PATH` entries.
 
-Public standard-library classes, interfaces, and user-facing methods carry
+Public standard-library classes, interfaces, structs, records, and user-facing methods carry
 source doc comments. Generated stdlib API documentation is produced from those
 comments with `tya doc`, for example `tya doc --json lib` for a
 machine-readable reference that includes package paths, signatures, rendered

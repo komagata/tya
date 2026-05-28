@@ -304,6 +304,19 @@ func docItemsForProgram(prog *ast.Program, comments []parser.CommentInfo, path s
 				item, diagnostics = finalizeDocItem(item, method.Func.Params, diagnostics)
 				items = append(items, item)
 			}
+		case *ast.StructDecl:
+			for _, field := range d.Fields {
+				item := DocItem{
+					Name:      d.Name + "." + field.Name,
+					Kind:      "field",
+					Signature: d.Name + "." + field.Name,
+					RawDoc:    leadingBeforeLine(comments, field.Tok.Line, 2),
+					FilePath:  path,
+					Line:      field.Tok.Line,
+				}
+				item, diagnostics = finalizeDocItem(item, nil, diagnostics)
+				items = append(items, item)
+			}
 		case *ast.InterfaceDecl:
 			for _, method := range d.Methods {
 				item := DocItem{
@@ -520,6 +533,19 @@ func stmtToDocItem(stmt ast.Stmt, prog *ast.Program, path string) (DocItem, bool
 			Name:      d.Name,
 			Kind:      "module",
 			Signature: "module " + d.Name,
+			RawDoc:    leading,
+			FilePath:  path,
+			Line:      d.NameTok.Line,
+		}, true
+	case *ast.StructDecl:
+		kind := "struct"
+		if d.Record {
+			kind = "record"
+		}
+		return DocItem{
+			Name:      d.Name,
+			Kind:      kind,
+			Signature: kind + " " + d.Name,
 			RawDoc:    leading,
 			FilePath:  path,
 			Line:      d.NameTok.Line,

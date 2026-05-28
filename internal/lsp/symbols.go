@@ -83,6 +83,12 @@ func symbolFromStmt(stmt ast.Stmt, prog *ast.Program) (Symbol, bool) {
 	switch d := stmt.(type) {
 	case *ast.ClassDecl:
 		return Symbol{Name: d.Name, Kind: "class", Signature: "class " + d.Name, NameTok: d.NameTok, DocBody: leading}, true
+	case *ast.StructDecl:
+		kind := "struct"
+		if d.Record {
+			kind = "record"
+		}
+		return Symbol{Name: d.Name, Kind: kind, Signature: kind + " " + d.Name, NameTok: d.NameTok, DocBody: leading}, true
 	case *ast.ModuleDecl:
 		return Symbol{Name: d.Name, Kind: "module", Signature: "module " + d.Name, NameTok: d.NameTok, DocBody: leading}, true
 	case *ast.InterfaceDecl:

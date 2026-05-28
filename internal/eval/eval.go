@@ -1164,6 +1164,13 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			}
 		}
 		return class, nil
+	case *ast.StructDecl:
+		decl := n
+		constructor := Builtin(func(args []Value) (Value, error) {
+			return instantiateStruct(decl, args, nil, env)
+		})
+		env.set(n.Name, constructor)
+		return constructor, nil
 	case *ast.InterfaceDecl:
 		return nil, nil
 	case *ast.ExprStmt:
@@ -1500,6 +1507,14 @@ func assign(target ast.Expr, v Value, env *Env) error {
 		if !ok {
 			return fmt.Errorf("cannot assign property on non-dictionary")
 		}
+		if o["__record"] == true {
+			return fmt.Errorf("cannot assign to record field %s", t.Name)
+		}
+		if _, ok := o[t.Name]; !ok {
+			if o["__struct"] == true || o["__record"] == true {
+				return fmt.Errorf("undeclared struct or record field %s", t.Name)
+			}
+		}
 		assignMember(o, t.Name, v)
 		return nil
 	case *ast.IndexExpr:
@@ -1820,15 +1835,93 @@ func evalCall(c *ast.CallExpr, env *Env) (Value, error) {
 	if err != nil {
 		return nil, err
 	}
+	if member, ok := c.Callee.(*ast.MemberExpr); ok && member.Name == "with" {
+		if receiver, err := evalExpr(member.Target, env); err == nil {
+			if dict, ok := receiver.(Dict); ok && dict["__record"] == true {
+				if len(args) != 0 {
+					return nil, fmt.Errorf("record with expects keyword arguments")
+				}
+				next := Dict{}
+				for k, v := range dict {
+					next[k] = v
+				}
+				for _, kw := range kwargs {
+					if _, ok := dict[kw.name]; !ok || strings.HasPrefix(kw.name, "__") {
+						return nil, fmt.Errorf("unknown record field %s", kw.name)
+					}
+					next[kw.name] = kw.value
+				}
+				return next, nil
+			}
+		}
+	}
 	switch fn := fnVal.(type) {
 	case Builtin, *Function:
 		return callValueWithKeywords(fn, args, kwargs)
+	case *ast.StructDecl:
+		return instantiateStruct(fn, args, kwargs, env)
 	case Dict:
 		if isModuleNamespace(fn) {
 			return instantiateClassWithKeywords(fn, args, kwargs)
 		}
 	}
 	return nil, fmt.Errorf("value is not callable")
+}
+
+func instantiateStruct(decl *ast.StructDecl, args []Value, keywords []keywordArgValue, env *Env) (Value, error) {
+	values, err := bindStructArgs(decl, args, keywords, env)
+	if err != nil {
+		return nil, err
+	}
+	obj := Dict{"__data_type": decl.Name}
+	if decl.Record {
+		obj["__record"] = true
+	} else {
+		obj["__struct"] = true
+	}
+	for i, field := range decl.Fields {
+		obj[field.Name] = values[i]
+	}
+	return obj, nil
+}
+
+func bindStructArgs(decl *ast.StructDecl, args []Value, keywords []keywordArgValue, env *Env) ([]Value, error) {
+	params := make([]string, len(decl.Fields))
+	required := 0
+	for i, field := range decl.Fields {
+		params[i] = field.Name
+		if !field.HasDefault {
+			required++
+		}
+	}
+	bound, err := bindKeywordArgs(params, args, keywords)
+	if err != nil {
+		return nil, err
+	}
+	if len(bound) > len(params) {
+		return nil, fmt.Errorf("too many positional arguments")
+	}
+	out := make([]Value, len(params))
+	for i, field := range decl.Fields {
+		if i < len(bound) {
+			if _, missing := bound[i].(missingKeywordArg); !missing {
+				out[i] = bound[i]
+				continue
+			}
+		}
+		if field.HasDefault {
+			value, err := evalExpr(field.Value, env)
+			if err != nil {
+				return nil, err
+			}
+			out[i] = value
+			continue
+		}
+		if i < required {
+			return nil, fmt.Errorf("missing required argument %s", field.Name)
+		}
+	}
+	return out, nil
 }
 
 type keywordArgValue struct {
@@ -2773,6 +2866,28 @@ func evalCallee(e ast.Expr, env *Env) (Value, error) {
 			return module.Members[m.Name], nil
 		}
 		if dict, ok := obj.(Dict); ok {
+			if dict["__record"] == true && m.Name == "with" {
+				return Builtin(func(args []Value) (Value, error) {
+					if len(args) != 1 {
+						return nil, fmt.Errorf("record with expects keyword arguments")
+					}
+					updates, ok := args[0].(Dict)
+					if !ok {
+						return nil, fmt.Errorf("record with expects keyword arguments")
+					}
+					next := Dict{}
+					for k, v := range dict {
+						next[k] = v
+					}
+					for k, v := range updates {
+						if _, ok := dict[k]; !ok || strings.HasPrefix(k, "__") {
+							return nil, fmt.Errorf("unknown record field %s", k)
+						}
+						next[k] = v
+					}
+					return next, nil
+				}), nil
+			}
 			if isModuleNamespace(dict) {
 				return dict[m.Name], nil
 			}
@@ -3155,6 +3270,9 @@ func equalValue(l, r Value, seen map[visitPair]bool) (bool, error) {
 		if !ok {
 			return false, nil
 		}
+		if isDataObject(lv) || isDataObject(rv) {
+			return dataObjectEqual(lv, rv, seen)
+		}
 		return deepEqualValue(lv, rv, seen)
 	case *Array:
 		rv, ok := r.(*Array)
@@ -3170,6 +3288,47 @@ func equalValue(l, r Value, seen map[visitPair]bool) (bool, error) {
 		return lv == r, nil
 	}
 	return false, nil
+}
+
+func isDataObject(v Dict) bool {
+	_, ok := v["__data_type"].(string)
+	return ok
+}
+
+func dataObjectEqual(l, r Dict, seen map[visitPair]bool) (bool, error) {
+	leftType, leftOK := l["__data_type"].(string)
+	rightType, rightOK := r["__data_type"].(string)
+	if !leftOK || !rightOK || leftType != rightType {
+		return false, nil
+	}
+	pair := visitKey(l, r)
+	if seen[pair] {
+		return false, fmt.Errorf("cyclic equality is invalid")
+	}
+	seen[pair] = true
+	defer delete(seen, pair)
+	for key, leftValue := range l {
+		if strings.HasPrefix(key, "__") || key == "with" {
+			continue
+		}
+		rightValue, ok := r[key]
+		if !ok {
+			return false, nil
+		}
+		ok, err := equalValue(leftValue, rightValue, seen)
+		if err != nil || !ok {
+			return ok, err
+		}
+	}
+	for key := range r {
+		if strings.HasPrefix(key, "__") || key == "with" {
+			continue
+		}
+		if _, ok := l[key]; !ok {
+			return false, nil
+		}
+	}
+	return true, nil
 }
 
 func runtimeKind(v Value) string {

@@ -1,0 +1,147 @@
+# Structs and records provide lightweight named-field data values.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/basic.tya
+stdout 'komagata\n46\ntrue\ntrue\n1500\nJPY\ntrue\nfalse\n'
+! stderr .
+
+exec go run ./cmd/tya build $WORK/basic.tya -o $WORK/basic
+exec $WORK/basic
+stdout 'komagata\n46\ntrue\ntrue\n1500\nJPY\ntrue\nfalse\n'
+! stderr .
+
+! exec go run ./cmd/tya check $WORK/missing_required.tya
+stderr 'missing required argument name'
+
+! exec go run ./cmd/tya check $WORK/unknown_keyword.tya
+stderr 'unknown keyword unknown'
+
+! exec go run ./cmd/tya check $WORK/duplicate_keyword.tya
+stderr 'argument name supplied multiple times'
+
+! exec go run ./cmd/tya check $WORK/record_assign.tya
+stderr 'cannot assign to record field x'
+
+! exec go run ./cmd/tya check $WORK/unknown_field.tya
+stderr 'undeclared struct or record field unknown'
+
+! exec go run ./cmd/tya run $WORK/record_with_unknown.tya
+stderr 'unknown keyword z'
+
+! exec go run ./cmd/tya check $WORK/struct_with.tya
+stderr 'struct values do not provide with'
+
+! exec go run ./cmd/tya check $WORK/bad_body.tya
+stderr 'methods are not allowed in struct or record'
+
+exec go run ./cmd/tya run $WORK/import_main.tya
+stdout 'komagata\nJPY\ntrue\n'
+! stderr .
+
+-- basic.tya --
+struct User
+  name
+  age: 0
+
+record Money
+  amount
+  currency: "JPY"
+
+record Point
+  x
+  y
+
+struct Pair
+  x
+  y
+
+user1 = User("komagata", 45)
+user2 = User(name: "komagata", age: 45)
+user3 = User("komagata")
+user3.age = 46
+print(user1.name)
+print(user3.age)
+print(user1 == user2)
+print(Point(1, 2) == Point(x: 1, y: 2))
+next = Money(1200).with(amount: 1500)
+print(next.amount)
+print(next.currency)
+print(Money(1200).with(**{ "amount": 1500 }) == next)
+print(Point(1, 2) == Pair(1, 2))
+
+-- missing_required.tya --
+struct User
+  name
+  age: 0
+
+User(age: 45)
+
+-- unknown_keyword.tya --
+struct User
+  name
+
+User(unknown: 1)
+
+-- duplicate_keyword.tya --
+struct User
+  name
+
+User("a", name: "b")
+
+-- record_assign.tya --
+record Point
+  x
+  y
+
+point = Point(1, 2)
+point.x = 3
+
+-- unknown_field.tya --
+struct User
+  name
+
+user = User("a")
+user.unknown = 1
+
+-- record_with_unknown.tya --
+record Point
+  x
+  y
+
+point = Point(1, 2)
+point.with(z: 3)
+
+-- struct_with.tya --
+struct User
+  name
+
+user = User("a")
+user.with(name: "b")
+
+-- bad_body.tya --
+struct User
+  name: -> "bad"
+
+-- import_main.tya --
+import data/* as data
+
+user = User("komagata")
+money = Money(1200)
+print(user.name)
+print(money.currency)
+print(Point(1, 2) == Point(x: 1, y: 2))
+
+-- data/user.tya --
+struct User
+  name
+  age: 0
+
+-- data/money.tya --
+record Money
+  amount
+  currency: "JPY"
+
+-- data/point.tya --
+record Point
+  x
+  y

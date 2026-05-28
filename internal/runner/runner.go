@@ -103,7 +103,7 @@ func RunFile(path string, in io.Reader, out io.Writer, args []string) ([]diag.Di
 }
 
 // StampOriginFiles walks package-expanded programs and stamps the
-// per-class origin file path onto each top-level ClassDecl whose
+// per-type origin file path onto each top-level type declaration whose
 // package origin was recorded during directory-package synthesis.
 func StampOriginFiles(prog *ast.Program, origins map[string]map[string]string) {
 	if prog == nil || len(origins) == 0 {
@@ -116,12 +116,15 @@ func StampOriginFiles(prog *ast.Program, origins map[string]map[string]string) {
 		}
 	}
 	for _, stmt := range prog.Stmts {
-		class, ok := stmt.(*ast.ClassDecl)
-		if !ok {
-			continue
-		}
-		if origin, ok := classOrigins[class.Name]; ok {
-			class.OriginFile = origin
+		switch n := stmt.(type) {
+		case *ast.ClassDecl:
+			if origin, ok := classOrigins[n.Name]; ok {
+				n.OriginFile = origin
+			}
+		case *ast.StructDecl:
+			if origin, ok := classOrigins[n.Name]; ok {
+				n.OriginFile = origin
+			}
 		}
 	}
 }
@@ -193,7 +196,8 @@ func hasClassDecl(prog *ast.Program) bool {
 		return false
 	}
 	for _, stmt := range prog.Stmts {
-		if _, ok := stmt.(*ast.ClassDecl); ok {
+		switch stmt.(type) {
+		case *ast.ClassDecl, *ast.StructDecl:
 			return true
 		}
 	}
@@ -899,6 +903,8 @@ func publicTopLevelNames(prog *ast.Program) []string {
 			}
 		case *ast.ClassDecl:
 			add(n.Name)
+		case *ast.StructDecl:
+			add(n.Name)
 		case *ast.EmbedStmt:
 			add(n.Name)
 		}
@@ -1062,8 +1068,8 @@ func hasOnlyClassFileTopLevel(prog *ast.Program) bool {
 	for _, stmt := range prog.Stmts {
 		switch stmt.(type) {
 		case *ast.ImportStmt:
-			// allowed
-		case *ast.ClassDecl, *ast.InterfaceDecl:
+		// allowed
+		case *ast.ClassDecl, *ast.InterfaceDecl, *ast.StructDecl:
 			hasType = true
 		default:
 			return false
@@ -1099,7 +1105,7 @@ func hasAnyClassFileTopLevel(prog *ast.Program) bool {
 	}
 	for _, stmt := range prog.Stmts {
 		switch stmt.(type) {
-		case *ast.ClassDecl, *ast.InterfaceDecl:
+		case *ast.ClassDecl, *ast.InterfaceDecl, *ast.StructDecl:
 			return true
 		}
 	}
@@ -1411,6 +1417,14 @@ func synthesizePackageSource(classFiles []string, pkgName string, includeNamespa
 					publicSymbols[n.Name] = true
 					publicInterfaces[n.Name] = true
 				}
+			case *ast.StructDecl:
+				packageSymbols[n.Name] = true
+				if _, dup := origins[n.Name]; !dup {
+					origins[n.Name] = relName
+				}
+				if relName == checker.SnakeCaseName(n.Name)+".tya" {
+					publicSymbols[n.Name] = true
+				}
 			}
 		}
 		bodies = append(bodies, stripTopLevelImports(text))
@@ -1576,6 +1590,15 @@ func publicPackageNames(classFiles []string) ([]string, error) {
 				}
 				seen[n.Name] = true
 				names = append(names, n.Name)
+			case *ast.StructDecl:
+				if seen[n.Name] {
+					continue
+				}
+				if filepath.Base(file) != checker.SnakeCaseName(n.Name)+".tya" {
+					continue
+				}
+				seen[n.Name] = true
+				names = append(names, n.Name)
 			}
 		}
 	}
@@ -1604,6 +1627,10 @@ func publicClassFileNames(path string) ([]string, error) {
 				names = append(names, n.Name)
 			}
 		case *ast.InterfaceDecl:
+			if checker.SnakeCaseName(n.Name) == want {
+				names = append(names, n.Name)
+			}
+		case *ast.StructDecl:
 			if checker.SnakeCaseName(n.Name) == want {
 				names = append(names, n.Name)
 			}
@@ -1730,6 +1757,10 @@ func validateEntry(path string, prog *ast.Program, imports map[string]bool) erro
 			if imports[n.Name] {
 				return runnerError(codeImportNameConflict, fmt.Sprintf("import name conflict: %s", n.Name), 0, 0)
 			}
+		case *ast.StructDecl:
+			if imports[n.Name] {
+				return runnerError(codeImportNameConflict, fmt.Sprintf("import name conflict: %s", n.Name), 0, 0)
+			}
 		case *ast.AssignStmt:
 			for _, target := range n.Targets {
 				if id, ok := target.(*ast.Ident); ok && imports[id.Name] {
@@ -1764,6 +1795,8 @@ func validateAliasedImportOriginals(prog *ast.Program, imports []importSpec) err
 		case *ast.ClassDecl:
 			topLevel[n.Name] = true
 		case *ast.InterfaceDecl:
+			topLevel[n.Name] = true
+		case *ast.StructDecl:
 			topLevel[n.Name] = true
 		}
 	}
@@ -1809,6 +1842,8 @@ func validateBarePackageImportNamespaces(prog *ast.Program, imports []importSpec
 		case *ast.ClassDecl:
 			topLevel[n.Name] = true
 		case *ast.InterfaceDecl:
+			topLevel[n.Name] = true
+		case *ast.StructDecl:
 			topLevel[n.Name] = true
 		}
 	}
@@ -1856,6 +1891,8 @@ func validateAliasedPackageBareNames(prog *ast.Program, imports []importSpec) er
 			topLevel[n.Name] = true
 		case *ast.InterfaceDecl:
 			topLevel[n.Name] = true
+		case *ast.StructDecl:
+			topLevel[n.Name] = true
 		}
 	}
 	for name := range topLevel {
@@ -1901,6 +1938,8 @@ func validateAliasedClassImportNamespaces(prog *ast.Program, imports []importSpe
 		case *ast.ClassDecl:
 			topLevel[n.Name] = true
 		case *ast.InterfaceDecl:
+			topLevel[n.Name] = true
+		case *ast.StructDecl:
 			topLevel[n.Name] = true
 		}
 	}
@@ -2036,6 +2075,14 @@ func rejectHiddenImportUseStmt(stmt ast.Stmt, hidden map[string]bool, bound map[
 		for _, method := range n.Methods {
 			if err := rejectHiddenImportUseExpr(method.Func, hidden, bound); err != nil {
 				return err
+			}
+		}
+	case *ast.StructDecl:
+		for _, field := range n.Fields {
+			if field.HasDefault {
+				if err := rejectHiddenImportUseExpr(field.Value, hidden, bound); err != nil {
+					return err
+				}
 			}
 		}
 	}

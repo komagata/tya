@@ -662,7 +662,7 @@ func TestCheckClassFileRejectsMissingPublicClass(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected missing public class error")
 	}
-	if !strings.Contains(err.Error(), "must define a class or interface that maps to request") {
+	if !strings.Contains(err.Error(), "must define a public type that maps to request") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -685,8 +685,19 @@ func TestCheckClassFileRejectsTopLevelStatement(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected top-level statement error")
 	}
-	if !strings.Contains(err.Error(), "may only contain import, class, and interface") {
+	if !strings.Contains(err.Error(), "may only contain import and type declarations") {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckClassFileAcceptsPublicStructAndRecord(t *testing.T) {
+	structProg := parse(t, "struct User\n  name\n")
+	if err := CheckClassFile(structProg, "user.tya"); err != nil {
+		t.Fatalf("unexpected struct class-file error: %v", err)
+	}
+	recordProg := parse(t, "record Money\n  amount\n")
+	if err := CheckClassFile(recordProg, "money.tya"); err != nil {
+		t.Fatalf("unexpected record class-file error: %v", err)
 	}
 }
 
