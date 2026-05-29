@@ -616,16 +616,22 @@ func (p *Parser) importEntry() (*ast.ImportStmt, error) {
 	}
 	var alias string
 	var aliasTok token.Token
+	bare := false
 	if p.at(token.IDENT) && p.peek().Lexeme == "as" {
 		p.next()
-		tok, err := p.expectName("expected import alias after as")
-		if err != nil {
-			return nil, err
+		if p.at(token.STAR) {
+			aliasTok = p.next()
+			bare = true
+		} else {
+			tok, err := p.expectName("expected import alias after as")
+			if err != nil {
+				return nil, err
+			}
+			alias = tok.Lexeme
+			aliasTok = tok
 		}
-		alias = tok.Lexeme
-		aliasTok = tok
 	}
-	return &ast.ImportStmt{Name: strings.Join(parts, "/"), NameTok: name, Alias: alias, AliasTok: aliasTok, Wildcard: wildcard}, nil
+	return &ast.ImportStmt{Name: strings.Join(parts, "/"), NameTok: name, Alias: alias, AliasTok: aliasTok, Bare: bare, Wildcard: wildcard}, nil
 }
 
 func (p *Parser) embedStmt() (ast.Stmt, error) {

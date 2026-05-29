@@ -412,7 +412,7 @@ func TestTyaTestDiscoversOnlyTestFilesAndOrdersDeterministically(t *testing.T) {
 	dir := t.TempDir()
 	writeTestFile := func(name, className, methodName string) {
 		t.Helper()
-		src := fmt.Sprintf("import unittest/* as unittest\n\nclass %s extends TestCase\n  %s: ->\n    self.assert(true, \"%s\")\n", className, methodName, methodName)
+		src := fmt.Sprintf("import unittest/* as *\n\nclass %s extends TestCase\n  %s: ->\n    self.assert(true, \"%s\")\n", className, methodName, methodName)
 		if err := os.WriteFile(filepath.Join(dir, name), []byte(src), 0644); err != nil {
 			t.Fatal(err)
 		}
@@ -446,7 +446,7 @@ func TestTyaTestDiscoversOnlyTestFilesAndOrdersDeterministically(t *testing.T) {
 func TestFormatClassInheritanceOutputRunsInTyaTest(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "sample_test.tya")
-	src := "import unittest/* as unittest\n\nclass SampleTest extends TestCase\n  test_example: () ->\n    self.assert(true, \"example\")\n"
+	src := "import unittest/* as *\n\nclass SampleTest extends TestCase\n  test_example: () ->\n    self.assert(true, \"example\")\n"
 	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}

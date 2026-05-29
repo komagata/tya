@@ -1,6 +1,6 @@
 # Unaliased package imports expose public class names through their
 # import-path namespace. Aliased package imports expose public class
-# names bare and do not create an alias namespace.
+# names through the alias namespace. `as *` imports public names bare.
 cd $REPO
 
 exec go run ./cmd/tya run $WORK/bare.tya
@@ -15,11 +15,15 @@ exec go run ./cmd/tya run $WORK/aliased.tya
 stdout 'aliased\n'
 ! stderr .
 
+exec go run ./cmd/tya run $WORK/as_star.tya
+stdout 'as star\n'
+! stderr .
+
 ! exec go run ./cmd/tya run $WORK/bare_namespace.tya
 stderr 'undefined variable http'
 
 ! exec go run ./cmd/tya run $WORK/aliased_bare.tya
-stderr 'undefined variable http'
+stderr 'undefined variable Request'
 
 ! exec go run ./cmd/tya run $WORK/conflict_imports.tya
 stderr 'import name conflict: Request'
@@ -48,7 +52,13 @@ print(request.label())
 -- aliased.tya --
 import net/http/* as http
 
-request = Request("aliased")
+request = http.Request("aliased")
+print(request.label())
+
+-- as_star.tya --
+import net/http/* as *
+
+request = Request("as star")
 print(request.label())
 
 -- bare_namespace.tya --
@@ -60,12 +70,12 @@ print(request.label())
 -- aliased_bare.tya --
 import net/http/* as http
 
-request = http.Request("hidden")
+request = Request("hidden")
 print(request.label())
 
 -- conflict_imports.tya --
-import api/* as api
-import web/* as web
+import api/* as *
+import web/* as *
 
 print("unreachable")
 

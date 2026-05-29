@@ -54,6 +54,7 @@ type ImportStmt struct {
 	NameTok  token.Token
 	Alias    string
 	AliasTok token.Token
+	Bare     bool
 	Wildcard bool
 }
 

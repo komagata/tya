@@ -35,7 +35,7 @@ func BuildSymbols(prog *ast.Program) *SymbolIndex {
 		return idx
 	}
 	for _, stmt := range prog.Stmts {
-		if imp, ok := stmt.(*ast.ImportStmt); ok && imp.Alias == "" {
+		if imp, ok := stmt.(*ast.ImportStmt); ok && !imp.Bare {
 			parts := importNamespaceParts(imp)
 			if len(parts) > 0 {
 				name := parts[0]

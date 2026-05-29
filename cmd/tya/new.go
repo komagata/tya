@@ -237,7 +237,7 @@ TyaValue tya_%s_version(TyaValue __this, TyaValue a0, TyaValue a1, TyaValue a2, 
 		return err
 	}
 	test := fmt.Sprintf(`import %s/*
-import unittest/* as unittest
+import unittest/* as *
 
 class %sTest extends TestCase
   test_version: ->
@@ -252,7 +252,7 @@ func writeAppTemplate(target, name string) error {
 	if err := os.WriteFile(filepath.Join(target, "src", "main.tya"), []byte(main), 0644); err != nil {
 		return err
 	}
-	mainTest := `import unittest/* as unittest
+	mainTest := `import unittest/* as *
 
 class MainTest < TestCase
   test_main: ->
@@ -281,7 +281,7 @@ func writeLibTemplate(target, name string) error {
 		return err
 	}
 	test := fmt.Sprintf(`import %s/*
-import unittest/* as unittest
+import unittest/* as *
 
 class %sTest extends TestCase
   test_greet: ->

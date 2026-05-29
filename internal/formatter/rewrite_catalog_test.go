@@ -345,12 +345,14 @@ func TestRewriteCatalog(t *testing.T) {
 			input: strings.Join([]string{
 				"import",
 				"  net/http/client as client",
+				"  net/http/server as *",
 				"  base64/*",
 				"",
 			}, "\n"),
 			want: strings.Join([]string{
 				"import base64/*",
 				"import net/http/client as client",
+				"import net/http/server as *",
 				"",
 			}, "\n"),
 		},

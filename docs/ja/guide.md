@@ -342,7 +342,7 @@ tya run main.tya
 パッケージ名が長い場合は alias を使えます。
 
 ```tya
-import net/http as http
+import net/http/* as http
 
 resp = http.Client().get("https://example.com/")
 print(resp["status"])

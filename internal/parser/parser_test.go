@@ -874,11 +874,30 @@ func TestParseWildcardImportStatement(t *testing.T) {
 	}
 }
 
+func TestParseBareWildcardImportStatement(t *testing.T) {
+	toks, errs := lexer.Lex("import compress/* as *\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	imp, ok := prog.Stmts[0].(*ast.ImportStmt)
+	if !ok {
+		t.Fatalf("got %T", prog.Stmts[0])
+	}
+	if imp.Name != "compress" || !imp.Wildcard || !imp.Bare || imp.Alias != "" {
+		t.Fatalf("got import %#v", imp)
+	}
+}
+
 func TestParseGroupedImportStatement(t *testing.T) {
 	toks, errs := lexer.Lex(strings.Join([]string{
 		"import",
 		"  compress/*",
 		"  net/http/client as client",
+		"  net/http/server as *",
 		"",
 	}, "\n"))
 	if len(errs) != 0 {
@@ -892,7 +911,7 @@ func TestParseGroupedImportStatement(t *testing.T) {
 	if !ok {
 		t.Fatalf("got %T", prog.Stmts[0])
 	}
-	if len(block.Imports) != 2 {
+	if len(block.Imports) != 3 {
 		t.Fatalf("got %d imports", len(block.Imports))
 	}
 	if block.Imports[0].Name != "compress" || !block.Imports[0].Wildcard {
@@ -900,6 +919,9 @@ func TestParseGroupedImportStatement(t *testing.T) {
 	}
 	if block.Imports[1].Name != "net/http/client" || block.Imports[1].Alias != "client" {
 		t.Fatalf("got second import %#v", block.Imports[1])
+	}
+	if block.Imports[2].Name != "net/http/server" || !block.Imports[2].Bare {
+		t.Fatalf("got third import %#v", block.Imports[2])
 	}
 }
 
@@ -1785,6 +1807,9 @@ func dumpProgram(prog *ast.Program) string {
 func dumpStmt(stmt ast.Stmt) string {
 	switch n := stmt.(type) {
 	case *ast.ImportStmt:
+		if n.Bare {
+			return "import " + n.Name + " as *"
+		}
 		if n.Alias != "" {
 			return "import " + n.Name + " as " + n.Alias
 		}

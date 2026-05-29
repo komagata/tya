@@ -1195,8 +1195,8 @@ env(name)
 explicit standard-library APIs such as `Io().stderr()`.
 
 Use standard-library APIs such as `File().read(path)`, `File().append(path, text)`,
-`Dir().list(path)`, `Path().expand_user(path)`, `Process().cwd()`,
-`Process().chdir(path)`, `Io().open(path, mode)`, `Reader#read(size)`,
+`Dir().list(path)`, `Path(path).expand_user()`, `Process.cwd()`,
+`Process.chdir(path)`, `Io().open(path, mode)`, `Reader#read(size)`,
 `Writer#write(value)`, `Random().int(min, max)`, `compress.Gzip().compress(value)`,
 `Digest.sha256(value)`, `Socket.connect(host, port, options)`,
 `Lexer().lex(source)`, `Parser().parse(source)`, `Checker().check(source)`, and
@@ -1270,23 +1270,32 @@ In the example above, `Server()` is invalid. The first namespace segment is
 reserved for qualified access, so a top-level `net` binding in the importing
 file is invalid.
 
-Aliased wildcard directory imports explicitly expose package public names bare.
-The alias is an import-group label for duplicate import diagnostics; it is not
-a runtime or compile-time namespace binding.
+Aliased wildcard directory imports expose package public names through the alias
+namespace and do not create the original import-path namespace.
 
 ```tya
 import net/http/* as http
 
+server = http.Server()
+```
+
+With an alias, `net.http.Server()` and bare `Server()` are invalid in the
+example above unless another import creates those names.
+
+Use `as *` when public names should be imported bare.
+
+```tya
+import net/http/* as *
+
 server = Server()
 ```
 
-With an alias, `http.Server()` is invalid in the example above.
-
 Unaliased namespace imports reserve their qualified public names. Two imports
 that expose the same qualified public name are invalid, but `net.http.Server`
-and `net.tcp.Server` may coexist. Aliased imports reserve bare public names, so
-two aliased imports that expose `Server` are invalid. Importing the same path
-twice is invalid even when aliases differ.
+and `net.tcp.Server` may coexist. Alias namespace imports reserve their alias
+namespace. Explicit `as *` imports reserve bare public names, so two `as *`
+imports that expose `Server` are invalid. Importing the same path twice is
+invalid even when aliases differ.
 
 ```tya
 import net/http/*
@@ -1926,7 +1935,7 @@ and values are strings. A missing environment variable returns `nil`, and
 environment mutation affects the current process and child processes started
 after the mutation.
 
-`process/Process().run(command, options = {})` runs a child process and returns a
+`process/Process.run(command, options = {})` runs a child process and returns a
 result dictionary. `command` may be an array of strings for direct execution or
 a string when `options["shell"] == true`. String commands without explicit
 shell opt-in are invalid. Supported options are `cwd`, `env`, `clear_env`,
@@ -1938,7 +1947,7 @@ The result dictionary contains `status`, `success`, `stdout`, `stderr`, and
 `timed_out`; `exit_code` remains as a compatibility alias for `status`.
 Non-zero child exit status is reported in the result dictionary and is not a
 raised error. Spawn/setup failures, invalid options, invalid environment
-values, timeout setup failures, and unsupported `Process().exec(command,
+values, timeout setup failures, and unsupported `Process.exec(command,
 options = {})` raise structured process errors.
 
 ### Filesystem Utilities

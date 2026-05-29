@@ -58,7 +58,7 @@ print(native_dep.NativeDep.version())
 
 -- app/tests/native_dep_test.tya --
 import native_dep/*
-import unittest/* as unittest
+import unittest/* as *
 
 class NativeDepTest extends TestCase
   test_version: ->

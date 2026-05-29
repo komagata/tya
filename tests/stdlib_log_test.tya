@@ -1,4 +1,4 @@
-import unittest/* as unittest
+import unittest/* as *
 import logger
 
 class StdlibLogTest extends TestCase

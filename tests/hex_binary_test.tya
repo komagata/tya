@@ -1,4 +1,4 @@
-import unittest/* as unittest
+import unittest/* as *
 
 class HexBinaryTest extends TestCase
 

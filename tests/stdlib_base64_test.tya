@@ -1,4 +1,4 @@
-import unittest/* as unittest
+import unittest/* as *
 import base64
 
 class StdlibBase64Test extends TestCase

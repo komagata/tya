@@ -1,0 +1,150 @@
+# Individual class/interface imports expose public names through the
+# parent import-path namespace. `as name` creates an alias namespace,
+# and `as *` imports the public name bare.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/namespaced.tya
+stdout 'bar\n'
+! stderr .
+
+exec go run ./cmd/tya run $WORK/nested.tya
+stdout 'server\nrequest\n'
+! stderr .
+
+exec go run ./cmd/tya run $WORK/aliased.tya
+stdout 'bar\n'
+! stderr .
+
+exec go run ./cmd/tya run $WORK/as_star.tya
+stdout 'bar\n'
+! stderr .
+
+exec go run ./cmd/tya run $WORK/grouped.tya
+stdout 'bar\nbuz\n'
+! stderr .
+
+exec go run ./cmd/tya run $WORK/local_bare.tya
+stdout 'local\nbar\n'
+! stderr .
+
+! exec go run ./cmd/tya run $WORK/bare_invalid.tya
+stderr 'undefined variable Bar'
+
+exec go run ./cmd/tya run $WORK/file_segment_not_exposed.tya
+stdout 'nil\n'
+! stderr .
+
+! exec go run ./cmd/tya run $WORK/alias_original_invalid.tya
+stderr 'undefined variable foo'
+
+! exec go run ./cmd/tya run $WORK/local_namespace_conflict.tya
+stderr 'import name conflict: foo'
+
+! exec go run ./cmd/tya run $WORK/local_alias_conflict.tya
+stderr 'import name conflict: f'
+
+! exec go run ./cmd/tya run $WORK/local_as_star_conflict.tya
+stderr 'import name conflict: Bar'
+
+! exec go run ./cmd/tya run $WORK/as_star_conflict.tya
+stderr 'import name conflict: Bar'
+
+-- namespaced.tya --
+import foo/bar
+
+print(foo.Bar.label())
+
+-- nested.tya --
+import net/http/server
+import net/http/request
+
+print(net.http.Server.label())
+print(net.http.Request.label())
+
+-- aliased.tya --
+import foo/bar as f
+
+print(f.Bar.label())
+
+-- as_star.tya --
+import foo/bar as *
+
+print(Bar.label())
+
+-- grouped.tya --
+import
+  foo/bar
+  foo/buz
+
+print(foo.Bar.label())
+print(foo.Buz.label())
+
+-- local_bare.tya --
+import foo/bar
+
+class Bar
+  static label: -> "local"
+
+print(Bar.label())
+print(foo.Bar.label())
+
+-- bare_invalid.tya --
+import foo/bar
+
+print(Bar.label())
+
+-- file_segment_not_exposed.tya --
+import foo/bar
+
+print(foo.bar.Bar.label())
+
+-- alias_original_invalid.tya --
+import foo/bar as f
+
+print(foo.Bar.label())
+
+-- local_namespace_conflict.tya --
+import foo/bar
+
+foo = "local"
+print(foo)
+
+-- local_alias_conflict.tya --
+import foo/bar as f
+
+f = "local"
+print(f)
+
+-- local_as_star_conflict.tya --
+import foo/bar as *
+
+class Bar
+  static label: -> "local"
+
+print(Bar.label())
+
+-- as_star_conflict.tya --
+import foo/bar as *
+import other/bar as *
+
+print(Bar.label())
+
+-- foo/bar.tya --
+class Bar
+  static label: -> "bar"
+
+-- foo/buz.tya --
+class Buz
+  static label: -> "buz"
+
+-- other/bar.tya --
+class Bar
+  static label: -> "other"
+
+-- net/http/server.tya --
+class Server
+  static label: -> "server"
+
+-- net/http/request.tya --
+class Request
+  static label: -> "request"

@@ -12,7 +12,7 @@ stdout '1 tests, 1 passed, 0 failed'
 ! stderr .
 
 -- feature_test.tya --
-import unittest/* as unittest
+import unittest/* as *
 import feature/*
 
 class FeatureTest extends TestCase

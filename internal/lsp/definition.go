@@ -61,14 +61,21 @@ func DefinitionAt(ctx DefinitionContext, line, character int) ([]Location, error
 			if !ok {
 				continue
 			}
-			if imp.Wildcard && imp.Alias != "" && definitionClassNameRE.MatchString(id.Name) {
+			if imp.Bare && definitionClassNameRE.MatchString(id.Name) {
 				if path := resolvePackageClassFile(ctx.Workspace, imp.Name, id.Name); path != "" {
 					if loc := symbolLocation(ctx.Workspace, path, id.Name); loc != nil {
 						return []Location{*loc}, nil
 					}
 				}
+				if !imp.Wildcard {
+					if path := resolveModuleFile(ctx.Workspace, imp.Name); path != "" {
+						if loc := symbolLocation(ctx.Workspace, path, id.Name); loc != nil {
+							return []Location{*loc}, nil
+						}
+					}
+				}
 			}
-			if imp.Alias == "" && definitionClassNameRE.MatchString(id.Name) {
+			if imp.Alias == "" && !imp.Bare && definitionClassNameRE.MatchString(id.Name) {
 				if path := resolvePackageClassFile(ctx.Workspace, imp.Name, id.Name); path != "" {
 					if loc := symbolLocation(ctx.Workspace, path, id.Name); loc != nil {
 						return []Location{*loc}, nil
@@ -200,7 +207,7 @@ func resolveNamespacedImportMember(ws *Workspace, prog *ast.Program, match *ast.
 	}
 	for _, stmt := range prog.Stmts {
 		imp, ok := stmt.(*ast.ImportStmt)
-		if !ok || imp.Alias != "" {
+		if !ok || imp.Bare {
 			continue
 		}
 		if !sameStringSlice(importNamespaceParts(imp), parts) {
@@ -235,6 +242,9 @@ func memberPath(expr ast.Expr) []string {
 }
 
 func importNamespaceParts(imp *ast.ImportStmt) []string {
+	if imp.Alias != "" {
+		return []string{imp.Alias}
+	}
 	parts := strings.Split(imp.Name, "/")
 	if imp.Wildcard || len(parts) == 1 {
 		return parts

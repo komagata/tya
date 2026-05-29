@@ -1,4 +1,4 @@
-import unittest/* as unittest
+import unittest/* as *
 import net/http/*
 
 class StdlibHttpRoutingTest extends TestCase

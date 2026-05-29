@@ -125,6 +125,9 @@ func importEntryString(imp *ast.ImportStmt) string {
 	if imp.Wildcard {
 		name += "/*"
 	}
+	if imp.Bare {
+		return fmt.Sprintf("%s as *", name)
+	}
 	if imp.Alias != "" {
 		return fmt.Sprintf("%s as %s", name, imp.Alias)
 	}

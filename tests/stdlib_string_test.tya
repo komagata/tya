@@ -1,4 +1,4 @@
-import unittest/* as unittest
+import unittest/* as *
 
 class StdlibStringTest extends TestCase
 

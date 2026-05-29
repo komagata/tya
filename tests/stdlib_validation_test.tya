@@ -1,6 +1,6 @@
-import unittest/* as unittest
+import unittest/* as *
 import validation
-import validation/* as validation_validators
+import validation/* as *
 
 class StdlibValidationTest extends TestCase
   assert_error_message: body, message, desc ->

@@ -1,5 +1,5 @@
 import option_parser
-import unittest/* as unittest
+import unittest/* as *
 
 class StdlibOptionParserTest extends TestCase
   test_arguments_and_double_dash: ->

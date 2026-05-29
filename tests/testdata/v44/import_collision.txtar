@@ -1,14 +1,14 @@
 # Directory-package imports expose public names through the import
 # path namespace, so same terminal directory names can coexist when
-# their qualified names differ. Aliased package imports still expose
-# public names bare, so duplicate public names conflict.
+# their qualified names differ. `as *` imports expose public names
+# bare, so duplicate public names conflict.
 cd $REPO
 
 exec go run ./cmd/tya run $WORK/main.tya
 stdout 'a\nb\n'
 ! stderr .
 
-! exec go run ./cmd/tya run $WORK/aliased.tya
+! exec go run ./cmd/tya run $WORK/as_star.tya
 stderr 'import name conflict'
 
 -- main.tya --
@@ -18,9 +18,9 @@ import b/net/*
 print(a.net.Request().label)
 print(b.net.Request().label)
 
--- aliased.tya --
-import a/net/* as a_net
-import b/net/* as b_net
+-- as_star.tya --
+import a/net/* as *
+import b/net/* as *
 
 print("unreachable")
 

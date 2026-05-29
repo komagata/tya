@@ -33,12 +33,39 @@ func TestDefinitionAtNamespacedPackageClassImport(t *testing.T) {
 	}
 }
 
-func TestDefinitionAtAliasedPackageBareClassImport(t *testing.T) {
+func TestDefinitionAtAliasedPackageNamespaceClassImport(t *testing.T) {
 	dir := t.TempDir()
 	writeLSPFile(t, filepath.Join(dir, "tya.toml"), "name = \"demo\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n")
 	writeLSPFile(t, filepath.Join(dir, "src", "net", "http", "request.tya"), "class Request\n  initialize: ->\n    self.path = \"\"\n")
 	mainPath := filepath.Join(dir, "src", "main.tya")
-	mainSrc := "import net/http/* as http\n\nrequest = Request()\n"
+	mainSrc := "import net/http/* as http\n\nrequest = http.Request()\n"
+	writeLSPFile(t, mainPath, mainSrc)
+	mainURI, _ := PathToURI(mainPath)
+	wantURI, _ := PathToURI(filepath.Join(dir, "src", "net", "http", "request.tya"))
+	ws := NewWorkspace()
+	ws.Root = dir
+
+	locs, err := DefinitionAt(DefinitionContext{
+		Doc:       &Document{URI: mainURI, Path: mainPath, Text: mainSrc},
+		Workspace: ws,
+	}, 2, 19)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(locs) != 1 {
+		t.Fatalf("expected one definition, got %d", len(locs))
+	}
+	if locs[0].URI != wantURI {
+		t.Fatalf("URI = %q, want %q", locs[0].URI, wantURI)
+	}
+}
+
+func TestDefinitionAtAsStarPackageBareClassImport(t *testing.T) {
+	dir := t.TempDir()
+	writeLSPFile(t, filepath.Join(dir, "tya.toml"), "name = \"demo\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n")
+	writeLSPFile(t, filepath.Join(dir, "src", "net", "http", "request.tya"), "class Request\n  initialize: ->\n    self.path = \"\"\n")
+	mainPath := filepath.Join(dir, "src", "main.tya")
+	mainSrc := "import net/http/* as *\n\nrequest = Request()\n"
 	writeLSPFile(t, mainPath, mainSrc)
 	mainURI, _ := PathToURI(mainPath)
 	wantURI, _ := PathToURI(filepath.Join(dir, "src", "net", "http", "request.tya"))

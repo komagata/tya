@@ -1,4 +1,4 @@
-import unittest/* as unittest
+import unittest/* as *
 import secure_random
 
 class StdlibSecureRandomTest extends TestCase

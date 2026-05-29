@@ -1075,48 +1075,49 @@ Imports appear at top level before other declarations and statements.
 
 ```tya
 import greeting
-import net/http
-import net/http as http
+import net/http/client
+import net/http/* as http
 ```
 
 Import paths are slash-separated `snake_case` segments. Relative filesystem
 paths, absolute paths, empty segments, and non-snake_case segments are invalid.
+Package-wide imports use an explicit final `/*` suffix.
 
 ### Directory Packages
 
 A directory package is a directory resolved by import path containing snake_case class/interface files. It must contain at least one class/interface file and must not contain script files at the package leaf.
 
-Unaliased directory imports expose public class and interface names directly.
-They do not create a lowercase namespace binding for the import path or terminal
-directory segment.
+Unaliased wildcard directory imports expose public class and interface names
+through the import path namespace. They do not import public names bare.
 
 ```tya
-import net/http
+import net/http/*
 
-server = Server()
-http = "local label"
+server = net.http.Server()
 ```
 
-In the example above, `http` is an ordinary local binding. `http.Server()` is
-invalid because unaliased directory imports do not expose a namespace object.
-If a namespace is desired, use an alias.
+In the example above, `Server()` is invalid.
 
-Aliased directory imports expose a namespace binding and do not import public
-names bare.
+Aliased wildcard directory imports expose public names through the alias
+namespace and do not create the original import-path namespace.
 
 ```tya
-import net/http as http
+import net/http/* as http
 
 server = http.Server()
 ```
 
-With an alias, package public names are only available through the alias
-namespace. `Server()` is invalid in the example above; use `http.Server()`.
+Use `as *` when public names should be imported bare.
 
-Imported public names are reserved in the importing scope. Reassigning or
-redeclaring an imported public class or interface name is invalid, and importing
-two packages that expose the same public name is invalid. Importing the same
-path twice is invalid even when aliases differ.
+```tya
+import net/http/* as *
+
+server = Server()
+```
+
+Namespace imports reserve their qualified public names. Explicit `as *` imports
+reserve bare public names. Importing the same path twice is invalid even when
+aliases differ.
 
 ```tya
 import net/http

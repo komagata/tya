@@ -660,7 +660,7 @@ func TestLoadSourceRejectsDirectoryPackageImportWithoutWildcard(t *testing.T) {
 	}
 }
 
-func TestLoadSourceImportsAliasedPackageBare(t *testing.T) {
+func TestLoadSourceImportsAliasedPackageNamespace(t *testing.T) {
 	dir := t.TempDir()
 	pkgDir := filepath.Join(dir, "net", "http")
 	if err := os.MkdirAll(pkgDir, 0755); err != nil {
@@ -668,36 +668,39 @@ func TestLoadSourceImportsAliasedPackageBare(t *testing.T) {
 	}
 	writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  url: \"\"\n\n  initialize: url ->\n    self.url = url\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import net/http/* as http\nreq = Request(\"/ok\")\nprint(req.url)\n")
+	writeFile(t, main, "import net/http/* as http\nreq = http.Request(\"/ok\")\nprint(req.url)\n")
+
+	source, modules, err := LoadSourceWithModules(main)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(source, "http = {}") || !strings.Contains(source, "class RequestTyaPkgHttp") || !strings.Contains(source, "http[\"Request\"] = RequestTyaPkgHttp") {
+		t.Fatalf("source should expose aliased package namespace:\n%s", source)
+	}
+	if strings.Join(modules, ",") != "http" {
+		t.Fatalf("got modules %v", modules)
+	}
+}
+
+func TestLoadSourceImportsPackageBareWithAsStar(t *testing.T) {
+	dir := t.TempDir()
+	pkgDir := filepath.Join(dir, "net", "http")
+	if err := os.MkdirAll(pkgDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  url: \"\"\n\n  initialize: url ->\n    self.url = url\n")
+	main := filepath.Join(dir, "main.tya")
+	writeFile(t, main, "import net/http/* as *\nreq = Request(\"/ok\")\nprint(req.url)\n")
 
 	source, modules, err := LoadSourceWithModules(main)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if strings.Contains(source, "http = {}") || !strings.Contains(source, "class Request") {
-		t.Fatalf("source should expose aliased package classes bare:\n%s", source)
+		t.Fatalf("source should expose as-star package classes bare:\n%s", source)
 	}
 	if strings.Join(modules, ",") != "Request" {
 		t.Fatalf("got modules %v", modules)
-	}
-}
-
-func TestLoadSourceRejectsAliasedPackageNamespaceUse(t *testing.T) {
-	dir := t.TempDir()
-	pkgDir := filepath.Join(dir, "net", "http")
-	if err := os.MkdirAll(pkgDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-	writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  initialize: url ->\n    self.url = url\n")
-	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import net/http/* as http\nreq = http.Request(\"/ok\")\n")
-
-	_, err := LoadSource(main)
-	if err == nil {
-		t.Fatal("expected alias namespace rejection")
-	}
-	if !strings.Contains(err.Error(), "undefined variable http") {
-		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
@@ -720,7 +723,7 @@ func TestLoadSourceRejectsUnaliasedPackageBareClassUse(t *testing.T) {
 	}
 }
 
-func TestLoadSourceRejectsBarePackageImportNameConflict(t *testing.T) {
+func TestLoadSourceRejectsAsStarPackageImportNameConflict(t *testing.T) {
 	dir := t.TempDir()
 	for _, rel := range []string{"api", "web"} {
 		pkgDir := filepath.Join(dir, rel)
@@ -730,7 +733,7 @@ func TestLoadSourceRejectsBarePackageImportNameConflict(t *testing.T) {
 		writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  initialize: ->\n    self.path = \"\"\n")
 	}
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import api/* as api\nimport web/* as web\n")
+	writeFile(t, main, "import api/* as *\nimport web/* as *\n")
 
 	_, err := LoadSource(main)
 	if err == nil {
@@ -741,7 +744,7 @@ func TestLoadSourceRejectsBarePackageImportNameConflict(t *testing.T) {
 	}
 }
 
-func TestLoadSourceRejectsLocalBarePackageImportNameConflict(t *testing.T) {
+func TestLoadSourceRejectsLocalAsStarPackageImportNameConflict(t *testing.T) {
 	dir := t.TempDir()
 	pkgDir := filepath.Join(dir, "api")
 	if err := os.MkdirAll(pkgDir, 0755); err != nil {
@@ -749,7 +752,7 @@ func TestLoadSourceRejectsLocalBarePackageImportNameConflict(t *testing.T) {
 	}
 	writeFile(t, filepath.Join(pkgDir, "request.tya"), "class Request\n  initialize: ->\n    self.path = \"\"\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import api/* as api\nRequest = -> \"local\"\n")
+	writeFile(t, main, "import api/* as *\nRequest = -> \"local\"\n")
 
 	_, err := LoadSource(main)
 	if err == nil {
