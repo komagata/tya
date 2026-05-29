@@ -117,6 +117,32 @@ func TestUnparseSeparatesClassAndInterfaceMembersBeforeComments(t *testing.T) {
 	}
 }
 
+func TestUnparseKeepsRecordDeclarationAndFieldComments(t *testing.T) {
+	src := strings.Join([]string{
+		"# Option docs.",
+		"record Option",
+		"  # kind docs.",
+		"  kind",
+		"  # name docs.",
+		"  name",
+		"",
+	}, "\n")
+	got, err := unparseSourceWithComments(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != src {
+		t.Fatalf("got:\n%swant:\n%s", got, src)
+	}
+	again, err := unparseSourceWithComments(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again != got {
+		t.Fatalf("not idempotent:\nfirst:\n%s\nsecond:\n%s", got, again)
+	}
+}
+
 func unparseSource(t *testing.T, src string) (string, error) {
 	t.Helper()
 	toks, errs := lexer.Lex(src)

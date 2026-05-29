@@ -145,3 +145,45 @@ y = 2
 		t.Errorf("inline-only comment should not become header, got %v", prog.HeaderComments)
 	}
 }
+
+func TestParseWithCommentsRecordDeclarationAndFields(t *testing.T) {
+	src := `# Option docs.
+record Option
+  # kind docs.
+  kind
+  # name docs.
+  name
+`
+	toks, lcomments, errs := lexer.LexWithComments(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errs: %v", errs)
+	}
+	comments := make([]CommentInfo, 0, len(lcomments))
+	for _, c := range lcomments {
+		comments = append(comments, CommentInfo{Line: c.Line, Col: c.Col, Indent: c.Indent, Text: c.Text, IsFullLine: c.IsFullLine})
+	}
+	prog, _, err := ParseWithComments(toks, comments)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if orphans := OrphanComments(prog, comments); len(orphans) != 0 {
+		t.Fatalf("record comments became orphan comments: %+v", orphans)
+	}
+	decl := prog.Stmts[0].(*ast.StructDecl)
+	sc, ok := prog.Comments[decl]
+	if !ok {
+		t.Fatalf("record declaration missing comments: %+v", prog.Comments)
+	}
+	if len(sc.Leading) != 1 || sc.Leading[0] != " Option docs." {
+		t.Fatalf("record leading comments: %+v", sc.Leading)
+	}
+	if len(decl.Fields) != 2 {
+		t.Fatalf("record fields: %+v", decl.Fields)
+	}
+	if got := decl.Fields[0].Comments.Leading; len(got) != 1 || got[0] != " kind docs." {
+		t.Fatalf("kind comments: %+v", got)
+	}
+	if got := decl.Fields[1].Comments.Leading; len(got) != 1 || got[0] != " name docs." {
+		t.Fatalf("name comments: %+v", got)
+	}
+}

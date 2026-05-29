@@ -1,3 +1,18 @@
+# Option stores one parsed option token.
+record Option
+  # Option.kind stores "long" or "short".
+  # @type String
+  kind
+  # Option.name stores the option name without dashes.
+  # @type String
+  name
+  # Option.value stores the parsed option value.
+  # @type Any
+  value
+  # Option.raw stores the original option token.
+  # @type String
+  raw
+
 # OptionParser parses command-line option tokens.
 class OptionParser
   # OptionParser.args stores the original command-line arguments.
@@ -44,9 +59,9 @@ class OptionParser
   # @param name String long option name.
   # @param value Any parsed option value.
   # @param raw String original option token.
-  # @return ParsedOption parsed option token.
+  # @return Option parsed option token.
   private long_option: name, value, raw ->
-    ParsedOption("long", name, value, raw)
+    Option("long", name, value, raw)
 
   # OptionParser.parse_long! parses one long option token.
   # @param arg String command-line token.
@@ -76,36 +91,6 @@ class OptionParser
   # @param name String short option name.
   # @param value Any parsed option value.
   # @param raw String original option token.
-  # @return ParsedOption parsed option token.
+  # @return Option parsed option token.
   private short_option: name, value, raw ->
-    ParsedOption("short", name, value, raw)
-
-# ParsedOption stores one parsed option token.
-class ParsedOption
-  # ParsedOption.kind stores "long" or "short".
-  # @type String
-  kind: ""
-
-  # ParsedOption.name stores the option name without dashes.
-  # @type String
-  name: ""
-
-  # ParsedOption.value stores the parsed option value.
-  # @type Any
-  value: nil
-
-  # ParsedOption.raw stores the original option token.
-  # @type String
-  raw: ""
-
-  # ParsedOption.initialize initializes all fields.
-  # @param kind String option kind.
-  # @param name String option name.
-  # @param value Any option value.
-  # @param raw String original option token.
-  # @return Nil no meaningful value.
-  initialize: kind, name, value, raw ->
-    self.kind = kind
-    self.name = name
-    self.value = value
-    self.raw = raw
+    Option("short", name, value, raw)

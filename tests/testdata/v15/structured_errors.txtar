@@ -24,7 +24,7 @@ stderr 'block try requires catch'
 stderr 'invalid binding name User'
 
 exec go run ./cmd/tya version
-stdout '0.72.2\n'
+stdout '0.72.3\n'
 ! stderr .
 
 -- structured_errors.tya --

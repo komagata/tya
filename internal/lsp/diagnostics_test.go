@@ -91,3 +91,13 @@ func TestLspAcceptsAcceptedButUnformattedSyntax(t *testing.T) {
 		}
 	}
 }
+
+func TestDiagnosticsAllowRecordDocComments(t *testing.T) {
+	src := "# Option stores one parsed option token.\nrecord Option\n  # Option.kind stores option kind.\n  kind\n  # Option.name stores option name.\n  name\n"
+	diags := DiagnosticsFor("option_parser.tya", src)
+	for _, d := range diags {
+		if d.Severity == DiagSeverityError {
+			t.Fatalf("unexpected diagnostic: %#v", d)
+		}
+	}
+}

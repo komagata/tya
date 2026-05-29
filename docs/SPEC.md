@@ -123,6 +123,8 @@ name = "tya" # line-end comment
 
 Comments may attach to declarations and statements for formatting, LSP hover,
 and `tya doc`. Comment placement rules are part of Formatted Syntax.
+Declarations include top-level `class`, `interface`, `struct`, and `record`
+declarations and their body members.
 
 Tya recognizes three source comment roles:
 
@@ -636,6 +638,9 @@ fields replaced. Structs do not provide `with(...)`.
 Struct and record bodies may contain only field declarations. They do not
 support methods, static members, private/protected members, inheritance,
 interfaces, class variables, class constants, or runtime type generation.
+Leading comments may attach to struct and record declarations and to their
+field declarations, using the same placement rules as class declarations and
+class fields.
 
 Structs and records may be the public type in snake_case type files and are
 exported by directory packages under the same public-name rules as classes and

@@ -173,6 +173,8 @@ func markMemberComments(stmts []ast.Stmt, comments []CommentInfo, used []bool) {
 			markClassMemberComments(d, comments, used)
 		case *ast.InterfaceDecl:
 			markInterfaceMemberComments(d, comments, used)
+		case *ast.StructDecl:
+			markStructMemberComments(d, comments, used)
 		}
 	}
 }
@@ -198,6 +200,12 @@ func markInterfaceMemberComments(d *ast.InterfaceDecl, comments []CommentInfo, u
 	}
 	for i := range d.Methods {
 		d.Methods[i].Comments.Leading = takeLeadingComments(d.Methods[i].Tok.Line, 2, comments, used)
+	}
+}
+
+func markStructMemberComments(d *ast.StructDecl, comments []CommentInfo, used []bool) {
+	for i := range d.Fields {
+		d.Fields[i].Comments.Leading = takeLeadingComments(d.Fields[i].Tok.Line, 2, comments, used)
 	}
 }
 
@@ -359,6 +367,8 @@ func stmtPos(stmt ast.Stmt) (line, indent int) {
 	case *ast.ClassDecl:
 		return n.NameTok.Line, n.NameTok.Col - 1
 	case *ast.InterfaceDecl:
+		return n.NameTok.Line, n.NameTok.Col - 1
+	case *ast.StructDecl:
 		return n.NameTok.Line, n.NameTok.Col - 1
 	case *ast.ReturnStmt:
 		return n.Tok.Line, n.Tok.Col - 1

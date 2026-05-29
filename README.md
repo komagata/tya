@@ -49,13 +49,13 @@ For local formula development from this repository:
 brew install --HEAD ./Formula/tya.rb
 ```
 
-For v0.72.2, download the release source and build the `tya` command locally.
+For v0.72.3, download the release source and build the `tya` command locally.
 This currently requires Go because the reference implementation is written
 in Go.
 
 ```sh
-curl -L https://github.com/komagata/tya/archive/refs/tags/v0.72.2.tar.gz | tar xz
-cd tya-0.72.2
+curl -L https://github.com/komagata/tya/archive/refs/tags/v0.72.3.tar.gz | tar xz
+cd tya-0.72.3
 go build -o tya ./cmd/tya
 ./tya version
 ```
