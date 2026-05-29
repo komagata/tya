@@ -1097,6 +1097,11 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 			i += 2
 			continue
 		}
+		if i+2 < len(s) && s[i:i+3] == "??=" {
+			l.add(token.NIL_ASSIGN, "??=", line, col)
+			i += 3
+			continue
+		}
 		if i+1 < len(s) {
 			two := s[i : i+2]
 			switch two {

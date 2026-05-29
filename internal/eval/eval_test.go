@@ -1243,6 +1243,15 @@ func TestRunAssignmentEvaluationOrderAndSwap(t *testing.T) {
 	}
 }
 
+func TestRunNilCoalescingAssignment(t *testing.T) {
+	src := "fail = ->\n  print(\"rhs\")\n  return \"unused\"\nvalue = nil\nvalue ??= \"fallback\"\nprint(value)\nvalue ??= fail()\nprint(value)\nflag = false\nflag ??= true\nprint(flag)\nzero = 0\nzero ??= 1\nprint(zero)\nempty = \"\"\nempty ??= \"unused\"\nprint(empty == \"\")\nitems = []\nitems ??= [1]\nprint(items.len())\narray = [nil]\narray[0] ??= \"first\"\narray[0] ??= fail()\nprint(array[0])\ndict = {}\ndict[\"name\"] ??= \"tya\"\ndict[\"name\"] ??= fail()\nprint(dict[\"name\"])\nclass Box\n  name: nil\n\n  fill: ->\n    self.name ??= \"box\"\n    self.name ??= \"unused\"\n    self.name\n\nbox = Box()\nprint(box.fill())\n"
+	out := runEval(t, src)
+	want := "fallback\nfallback\nfalse\n0\ntrue\n0\nfirst\ntya\nbox\n"
+	if out != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestRunStringIndexingUsesRunes(t *testing.T) {
 	src := "print(\"abc\"[1])\nprint(\"あい\"[0])\nprint(\"あい\"[99])\n"
 	out := runEval(t, src)

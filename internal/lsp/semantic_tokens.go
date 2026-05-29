@@ -151,7 +151,7 @@ func classifyToken(t token.Token, all []token.Token, i int, idx *SymbolIndex) in
 
 func isOperatorToken(t token.Type) bool {
 	switch t {
-	case token.ASSIGN, token.EQ, token.NEQ, token.LT, token.LTE, token.GT, token.GTE,
+	case token.ASSIGN, token.NIL_ASSIGN, token.EQ, token.NEQ, token.LT, token.LTE, token.GT, token.GTE,
 		token.PLUS, token.MINUS, token.STAR, token.SLASH, token.PERCENT, token.ARROW,
 		token.AMP, token.PIPE, token.CARET, token.TILDE, token.SHL, token.SHR,
 		token.COLON, token.COMMA, token.DOT, token.QUESTION:

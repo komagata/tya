@@ -15,6 +15,7 @@ import (
 	"tya/internal/lexer"
 	"tya/internal/parser"
 	"tya/internal/pkg"
+	"tya/internal/token"
 )
 
 var classNameRE = regexp.MustCompile(`^[A-Z][a-zA-Z0-9]*$`)
@@ -349,6 +350,9 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		return g.assignInterfaceDecl(n.Name)
 	case *ast.AssignStmt:
 		g.sourceLine(n.Tok.Line)
+		if n.Tok.Type == token.NIL_ASSIGN {
+			return g.nilAssign(n)
+		}
 		if len(n.Targets) != 1 || len(n.Values) != 1 {
 			return g.multiAssign(n)
 		}
@@ -1165,6 +1169,123 @@ func (g *cgen) multiAssign(n *ast.AssignStmt) error {
 		}
 	}
 	return nil
+}
+
+func (g *cgen) nilAssign(n *ast.AssignStmt) error {
+	if len(n.Targets) != 1 || len(n.Values) != 1 {
+		line, col, _ := stmtPos(n)
+		return codegenError(codeMultiAssignNonTuple, "??= assignment requires exactly one target and one value", line, col)
+	}
+	switch target := n.Targets[0].(type) {
+	case *ast.Ident:
+		name := cName(target.Name)
+		if !g.vars[target.Name] {
+			g.vars[target.Name] = true
+			g.line(fmt.Sprintf("TyaValue %s = tya_nil();", name))
+		}
+		g.line(fmt.Sprintf("if (%s.kind == TYA_NIL) {", name))
+		g.indent++
+		value, _, err := g.expr(n.Values[0])
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("%s = %s;", name, value))
+		g.indent--
+		g.line("}")
+		return nil
+	case *ast.IndexExpr:
+		obj, _, err := g.expr(target.Target)
+		if err != nil {
+			return err
+		}
+		idx, _, err := g.expr(target.Index)
+		if err != nil {
+			return err
+		}
+		objTmp := fmt.Sprintf("__nil_assign_obj%d", g.temp)
+		idxTmp := fmt.Sprintf("__nil_assign_idx%d", g.temp)
+		g.temp++
+		g.line(fmt.Sprintf("TyaValue %s = %s;", objTmp, obj))
+		g.line(fmt.Sprintf("TyaValue %s = %s;", idxTmp, idx))
+		g.line(fmt.Sprintf("if (tya_index(%s, %s).kind == TYA_NIL) {", objTmp, idxTmp))
+		g.indent++
+		value, _, err := g.expr(n.Values[0])
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("tya_set_index(%s, %s, %s);", objTmp, idxTmp, value))
+		g.indent--
+		g.line("}")
+		return nil
+	case *ast.MemberExpr:
+		key := target.Name
+		receiver := ""
+		if selfTarget, ok := target.Target.(*ast.SelfExpr); ok {
+			if selfTarget.Class {
+				receiver = g.classTarget()
+			} else {
+				receiver = "__this"
+				key = "@" + target.Name
+			}
+		} else {
+			var err error
+			receiver, _, err = g.expr(target.Target)
+			if err != nil {
+				return err
+			}
+		}
+		recvTmp := fmt.Sprintf("__nil_assign_recv%d", g.temp)
+		g.temp++
+		g.line(fmt.Sprintf("TyaValue %s = %s;", recvTmp, receiver))
+		g.line(fmt.Sprintf("if (tya_member(%s, %s).kind == TYA_NIL) {", recvTmp, strconv.Quote(key)))
+		g.indent++
+		value, _, err := g.expr(n.Values[0])
+		if err != nil {
+			return err
+		}
+		if selfTarget, ok := target.Target.(*ast.SelfExpr); ok && !selfTarget.Class {
+			tmp := fmt.Sprintf("__field%d", g.temp)
+			g.temp++
+			g.line(fmt.Sprintf("TyaValue %s = %s;", tmp, value))
+			g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", recvTmp, strconv.Quote("@"+target.Name), tmp))
+			g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", recvTmp, strconv.Quote(target.Name), tmp))
+		} else {
+			g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", recvTmp, strconv.Quote(key), value))
+		}
+		g.indent--
+		g.line("}")
+		return nil
+	case *ast.InstanceFieldExpr:
+		g.line(fmt.Sprintf("if (tya_member(__this, %s).kind == TYA_NIL) {", strconv.Quote("@"+target.Name)))
+		g.indent++
+		value, _, err := g.expr(n.Values[0])
+		if err != nil {
+			return err
+		}
+		tmp := fmt.Sprintf("__field%d", g.temp)
+		g.temp++
+		g.line(fmt.Sprintf("TyaValue %s = %s;", tmp, value))
+		g.line(fmt.Sprintf("tya_set_member(__this, %s, %s);", strconv.Quote("@"+target.Name), tmp))
+		g.line(fmt.Sprintf("tya_set_member(__this, %s, %s);", strconv.Quote(target.Name), tmp))
+		g.indent--
+		g.line("}")
+		return nil
+	case *ast.ClassVarExpr:
+		receiver := g.classTarget()
+		g.line(fmt.Sprintf("if (tya_member(%s, %s).kind == TYA_NIL) {", receiver, strconv.Quote(target.Name)))
+		g.indent++
+		value, _, err := g.expr(n.Values[0])
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", receiver, strconv.Quote(target.Name), value))
+		g.indent--
+		g.line("}")
+		return nil
+	default:
+		line, col, _ := exprPos(target)
+		return codegenError(codeAssignTargetUnsupported, "C emitter only supports assignment targets for ??=", line, col)
+	}
 }
 
 func (g *cgen) assignDestructuring(target ast.Expr, value ast.Expr) error {

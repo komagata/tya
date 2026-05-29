@@ -445,6 +445,14 @@ func TestEmitCCompilesDictProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesNilCoalescingAssignment(t *testing.T) {
+	src := "fail = ->\n  print(\"rhs\")\n  return \"unused\"\nvalue = nil\nvalue ??= \"fallback\"\nprint(value)\nvalue ??= fail()\nprint(value)\narray = [nil]\narray[0] ??= \"first\"\narray[0] ??= fail()\nprint(array[0])\ndict = {}\ndict[\"name\"] ??= \"tya\"\ndict[\"name\"] ??= fail()\nprint(dict[\"name\"])\nclass Box\n  name: nil\n\n  fill: ->\n    self.name ??= \"box\"\n    self.name ??= \"unused\"\n    self.name\n\nbox = Box()\nprint(box.fill())\n"
+	out := compileAndRun(t, src)
+	if string(out) != "fallback\nfallback\nfirst\ntya\nbox\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCCompilesMemberInterpolationProgram(t *testing.T) {
 	src := "greet = user -> \"Hello, \" + user[\"name\"]\nuser =\n  name: \"komagata\"\nprint(greet(user))\n"
 	out := compileAndRun(t, src)

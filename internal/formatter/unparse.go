@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"tya/internal/ast"
+	"tya/internal/token"
 )
 
 var constNameRE = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
@@ -948,6 +949,10 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 	if len(n.Targets) == 0 {
 		return fmt.Errorf("formatter.Unparse: empty AssignStmt")
 	}
+	op := "="
+	if n.Tok.Type == token.NIL_ASSIGN {
+		op = "??="
+	}
 	targets := make([]string, 0, len(n.Targets))
 	for _, t := range n.Targets {
 		prevSuppress := u.suppressBareField
@@ -970,7 +975,7 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 			if err != nil {
 				return err
 			}
-			prefix := strings.Join(targets, ", ") + " = " + defArrow(head)
+			prefix := strings.Join(targets, ", ") + " " + op + " " + defArrow(head)
 			if fn.Expr != nil {
 				body, err := u.expr(fn.Expr)
 				if err != nil {
@@ -1000,13 +1005,13 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 			}
 		}
 		if lit, ok := n.Values[0].(*ast.StringLit); ok && strings.Contains(lit.Form, "heredoc") {
-			return u.emitHeredoc(n, strings.Join(targets, ", ")+" = ", lit)
+			return u.emitHeredoc(n, strings.Join(targets, ", ")+" "+op+" ", lit)
 		}
 		if lit, ok := n.Values[0].(*ast.BytesLit); ok && strings.Contains(lit.Form, "heredoc") {
-			return u.emitBytesHeredoc(n, strings.Join(targets, ", ")+" = ", lit)
+			return u.emitBytesHeredoc(n, strings.Join(targets, ", ")+" "+op+" ", lit)
 		}
 		if lit, ok := n.Values[0].(*ast.StringLit); ok && lit.Lang != "" && lit.Form == "triple" {
-			return u.emitTripleQuoted(n, strings.Join(targets, ", ")+" = ", lit)
+			return u.emitTripleQuoted(n, strings.Join(targets, ", ")+" "+op+" ", lit)
 		}
 	}
 	values := make([]string, 0, len(n.Values))
@@ -1017,7 +1022,7 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 		}
 		values = append(values, s)
 	}
-	body := strings.Join(targets, ", ") + " = " + strings.Join(values, ", ")
+	body := strings.Join(targets, ", ") + " " + op + " " + strings.Join(values, ", ")
 	if u.fitsInline(body) {
 		u.emitStmtLine(n, body)
 		return nil
@@ -1027,13 +1032,13 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 		switch v := n.Values[0].(type) {
 		case *ast.CallExpr:
 			if u.isWrappedCallChain(v) {
-				return u.emitWrappedCallChain(n, strings.Join(targets, ", ")+" = ", v)
+				return u.emitWrappedCallChain(n, strings.Join(targets, ", ")+" "+op+" ", v)
 			}
-			return u.emitWrappedCall(n, strings.Join(targets, ", ")+" = ", v)
+			return u.emitWrappedCall(n, strings.Join(targets, ", ")+" "+op+" ", v)
 		case *ast.ArrayLit:
-			return u.emitWrappedArray(n, strings.Join(targets, ", ")+" = ", v)
+			return u.emitWrappedArray(n, strings.Join(targets, ", ")+" "+op+" ", v)
 		case *ast.BinaryExpr:
-			return u.emitWrappedBinary(n, strings.Join(targets, ", ")+" = ", v)
+			return u.emitWrappedBinary(n, strings.Join(targets, ", ")+" "+op+" ", v)
 		case *ast.DictLit:
 			return u.emitDictBlock(n, strings.Join(targets, ", "), v)
 		case *ast.StringLit:
@@ -1043,7 +1048,7 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 			// back to the atomic-token exception (long
 			// single-line is OK).
 			if strings.Contains(v.Value, "\n") && !strings.Contains(v.Value, `"""`) {
-				return u.emitTripleQuoted(n, strings.Join(targets, ", ")+" = ", v)
+				return u.emitTripleQuoted(n, strings.Join(targets, ", ")+" "+op+" ", v)
 			}
 		case *ast.FuncLit:
 			// §5.3.8: a single-line `name -> expr` whose
@@ -1058,7 +1063,7 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 				if err != nil {
 					return err
 				}
-				u.line(strings.Join(targets, ", ") + " = " + defArrow(head))
+				u.line(strings.Join(targets, ", ") + " " + op + " " + defArrow(head))
 				u.indent++
 				u.line(bodyStr)
 				u.indent--

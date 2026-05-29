@@ -11,6 +11,7 @@ import (
 
 	"tya/internal/ast"
 	"tya/internal/lexer"
+	"tya/internal/token"
 )
 
 func TestParseIndentedDictAssignment(t *testing.T) {
@@ -32,6 +33,37 @@ func TestParseIndentedDictAssignment(t *testing.T) {
 	}
 	if len(obj.Props) != 2 {
 		t.Fatalf("got %d props", len(obj.Props))
+	}
+}
+
+func TestParseNilCoalescingAssignment(t *testing.T) {
+	toks, errs := lexer.Lex("value ??= \"fallback\"\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assign, ok := prog.Stmts[0].(*ast.AssignStmt)
+	if !ok {
+		t.Fatalf("got %T", prog.Stmts[0])
+	}
+	if assign.Tok.Type != token.NIL_ASSIGN {
+		t.Fatalf("got token %s, want %s", assign.Tok.Type, token.NIL_ASSIGN)
+	}
+	if len(assign.Targets) != 1 || len(assign.Values) != 1 {
+		t.Fatalf("got %d targets and %d values", len(assign.Targets), len(assign.Values))
+	}
+}
+
+func TestParseNilCoalescingAssignmentRejectsMultipleTargets(t *testing.T) {
+	toks, errs := lexer.Lex("a, b ??= pair()\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	if _, _, err := Parse(toks); err == nil {
+		t.Fatal("expected parse error")
 	}
 }
 

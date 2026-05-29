@@ -262,6 +262,18 @@ func TestUnparseAssignAndPrint(t *testing.T) {
 	}
 }
 
+func TestUnparseNilCoalescingAssignment(t *testing.T) {
+	src := "value??=\"fallback\"\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "value ??= \"fallback\"\n"
+	if got != want {
+		t.Errorf("got %q want %q", got, want)
+	}
+}
+
 func TestUnparseBinaryAndCall(t *testing.T) {
 	src := "y = 2 + 3 * 4\nprint(y)\n"
 	got, err := unparseSource(t, src)

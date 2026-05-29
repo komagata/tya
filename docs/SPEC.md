@@ -142,7 +142,7 @@ The token vocabulary includes identifiers, literals, indentation tokens,
 operators, and punctuation.
 
 ```text
-= == != < <= > >= : , . ? ! @ + - * / % ->
+= ??= == != < <= > >= : , . ? ! @ + - * / % ->
 ( ) [ ] { }
 & | ^ ~ << >>
 ```
@@ -1013,6 +1013,18 @@ user["admin"] = true
 Multiple assignment evaluates the right-hand side and binds the corresponding
 left-hand targets. Right-hand expressions are evaluated first, left to right;
 after that, assignment targets are evaluated and assigned left to right.
+
+Nil-coalescing assignment uses `??=` and is available for the same single
+assignment targets as `=`. It reads the target's current value; if that value is
+`nil`, it evaluates the right-hand side and assigns it. If the current value is
+not `nil`, the right-hand side is not evaluated and no assignment happens.
+Only `nil` triggers assignment: unlike Ruby's `||=`, `false`, `0`, `0.0`, `""`,
+empty arrays, and empty dictionaries keep their existing value.
+
+```tya
+value = nil
+value ??= "fallback"
+```
 
 ### If Expressions
 

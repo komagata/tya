@@ -515,15 +515,18 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 		return p.returnStmt()
 	}
 	if p.isAssignStart() {
-		tok := p.peek()
 		targets, err := p.assignTargets()
 		if err != nil {
 			return nil, err
 		}
+		tok := p.peek()
 		p.next()
 		values, err := p.valuesAfterAssign()
 		if err != nil {
 			return nil, err
+		}
+		if tok.Type == token.NIL_ASSIGN && (len(targets) != 1 || len(values) != 1) {
+			return nil, p.errAt(tok, "??= assignment requires exactly one target and one value")
 		}
 		return &ast.AssignStmt{Targets: targets, Values: values, Tok: tok}, nil
 	}
@@ -2574,7 +2577,7 @@ func (p *Parser) isAssignStart() bool {
 			return false
 		}
 	}
-	return i < len(p.toks) && p.toks[i].Type == token.ASSIGN
+	return i < len(p.toks) && (p.toks[i].Type == token.ASSIGN || p.toks[i].Type == token.NIL_ASSIGN)
 }
 
 func (p *Parser) scanAssignTarget(i *int) bool {

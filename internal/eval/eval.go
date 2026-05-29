@@ -34,6 +34,7 @@ import (
 	"tya/internal/interp"
 	"tya/internal/lexer"
 	"tya/internal/parser"
+	"tya/internal/token"
 )
 
 var (
@@ -1106,6 +1107,9 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 		}
 		return last, nil
 	case *ast.AssignStmt:
+		if n.Tok.Type == token.NIL_ASSIGN {
+			return evalNilAssign(n, env)
+		}
 		values, err := evalValues(n.Values, env)
 		if err != nil {
 			return nil, err
@@ -1457,6 +1461,48 @@ func evalValues(exprs []ast.Expr, env *Env) ([]Value, error) {
 		}
 	}
 	return values, nil
+}
+
+func evalNilAssign(n *ast.AssignStmt, env *Env) (Value, error) {
+	if len(n.Targets) != 1 || len(n.Values) != 1 {
+		return nil, fmt.Errorf("??= assignment requires exactly one target and one value")
+	}
+	current, err := assignmentValue(n.Targets[0], env)
+	if err != nil {
+		return nil, err
+	}
+	if current != nil {
+		return current, nil
+	}
+	value, err := evalExpr(n.Values[0], env)
+	if err != nil {
+		return nil, err
+	}
+	if id, ok := n.Targets[0].(*ast.Ident); ok {
+		value = nameFunction(id.Name, value)
+	}
+	if err := assign(n.Targets[0], value, env); err != nil {
+		return nil, err
+	}
+	return value, nil
+}
+
+func assignmentValue(target ast.Expr, env *Env) (Value, error) {
+	switch t := target.(type) {
+	case *ast.Ident:
+		if t.Name == "_" {
+			return nil, nil
+		}
+		value, ok := env.get(t.Name)
+		if !ok {
+			return nil, nil
+		}
+		return value, nil
+	case *ast.MemberExpr, *ast.IndexExpr:
+		return evalExpr(target, env)
+	default:
+		return evalExpr(target, env)
+	}
 }
 
 func assign(target ast.Expr, v Value, env *Env) error {
