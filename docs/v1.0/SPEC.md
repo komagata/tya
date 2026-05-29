@@ -299,6 +299,8 @@ The core canonical rules are:
 - blank lines are determined by AST shape, not user preference;
 - multi-line calls, arrays, dictionaries, parameter lists, operator chains, and
   long conditions use the formatter-defined continuation forms;
+- long array literal values in assignments and class members use a bracketed
+  block form with one element per line;
 - trailing commas are prohibited in arrays, dictionaries, calls, and parameter
   lists;
 - imports are atomic and not line-wrapped;

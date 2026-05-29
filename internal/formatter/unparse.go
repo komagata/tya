@@ -739,47 +739,32 @@ func classMethodRank(m ast.ClassMethod) int {
 
 func (u *unparser) classField(f ast.ClassField) error {
 	u.leadingComments(f.Comments)
-	val, err := u.expr(f.Value)
-	if err != nil {
-		return err
-	}
 	// v0.46+ canonical: `private` keyword instead of `_`-prefix.
 	fieldPrefix := ""
 	if f.Private {
 		fieldPrefix = "private "
 	}
-	u.line(fieldPrefix + f.Name + ": " + val)
-	return nil
+	return u.emitValueLine(fieldPrefix+f.Name+": ", f.Value)
 }
 
 func (u *unparser) classVar(v ast.ClassVar) error {
 	u.leadingComments(v.Comments)
-	val, err := u.expr(v.Value)
-	if err != nil {
-		return err
-	}
 	// v0.46+ canonical: `static` keyword instead of `@@`; `private`
 	// keyword instead of `_`-prefix.
 	varPrefix := "static "
 	if v.Private {
 		varPrefix = "private static "
 	}
-	u.line(varPrefix + v.Name + ": " + val)
-	return nil
+	return u.emitValueLine(varPrefix+v.Name+": ", v.Value)
 }
 
 func (u *unparser) classConst(c ast.ClassConst) error {
 	u.leadingComments(c.Comments)
-	val, err := u.expr(c.Value)
-	if err != nil {
-		return err
-	}
 	prefix := ""
 	if c.Private {
 		prefix = "private "
 	}
-	u.line(prefix + c.Name + ": " + val)
-	return nil
+	return u.emitValueLine(prefix+c.Name+": ", c.Value)
 }
 
 func (u *unparser) classMethod(m ast.ClassMethod) error {
@@ -1401,9 +1386,25 @@ func (u *unparser) emitDictBlock(stmt ast.Stmt, target string, dict *ast.DictLit
 	return nil
 }
 
+func (u *unparser) emitValueLine(prefix string, value ast.Expr) error {
+	val, err := u.expr(value)
+	if err != nil {
+		return err
+	}
+	if arr, ok := value.(*ast.ArrayLit); ok && !u.fitsInline(prefix+val) {
+		return u.emitWrappedArrayLiteral(prefix, arr, "")
+	}
+	u.line(prefix + val)
+	return nil
+}
+
 // emitWrappedArray emits an array literal as the multi-line form
 // per §5.3.2.
 func (u *unparser) emitWrappedArray(stmt ast.Stmt, prefix string, arr *ast.ArrayLit) error {
+	return u.emitWrappedArrayLiteral(prefix, arr, u.trailingFor(stmt))
+}
+
+func (u *unparser) emitWrappedArrayLiteral(prefix string, arr *ast.ArrayLit, trailing string) error {
 	u.line(prefix + "[")
 	u.indent++
 	for i, el := range arr.Elems {
@@ -1419,8 +1420,8 @@ func (u *unparser) emitWrappedArray(stmt ast.Stmt, prefix string, arr *ast.Array
 	}
 	u.indent--
 	closing := "]"
-	if t := u.trailingFor(stmt); t != "" {
-		u.line(closing + "  #" + t)
+	if trailing != "" {
+		u.line(closing + "  #" + trailing)
 	} else {
 		u.line(closing)
 	}

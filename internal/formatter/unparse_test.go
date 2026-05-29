@@ -73,6 +73,36 @@ func TestUnparseKeepsCommentedFunctionBodyBlockBodied(t *testing.T) {
 	}
 }
 
+func TestUnparseWrapsLongClassArrayLiteral(t *testing.T) {
+	src := strings.Join([]string{
+		"class FlakewatchCommand",
+		"  options: [cli.Spec.option(\"junit\", \"JUnit XML glob or file path\", { default: [], array: true }), cli.Spec.option(\"history\", \"JSONL history glob or file path\", { default: [], array: true })]",
+		"",
+	}, "\n")
+	got, err := unparseSourceWithComments(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := strings.Join([]string{
+		"class FlakewatchCommand",
+		"  options: [",
+		"    cli.Spec.option(\"junit\", \"JUnit XML glob or file path\", { default: [], array: true }),",
+		"    cli.Spec.option(\"history\", \"JSONL history glob or file path\", { default: [], array: true })",
+		"  ]",
+		"",
+	}, "\n")
+	if got != want {
+		t.Fatalf("got:\n%swant:\n%s", got, want)
+	}
+	again, err := unparseSourceWithComments(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again != got {
+		t.Fatalf("not idempotent:\nfirst:\n%s\nsecond:\n%s", got, again)
+	}
+}
+
 func TestUnparseSeparatesClassAndInterfaceMembersBeforeComments(t *testing.T) {
 	src := strings.Join([]string{
 		"class Foo",
