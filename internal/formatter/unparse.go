@@ -185,10 +185,22 @@ func requiresBlankBefore(cur, prev ast.Stmt) bool {
 	if prevImport && !curImport {
 		return true
 	}
+	if requiresBlankAfterBody(prev) {
+		return true
+	}
 	if isTopDefinition(prev) && isTopDefinition(cur) {
 		return true
 	}
 	return false
+}
+
+func requiresBlankAfterBody(s ast.Stmt) bool {
+	switch s.(type) {
+	case *ast.ClassDecl, *ast.InterfaceDecl, *ast.StructDecl:
+		return true
+	default:
+		return false
+	}
 }
 
 func isTopDefinition(s ast.Stmt) bool {
@@ -629,7 +641,10 @@ func (u *unparser) structDecl(n *ast.StructDecl) error {
 	}
 	u.line(kw + " " + n.Name)
 	u.indent++
-	for _, f := range n.Fields {
+	for i, f := range n.Fields {
+		if i > 0 {
+			u.b.WriteByte('\n')
+		}
 		u.leadingComments(f.Comments)
 		if f.HasDefault {
 			val, err := u.expr(f.Value)

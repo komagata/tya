@@ -123,6 +123,7 @@ func TestUnparseKeepsRecordDeclarationAndFieldComments(t *testing.T) {
 		"record Option",
 		"  # kind docs.",
 		"  kind",
+		"",
 		"  # name docs.",
 		"  name",
 		"",
@@ -135,6 +136,99 @@ func TestUnparseKeepsRecordDeclarationAndFieldComments(t *testing.T) {
 		t.Fatalf("got:\n%swant:\n%s", got, src)
 	}
 	again, err := unparseSourceWithComments(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again != got {
+		t.Fatalf("not idempotent:\nfirst:\n%s\nsecond:\n%s", got, again)
+	}
+}
+
+func TestUnparseSeparatesStructAndRecordFields(t *testing.T) {
+	src := strings.Join([]string{
+		"struct User",
+		"  name",
+		"  age: 0",
+		"",
+		"record Point",
+		"  x",
+		"  y",
+		"",
+	}, "\n")
+	want := strings.Join([]string{
+		"struct User",
+		"  name",
+		"",
+		"  age: 0",
+		"",
+		"record Point",
+		"  x",
+		"",
+		"  y",
+		"",
+	}, "\n")
+	got, err := unparseSourceWithComments(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("got:\n%swant:\n%s", got, want)
+	}
+	again, err := unparseSourceWithComments(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again != got {
+		t.Fatalf("not idempotent:\nfirst:\n%s\nsecond:\n%s", got, again)
+	}
+}
+
+func TestUnparseSeparatesTypeBodyFromFollowingStatement(t *testing.T) {
+	src := strings.Join([]string{
+		"class Foo",
+		"  name: \"\"",
+		"print(\"class\")",
+		"",
+		"interface Named",
+		"  name: ->",
+		"print(\"interface\")",
+		"",
+		"struct User",
+		"  name",
+		"print(\"struct\")",
+		"",
+		"record Point",
+		"  x",
+		"print(\"record\")",
+		"",
+	}, "\n")
+	want := strings.Join([]string{
+		"class Foo",
+		"  name: \"\"",
+		"",
+		"print(\"class\")",
+		"interface Named",
+		"  name: ->",
+		"",
+		"print(\"interface\")",
+		"struct User",
+		"  name",
+		"",
+		"print(\"struct\")",
+		"record Point",
+		"  x",
+		"",
+		"print(\"record\")",
+		"",
+	}, "\n")
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("got:\n%swant:\n%s", got, want)
+	}
+	again, err := unparseSource(t, got)
 	if err != nil {
 		t.Fatal(err)
 	}

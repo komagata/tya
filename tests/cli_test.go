@@ -362,6 +362,7 @@ func TestCLIFormatAndCheckClassMemberOrder(t *testing.T) {
 		"    self.ready = true",
 		"",
 		"  private helper: -> 1",
+		"",
 		"print(\"ok\")",
 		"",
 	}, "\n")
