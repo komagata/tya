@@ -502,7 +502,7 @@ class Markdown
     if kind == "hr"
       return "<hr/>\n"
     if kind == "h"
-      level = block["level"].to_s()
+      level = block["level"].to_string()
       inner = Markdown(nil).inline_with_refs(block["text"], refs)
       return "<h" + level + ">" + inner + "</h" + level + ">\n"
     if kind == "p"

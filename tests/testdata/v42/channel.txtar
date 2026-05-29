@@ -32,7 +32,7 @@ import channel
 c = channel.Channel(1)
 worker = ic -> ic.send(42)
 spawn worker(c)
-print("received: " + (c.receive()).to_s())
+print("received: " + (c.receive()).to_string())
 
 -- counter_actor.tya --
 import channel
@@ -59,10 +59,10 @@ inbox.send("inc")
 
 reply_chan = channel.Channel(1)
 inbox.send(reply_chan)
-print("count after three increments: " + (reply_chan.receive()).to_s())
+print("count after three increments: " + (reply_chan.receive()).to_string())
 
 inbox.send("stop")
-print("final: " + (await t).to_s())
+print("final: " + (await t).to_string())
 
 -- close_drains.tya --
 import channel
@@ -71,8 +71,8 @@ c = channel.Channel(2)
 c.send(1)
 c.send(2)
 c.close()
-print("first: " + (c.receive()).to_s())
-print("second: " + (c.receive()).to_s())
+print("first: " + (c.receive()).to_string())
+print("second: " + (c.receive()).to_string())
 nilv = c.receive()
 if nilv == nil
   print("after close, drained: 0")

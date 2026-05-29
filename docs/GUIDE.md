@@ -184,7 +184,7 @@ Primitive values have methods:
 
 ```tya
 print(" tya ".trim().upper())
-print(42.to_s())
+print(42.to_string())
 print([1, 2, 3].len())
 ```
 
@@ -409,7 +409,7 @@ declaring class and descendants can use them.
 ```tya
 class Parent
   protected normalize: value ->
-    value.to_s()
+    value.to_string()
 
 class Child extends Parent
   label: value ->

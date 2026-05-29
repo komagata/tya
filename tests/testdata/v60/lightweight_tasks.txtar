@@ -33,7 +33,7 @@ for task in tasks
   if await task == nil
     done = done + 1
 
-print("done: " + done.to_s())
+print("done: " + done.to_string())
 
 -- c10k_await.tya --
 tasks = []
@@ -50,7 +50,7 @@ for task in tasks
   if await task >= 0
     done = done + 1
 
-print("done: " + done.to_s())
+print("done: " + done.to_string())
 
 -- c10k_timer.tya --
 import time
@@ -70,7 +70,7 @@ done = 0
 for task in tasks
   done = done + await task
 
-print("done: " + done.to_s())
+print("done: " + done.to_string())
 
 -- fairness.tya --
 import channel

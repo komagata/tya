@@ -197,7 +197,7 @@ class Image
     if format_arg == nil
       format_arg = self.format
     if not encodable_format?(format_arg)
-      raise error("image.encode: unsupported format_arg " + format_arg.to_s())
+      raise error("image.encode: unsupported format_arg " + format_arg.to_string())
     check_encode_options(format_arg, options)
     alpha = "0"
     if has_alpha?()
@@ -205,9 +205,9 @@ class Image
     header = "TYAIMG:"
       + format_arg
       + ":"
-      + self.width.to_s()
+      + self.width.to_string()
       + ":"
-      + self.height.to_s()
+      + self.height.to_string()
       + ":"
       + alpha
       + ":1\n"
@@ -216,7 +216,7 @@ class Image
     while i < self.pixels.len()
       if i > 0
         body = body + ","
-      body = body + self.pixels[i].to_s()
+      body = body + self.pixels[i].to_string()
       i = i + 1
     bytes_of(header + body)
 

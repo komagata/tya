@@ -39,4 +39,4 @@ while true
     break
   total = total + v
 
-print("sum of squares 1..10 = " + total.to_s())
+print("sum of squares 1..10 = " + total.to_string())

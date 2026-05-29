@@ -99,12 +99,12 @@ class StringValidator
       return self
     if self.min_value != nil and self.value.len() < self.min_value
       self.errors.push(
-        error_message("must be at least " + self.min_value.to_s() + " characters")
+        error_message("must be at least " + self.min_value.to_string() + " characters")
       )
       return self
     if self.max_value != nil and self.value.len() > self.max_value
       self.errors.push(
-        error_message("must be at most " + self.max_value.to_s() + " characters")
+        error_message("must be at most " + self.max_value.to_string() + " characters")
       )
       return self
     self.ok = true

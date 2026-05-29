@@ -249,7 +249,7 @@ print(value.class)
 Tya does not perform implicit conversions. Operations that require a number,
 string, array, dictionary, function, class, task, channel, or resource must
 receive a value of the required kind or raise a runtime error. The documented
-exceptions are formatting operations such as string interpolation and `to_s()`,
+exceptions are formatting operations such as string interpolation and `to_string()`,
 plus the exact operator cases listed below.
 
 ### Blocks
@@ -422,7 +422,7 @@ class User
   private id: 0
 
   private normalize: ->
-    Self.ROLE + ":" + self.id.to_s()
+    Self.ROLE + ":" + self.id.to_string()
 
   protected label: value ->
     "user:{value}"
@@ -724,12 +724,18 @@ deep equality. The `==` operator and top-level `equal(left, right)` keep their
 existing behavior and do not dispatch to user-defined `equal?`.
 
 `Stringable` is the standard human-readable formatting protocol. A class
-implements it by providing `to_s()`, which returns a string and should be
+implements it by providing `to_string()`, which returns a string and should be
 side-effect free for ordinary formatting use. Number, String, Array, Dict,
 Boolean, and Nil conform to `Stringable` as primitive values without changing
 their tagged runtime representation or `value.class` behavior. `Stringable` is
 not a structured serialization protocol; use `Serializable.to_data()` for data
 trees.
+
+Debug display uses `inspect()`. `inspect(value)` and `value.inspect()` return a
+stable developer-facing string. Strings are quoted and escaped, arrays and
+dictionaries inspect nested values, and objects without a custom `inspect()`
+show their class name and public fields. Struct and record values use
+`TypeName(field: value, ...)` for both normal display and inspect.
 
 The standard library also defines protocol interfaces for iteration,
 sequences, I/O, and structured data:
@@ -1213,7 +1219,7 @@ Use standard-library APIs such as `File().read(path)`, `File().append(path, text
 `Digest.sha256(value)`, `Socket.connect(host, port, options)`,
 `Lexer().lex(source)`, `Parser().parse(source)`, `Checker().check(source)`, and
 `Format().format(source)` instead of low-level intrinsic names. Use receiver
-methods for conversions and collections, for example `value.to_s()`,
+methods for conversions and collections, for example `value.to_string()`,
 `value.to_i()`, `dict.delete(key)`, `dict.keys()`, and `items.pop()`.
 
 Standard library APIs are imported with the same `import` syntax as user code.
@@ -1933,7 +1939,8 @@ drop_sequence              lazy drop sequence
 
 `Comparable` requires `compare(other)` and provides `lt?`, `lte?`, `gt?`,
 `gte?`, and `between?`. `Equatable` requires `equal?(other)`. `Stringable`
-requires `to_s()`. `Iterable` requires `iter()` and provides `sequence()`.
+requires `to_string()`. Debug display uses `inspect()`. `Iterable` requires
+`iter()` and provides `sequence()`.
 `Sequence` provides `iter()`, `map(fn)`, `filter(fn)`, `take(n)`, `drop(n)`,
 `reduce(initial, fn)`, `each(fn)`, `any?(fn)`, `all?(fn)`, `find(fn)`, and
 `to_a()`.

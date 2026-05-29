@@ -1,4 +1,4 @@
-# Stringable interface and primitive to_s behavior.
+# Stringable interface and primitive to_string behavior.
 cd $REPO
 
 exec go run ./cmd/tya check lib/stringable.tya
@@ -6,8 +6,8 @@ exec go run ./cmd/tya check lib/stringable.tya
 exec go run ./cmd/tya run $WORK/user_stringable.tya
 stdout 'user:Ada\n'
 
-! exec go run ./cmd/tya check $WORK/missing_to_s.tya
-stderr 'class User must implement interface method to_s'
+! exec go run ./cmd/tya check $WORK/missing_to_string.tya
+stderr 'class User must implement interface method to_string'
 
 exec go run ./cmd/tya run $WORK/primitives.tya
 stdout '42'
@@ -25,7 +25,7 @@ stdout 'Nil'
 
 -- user_stringable.tya --
 interface Stringable
-  to_s: ->
+  to_string: ->
 
 class User implements Stringable
   name: nil
@@ -33,25 +33,25 @@ class User implements Stringable
   initialize: name_arg ->
     self.name = name_arg
 
-  to_s: ->
+  to_string: ->
     "user:" + self.name
 
-print(User("Ada").to_s())
+print(User("Ada").to_string())
 
--- missing_to_s.tya --
+-- missing_to_string.tya --
 interface Stringable
-  to_s: ->
+  to_string: ->
 
 class User implements Stringable
   name: "Ada"
 
 -- primitives.tya --
-print(42.to_s())
-print("hi".to_s())
-print([1, 2].to_s())
-print({ name: "Tya" }.to_s())
-print(true.to_s())
-print(nil.to_s())
+print(42.to_string())
+print("hi".to_string())
+print([1, 2].to_string())
+print({ name: "Tya" }.to_string())
+print(true.to_string())
+print(nil.to_string())
 print(42.class.name)
 print("hi".class.name)
 print([1, 2].class.name)

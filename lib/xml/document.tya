@@ -47,9 +47,9 @@ class Document
       i = i + 1
     nil
 
-  # Document.to_s provides the xml/Document standard library operation.
+  # Document.to_string provides the xml/Document standard library operation.
   # @return String the resulting value.
-  to_s: -> Xml(nil).stringify(self)
+  to_string: -> Xml(nil).stringify(self)
 
   # Document.version provides the xml/Document standard library operation.
   # @return Any the resulting value.

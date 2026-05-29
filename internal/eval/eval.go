@@ -551,15 +551,35 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		if len(args) != 1 {
 			return nil, fmt.Errorf("print expects 1 argument")
 		}
-		fmt.Fprintln(out, stringify(args[0]))
+		text, err := displayString(args[0], env)
+		if err != nil {
+			return nil, err
+		}
+		fmt.Fprintln(out, text)
 		return nil, nil
 	}))
 	env.set("println", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
 			return nil, fmt.Errorf("println expects 1 argument")
 		}
-		fmt.Fprintln(out, stringify(args[0]))
+		text, err := displayString(args[0], env)
+		if err != nil {
+			return nil, err
+		}
+		fmt.Fprintln(out, text)
 		return nil, nil
+	}))
+	env.set("to_string", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("to_string expects 1 argument")
+		}
+		return displayString(args[0], env)
+	}))
+	env.set("inspect", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("inspect expects 1 argument")
+		}
+		return inspectString(args[0], env)
 	}))
 	env.set("read_line", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 0 {
@@ -1145,13 +1165,21 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 		class := Dict{"__module_namespace": true, "__class_name": className, "name": className, "__instance_methods": Dict{}, "__fields": Dict{}}
 		env.set(n.Name, class)
 		fields := class["__fields"].(Dict)
+		fieldOrder := &Array{}
+		privateFields := Dict{}
 		for _, field := range n.Fields {
 			value, err := evalExpr(field.Value, env)
 			if err != nil {
 				return nil, err
 			}
 			fields[field.Name] = value
+			fieldOrder.items = append(fieldOrder.items, field.Name)
+			if field.Private {
+				privateFields[field.Name] = true
+			}
 		}
+		class["__field_order"] = fieldOrder
+		class["__private_fields"] = privateFields
 		for _, constant := range n.Constants {
 			value, err := evalExpr(constant.Value, env)
 			if err != nil {
@@ -1945,6 +1973,11 @@ func instantiateStruct(decl *ast.StructDecl, args []Value, keywords []keywordArg
 	for i, field := range decl.Fields {
 		obj[field.Name] = values[i]
 	}
+	fieldOrder := &Array{}
+	for _, field := range decl.Fields {
+		fieldOrder.items = append(fieldOrder.items, field.Name)
+	}
+	obj["__field_order"] = fieldOrder
 	return obj, nil
 }
 
@@ -2995,7 +3028,16 @@ func evalCallee(e ast.Expr, env *Env) (Value, error) {
 				if methods, ok := class["__instance_methods"].(Dict); ok {
 					if method, ok := methods[m.Name]; ok {
 						return Builtin(func(args []Value) (Value, error) {
-							return callMethod(method, dict, args)
+							value, err := callMethod(method, dict, args)
+							if err != nil {
+								return nil, err
+							}
+							if m.Name == "to_string" || m.Name == "inspect" {
+								if _, ok := value.(string); !ok {
+									return nil, fmt.Errorf("%s must return string", m.Name)
+								}
+							}
+							return value, nil
 						}), nil
 					}
 				}
@@ -3044,12 +3086,19 @@ func primitiveMethodValue(receiver Value, name string, env *Env) Value {
 				}
 				return strings.TrimSpace(text) != "", nil
 			})
-		case "to_s":
+		case "to_string":
 			return Builtin(func(args []Value) (Value, error) {
 				if len(args) != 0 {
-					return nil, fmt.Errorf("to_s expects 0 arguments")
+					return nil, fmt.Errorf("to_string expects 0 arguments")
 				}
-				return stringify(receiver), nil
+				return displayString(receiver, env)
+			})
+		case "inspect":
+			return Builtin(func(args []Value) (Value, error) {
+				if len(args) != 0 {
+					return nil, fmt.Errorf("inspect expects 0 arguments")
+				}
+				return inspectString(receiver, env)
 			})
 		case "to_i":
 			return Builtin(func(args []Value) (Value, error) {
@@ -3071,30 +3120,62 @@ func primitiveMethodValue(receiver Value, name string, env *Env) Value {
 			}
 		}
 	case *Array:
-		if name == "to_s" {
+		if name == "to_string" {
 			return Builtin(func(args []Value) (Value, error) {
 				if len(args) != 0 {
-					return nil, fmt.Errorf("to_s expects 0 arguments")
+					return nil, fmt.Errorf("to_string expects 0 arguments")
 				}
-				return stringify(receiver), nil
+				return displayString(receiver, env)
+			})
+		}
+		if name == "inspect" {
+			return Builtin(func(args []Value) (Value, error) {
+				if len(args) != 0 {
+					return nil, fmt.Errorf("inspect expects 0 arguments")
+				}
+				return inspectString(receiver, env)
 			})
 		}
 		if isStandardArrayCall(name) {
 			return call(func(args []Value) (Value, error) { return evalArrayModuleCall(name, args, env) })
 		}
 	case Dict:
-		if name == "to_s" {
+		if name == "to_string" {
 			return Builtin(func(args []Value) (Value, error) {
 				if len(args) != 0 {
-					return nil, fmt.Errorf("to_s expects 0 arguments")
+					return nil, fmt.Errorf("to_string expects 0 arguments")
 				}
-				return stringify(receiver), nil
+				return displayString(receiver, env)
+			})
+		}
+		if name == "inspect" {
+			return Builtin(func(args []Value) (Value, error) {
+				if len(args) != 0 {
+					return nil, fmt.Errorf("inspect expects 0 arguments")
+				}
+				return inspectString(receiver, env)
 			})
 		}
 		if isStandardDictCall(name) {
 			return call(func(args []Value) (Value, error) { return evalDictModuleCall(name, args, env) })
 		}
 	case *Bytes:
+		if name == "to_string" {
+			return Builtin(func(args []Value) (Value, error) {
+				if len(args) != 0 {
+					return nil, fmt.Errorf("to_string expects 0 arguments")
+				}
+				return displayString(receiver, env)
+			})
+		}
+		if name == "inspect" {
+			return Builtin(func(args []Value) (Value, error) {
+				if len(args) != 0 {
+					return nil, fmt.Errorf("inspect expects 0 arguments")
+				}
+				return inspectString(receiver, env)
+			})
+		}
 		if name == "len" {
 			return Builtin(func(args []Value) (Value, error) {
 				if len(args) != 0 {
@@ -3112,12 +3193,20 @@ func primitiveMethodValue(receiver Value, name string, env *Env) Value {
 			})
 		}
 	case int64, float64, bool, nil:
-		if name == "to_s" {
+		if name == "to_string" {
 			return Builtin(func(args []Value) (Value, error) {
 				if len(args) != 0 {
-					return nil, fmt.Errorf("to_s expects 0 arguments")
+					return nil, fmt.Errorf("to_string expects 0 arguments")
 				}
-				return stringify(receiver), nil
+				return displayString(receiver, env)
+			})
+		}
+		if name == "inspect" {
+			return Builtin(func(args []Value) (Value, error) {
+				if len(args) != 0 {
+					return nil, fmt.Errorf("inspect expects 0 arguments")
+				}
+				return inspectString(receiver, env)
 			})
 		}
 		if name == "to_i" {
@@ -3773,7 +3862,11 @@ func interpolate(s string, env *Env) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			out.WriteString(stringify(v))
+			text, err := displayString(v, env)
+			if err != nil {
+				return "", err
+			}
+			out.WriteString(text)
 			i = close + 1
 		case '}':
 			if i+1 < len(s) && s[i+1] == '}' {
@@ -3811,6 +3904,174 @@ func evalInterpolationExpr(expr string, env *Env) (Value, error) {
 
 func stringify(v Value) string {
 	return stringifyValue(v, map[uintptr]bool{})
+}
+
+func displayString(v Value, env *Env) (string, error) {
+	return displayValue(v, env, map[uintptr]bool{})
+}
+
+func displayValue(v Value, env *Env, seen map[uintptr]bool) (string, error) {
+	if dict, ok := v.(Dict); ok {
+		if isDataObject(dict) {
+			return inspectValue(v, env, seen)
+		}
+		if method, ok := instanceMethod(dict, "to_string"); ok {
+			value, err := callMethod(method, dict, nil)
+			if err != nil {
+				return "", err
+			}
+			text, ok := value.(string)
+			if !ok {
+				return "", fmt.Errorf("to_string must return string")
+			}
+			return text, nil
+		}
+	}
+	return stringifyValue(v, seen), nil
+}
+
+func inspectString(v Value, env *Env) (string, error) {
+	return inspectValue(v, env, map[uintptr]bool{})
+}
+
+func inspectValue(v Value, env *Env, seen map[uintptr]bool) (string, error) {
+	switch x := v.(type) {
+	case nil:
+		return "nil", nil
+	case string:
+		return strconv.Quote(x), nil
+	case int64, float64, bool, *Bytes, *Function, Builtin, *Module, *ErrorValue:
+		return stringifyValue(v, seen), nil
+	case *Array:
+		key := reflect.ValueOf(x).Pointer()
+		if seen[key] {
+			return "<cycle>", nil
+		}
+		seen[key] = true
+		defer delete(seen, key)
+		parts := make([]string, 0, len(x.items))
+		for _, item := range x.items {
+			part, err := inspectValue(item, env, seen)
+			if err != nil {
+				return "", err
+			}
+			parts = append(parts, part)
+		}
+		return "[" + strings.Join(parts, ", ") + "]", nil
+	case Dict:
+		key := reflect.ValueOf(x).Pointer()
+		if seen[key] {
+			return "<cycle>", nil
+		}
+		seen[key] = true
+		defer delete(seen, key)
+		if isDataObject(x) {
+			return inspectDataObject(x, env, seen)
+		}
+		if method, ok := instanceMethod(x, "inspect"); ok {
+			value, err := callMethod(method, x, nil)
+			if err != nil {
+				return "", err
+			}
+			text, ok := value.(string)
+			if !ok {
+				return "", fmt.Errorf("inspect must return string")
+			}
+			return text, nil
+		}
+		if _, ok := x["__class"].(Dict); ok {
+			return inspectInstanceObject(x, env, seen)
+		}
+		parts := make([]string, 0, len(x))
+		keys := make([]string, 0, len(x))
+		for k := range x {
+			if strings.HasPrefix(k, "__") {
+				continue
+			}
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			part, err := inspectValue(x[k], env, seen)
+			if err != nil {
+				return "", err
+			}
+			parts = append(parts, strconv.Quote(k)+": "+part)
+		}
+		return "{" + strings.Join(parts, ", ") + "}", nil
+	default:
+		return stringifyValue(v, seen), nil
+	}
+}
+
+func instanceMethod(dict Dict, name string) (Value, bool) {
+	class, ok := dict["__class"].(Dict)
+	if !ok {
+		return nil, false
+	}
+	methods, ok := class["__instance_methods"].(Dict)
+	if !ok {
+		return nil, false
+	}
+	method, ok := methods[name]
+	return method, ok
+}
+
+func inspectDataObject(dict Dict, env *Env, seen map[uintptr]bool) (string, error) {
+	name, _ := dict["__data_type"].(string)
+	return inspectFields(name, dict, fieldOrder(dict), nil, env, seen)
+}
+
+func inspectInstanceObject(dict Dict, env *Env, seen map[uintptr]bool) (string, error) {
+	class, _ := dict["__class"].(Dict)
+	name, _ := class["__class_name"].(string)
+	private := map[string]bool{}
+	if privateDict, ok := class["__private_fields"].(Dict); ok {
+		for k := range privateDict {
+			private[k] = true
+		}
+	}
+	return inspectFields(name, dict, fieldOrder(class), private, env, seen)
+}
+
+func fieldOrder(dict Dict) []string {
+	if arr, ok := dict["__field_order"].(*Array); ok {
+		out := make([]string, 0, len(arr.items))
+		for _, item := range arr.items {
+			if name, ok := item.(string); ok {
+				out = append(out, name)
+			}
+		}
+		return out
+	}
+	names := make([]string, 0, len(dict))
+	for k := range dict {
+		if strings.HasPrefix(k, "__") || strings.HasPrefix(k, "@") {
+			continue
+		}
+		names = append(names, k)
+	}
+	sort.Strings(names)
+	return names
+}
+
+func inspectFields(typeName string, dict Dict, fields []string, private map[string]bool, env *Env, seen map[uintptr]bool) (string, error) {
+	parts := make([]string, 0, len(fields))
+	for _, field := range fields {
+		if private != nil && private[field] {
+			continue
+		}
+		value, ok := dict["@"+field]
+		if !ok {
+			value = dict[field]
+		}
+		part, err := inspectValue(value, env, seen)
+		if err != nil {
+			return "", err
+		}
+		parts = append(parts, field+": "+part)
+	}
+	return typeName + "(" + strings.Join(parts, ", ") + ")", nil
 }
 
 func stringifyValue(v Value, seen map[uintptr]bool) string {

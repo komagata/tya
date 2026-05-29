@@ -127,7 +127,7 @@ interface.
 ```tya
 show<T: Stringable>: (T): String =
   (value: T): String ->
-    return value.to_s()
+    return value.to_string()
 ```
 
 ## Nil And Optional Types
@@ -225,10 +225,10 @@ not part of this note.
 
 ```tya
 interface Stringable
-  to_s: (): String
+  to_string: (): String
 
 class User implements Stringable
-  to_s: (): String =
+  to_string: (): String =
     (): String ->
       return self.name
 ```
@@ -246,7 +246,7 @@ parse: (String): Int =
 
 parse: (Bytes): Int =
   (data: Bytes): Int ->
-    return data.to_s().to_i()
+    return data.to_string().to_i()
 ```
 
 Overload identity is `name + argument type list`. Return-type-only overloads

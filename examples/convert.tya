@@ -1,7 +1,7 @@
-print(20.to_s())
+print(20.to_string())
 print("42".to_i())
 print("2.5".to_f())
 print("12".to_number())
 print("12.5".to_number())
 items = [1, 2]
-print(items.to_s())
+print(items.to_string())

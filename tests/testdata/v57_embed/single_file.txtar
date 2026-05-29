@@ -19,4 +19,4 @@ print(bytes.Bytes(payload).to_string())
 embed "data.txt" as meta with { hash: true, gzip: true }
 print(meta["path"])
 print(meta["content_type"])
-print("hash len: " + meta["hash"].len().to_s())
+print("hash len: " + meta["hash"].len().to_string())

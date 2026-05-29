@@ -91,7 +91,7 @@ class Xml
   # @param message String message value_arg.
   # @return Any the resulting value_arg.
   error: state, message ->
-    raise error("xml.parse: " + message + " at byte " + state["pos"].to_s())
+    raise error("xml.parse: " + message + " at byte " + state["pos"].to_string())
 
   # Xml.escape_attr provides the xml/Xml standard library operation.
   # @param text String text value.

@@ -25,9 +25,9 @@ while i < iterations
   i = i + 1
 
 stats = runtime.Runtime().gc_stats()
-print("iterations: " + iterations.to_s())
-print("alloc_count: " + stats["alloc_count"].to_s())
-print("freed_count: " + stats["freed_count"].to_s())
-print("live_count after final gc: " + stats["live_count"].to_s())
-print("collect_count: " + stats["collect_count"].to_s())
-print("peak live during loop: " + peak.to_s())
+print("iterations: " + iterations.to_string())
+print("alloc_count: " + stats["alloc_count"].to_string())
+print("freed_count: " + stats["freed_count"].to_string())
+print("live_count after final gc: " + stats["live_count"].to_string())
+print("collect_count: " + stats["collect_count"].to_string())
+print("peak live during loop: " + peak.to_string())

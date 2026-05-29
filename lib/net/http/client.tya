@@ -217,15 +217,15 @@ class Client
       headers = opts["headers"]
     body = ""
     if opts.has("body") and opts["body"] != nil
-      body = opts["body"].to_s()
+      body = opts["body"].to_string()
     crlf = chr(13) + "\n"
     req = method.upper() + " " + path + " HTTP/1.1" + crlf
     req = req + "Host: " + Client(nil).host_header(host, u["port"]) + crlf
     req = req + "Connection: close" + crlf
     if body != ""
-      req = req + "Content-Length: " + body.byte_len().to_s() + crlf
+      req = req + "Content-Length: " + body.byte_len().to_string() + crlf
     for entry in headers.entries()
-      req = req + entry[0] + ": " + entry[1].to_s() + crlf
+      req = req + entry[0] + ": " + entry[1].to_string() + crlf
     req = req + crlf + body
     connect_options = { timeout: opts.get("timeout", 10) }
     if opts.has("insecure_skip_verify")

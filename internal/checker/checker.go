@@ -272,6 +272,7 @@ func CheckModuleFile(prog *ast.Program, path string) error {
 
 var builtinNames = []string{
 	"args", "env", "error", "exit", "print", "println",
+	"inspect", "to_string",
 }
 
 var internalBuiltinNames = []string{
@@ -452,7 +453,6 @@ var removedTopLevelPrimitiveBuiltins = map[string]string{
 	"any":                              "items.any(fn)",
 	"all":                              "items.all(fn)",
 	"reduce":                           "items.reduce(initial, fn)",
-	"to_string":                        "value.to_s()",
 	"to_int":                           "value.to_i()",
 	"to_float":                         "value.to_f()",
 	"to_number":                        "value.to_number()",
@@ -4183,7 +4183,7 @@ func isNegativeNumberLiteral(expr ast.Expr) bool {
 
 func isDictMethodName(name string) bool {
 	switch name {
-	case "class", "len", "empty?", "has", "has?", "get", "set", "delete", "keys", "values", "entries", "merge", "merge!", "to_s", "equal?", "iter", "sequence":
+	case "class", "len", "empty?", "has", "has?", "get", "set", "delete", "keys", "values", "entries", "merge", "merge!", "to_string", "inspect", "equal?", "iter", "sequence":
 		return true
 	default:
 		return false

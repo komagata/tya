@@ -36,7 +36,7 @@ t1 = spawn inc100(m, state)
 t2 = spawn inc100(m, state)
 await t1
 await t2
-print("count: " + state["count"].to_s())
+print("count: " + state["count"].to_string())
 
 -- atomic.tya --
 import sync/*
@@ -44,14 +44,14 @@ import sync/*
 a = sync.AtomicInteger(0)
 a.add(10)
 a.add(5)
-print("atomic: " + (a.load()).to_s())
+print("atomic: " + (a.load()).to_string())
 
 ok = a.compare_and_swap(15, 99)
-print("cas success: " + ok.to_s())
-print("cas value: " + (a.load()).to_s())
+print("cas success: " + ok.to_string())
+print("cas value: " + (a.load()).to_string())
 
 ok2 = a.cas(99, 100)
-print("cas alias: " + ok2.to_s())
+print("cas alias: " + ok2.to_string())
 
 -- with_lock_raise.tya --
 import sync/*

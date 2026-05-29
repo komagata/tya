@@ -52,7 +52,7 @@ class Address
       b2 = groups_arg[6] % 256
       b3 = groups_arg[7] / 256.to_i()
       b4 = groups_arg[7] % 256
-      return "::ffff:" + b1.to_s() + "." + b2.to_s() + "." + b3.to_s() + "." + b4.to_s()
+      return "::ffff:" + b1.to_string() + "." + b2.to_string() + "." + b3.to_string() + "." + b4.to_string()
     run = zero_run(groups_arg)
     out = ""
     i = 0
@@ -160,7 +160,7 @@ class Address
       n = part.to_i()
       if n < 0 or n > 255
         raise error("net.ip.Address.parse: invalid IPv4 address")
-      if n.to_s() != part and not (n == 0 and part == "0")
+      if n.to_string() != part and not (n == 0 and part == "0")
         raise error("net.ip.Address.parse: invalid IPv4 address")
       bytes_local.push(n)
     Address(4, bytes_local, nil, false)
@@ -247,16 +247,16 @@ class Address
     g0 = addr.groups[0]
     g0 >= 64512 and g0 <= 65023
 
-  # Address.to_s provides the net/ip/Address standard library operation.
+  # Address.to_string provides the net/ip/Address standard library operation.
   # @param addr Any addr value.
   # @return String the resulting value.
-  to_s: addr = nil ->
+  to_string: addr = nil ->
     if addr == nil
       addr = self
     if addr.version == 4
       parts = []
       for b in addr.bytes
-        parts.push(b.to_s())
+        parts.push(b.to_string())
       return parts.join(".")
     format_v6(addr.groups, addr.mapped)
 

@@ -3428,6 +3428,13 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_to_string(%s)", arg), "TyaValue", nil
 		}
+		if ok && id.Name == "inspect" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_inspect(%s)", arg), "TyaValue", nil
+		}
 		if ok && id.Name == "to_int" && len(n.Args) == 1 {
 			arg, _, err := g.expr(n.Args[0])
 			if err != nil {

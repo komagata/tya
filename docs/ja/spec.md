@@ -160,7 +160,7 @@ print({ name: "tya" }.keys())
 print(value.class)
 ```
 
-Tya は暗黙変換を行わない。数値、文字列、配列、辞書、関数、クラス、タスク、チャンネル、リソースを必要とする操作は、必要な kind の値を受け取らなければならず、そうでなければ実行時エラーを raise する。文書化された例外は、文字列補間や `to_s()` のような整形操作、および下記の明示された演算子の場合だけである。
+Tya は暗黙変換を行わない。数値、文字列、配列、辞書、関数、クラス、タスク、チャンネル、リソースを必要とする操作は、必要な kind の値を受け取らなければならず、そうでなければ実行時エラーを raise する。文書化された例外は、文字列補間や `to_string()` のような整形操作、および下記の明示された演算子の場合だけである。
 
 ## ブロック
 
@@ -246,7 +246,7 @@ class User
   private id = 0
 
   private normalize = ->
-    Self.ROLE + ":" + self.id.to_s()
+    Self.ROLE + ":" + self.id.to_string()
 ```
 
 ### 埋め込みアセット
@@ -423,7 +423,9 @@ class Account implements Named, Timestamped
 
 `Equatable` は標準のドメイン等価性プロトコルである。クラスは `equal?(other)` を提供することでこれを実装する。`equal?(other)` は真偽値を返さなければならない。プリミティブ値は `equal?` を公開する。スカラープリミティブは `==` に従い、配列と辞書は deep equality を使う。`==` 演算子とトップレベルの `equal(left, right)` は既存の動作を保ち、ユーザー定義の `equal?` へディスパッチしない。
 
-`Stringable` は標準の人間可読フォーマットプロトコルである。クラスは `to_s()` を提供することでこれを実装する。`to_s()` は文字列を返し、通常のフォーマット用途では副作用を持たないべきである。Number、String、Array、Dict、Boolean、Nil は、タグ付きランタイム表現や `value.class` の振る舞いを変えずに、プリミティブ値として `Stringable` に適合する。`Stringable` は構造化シリアライズプロトコルではない。データツリーには `Serializable.to_data()` を使う。
+`Stringable` は標準の人間可読フォーマットプロトコルである。クラスは `to_string()` を提供することでこれを実装する。`to_string()` は文字列を返し、通常のフォーマット用途では副作用を持たないべきである。Number、String、Array、Dict、Boolean、Nil は、タグ付きランタイム表現や `value.class` の振る舞いを変えずに、プリミティブ値として `Stringable` に適合する。`Stringable` は構造化シリアライズプロトコルではない。データツリーには `Serializable.to_data()` を使う。
+
+デバッグ表示には `inspect()` を使う。`inspect(value)` と `value.inspect()` は、安定した開発者向け文字列を返す。文字列は quote と escape 付きで表示され、配列と辞書はネストした値を inspect 形式で表示する。カスタム `inspect()` を持たないオブジェクトは、クラス名と public field を表示する。struct と record は通常表示と inspect の両方で `TypeName(field: value, ...)` を使う。
 
 標準ライブラリは、iteration、sequence、I/O、構造化データのための protocol interface も定義する。
 
@@ -741,7 +743,7 @@ low-level intrinsic name ではなく、`File().read(path)`, `File().append(path
 `Digest.sha256(value)`, `Socket.connect(host, port, options)`,
 `Lexer().lex(source)`, `Parser().parse(source)`, `Checker().check(source)`,
 `Format().format(source)` などの standard-library API を使う。conversion と
-collection helper は `value.to_s()`, `value.to_i()`, `dict.delete(key)`,
+collection helper は `value.to_string()`, `value.to_i()`, `dict.delete(key)`,
 `dict.keys()`, `items.pop()` のような receiver method を使う。
 
 標準ライブラリ API は、ユーザーコードと同じ `import` 構文でインポートされる。
@@ -1298,7 +1300,7 @@ take_sequence              lazy take sequence
 drop_sequence              lazy drop sequence
 ```
 
-`Comparable` は `compare(other)` を要求し、`lt?`、`lte?`、`gt?`、`gte?`、`between?` を提供する。`Equatable` は `equal?(other)` を要求する。`Stringable` は `to_s()` を要求する。`Iterable` は `iter()` を要求し、`sequence()` を提供する。`Sequence` は `iter()`、`map(fn)`、`filter(fn)`、`take(n)`、`drop(n)`、`reduce(initial, fn)`、`to_a()` を提供する。
+`Comparable` は `compare(other)` を要求し、`lt?`、`lte?`、`gt?`、`gte?`、`between?` を提供する。`Equatable` は `equal?(other)` を要求する。`Stringable` は `to_string()` を要求する。デバッグ表示には `inspect()` を使う。`Iterable` は `iter()` を要求し、`sequence()` を提供する。`Sequence` は `iter()`、`map(fn)`、`filter(fn)`、`take(n)`、`drop(n)`、`reduce(initial, fn)`、`to_a()` を提供する。
 
 `io/Reader`、`io/Writer`、`net/socket` は readable、writable、closable、flushable values の stream capability interfaces を定義する。`Reader` は `read`、`read_line`、`each_line`、`eof?`、`close` をサポートする。`Writer` は `write`、`write_line`、`flush`、`close` をサポートする。`Socket` は `connect`、`read`、`read_line`、`write`、`write_line`、`close`、`closed?`、`local_address`、`remote_address` をサポートする。`net/socket/Server` は `listen`、`accept`、`close`、`local_address` をサポートする。compiled runtime は POSIX socket platform と Windows WinSock2 で `net/socket` をサポートする。
 

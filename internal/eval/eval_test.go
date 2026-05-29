@@ -883,7 +883,7 @@ func TestRunReturn(t *testing.T) {
 }
 
 func TestRunConversions(t *testing.T) {
-	src := "print(20.to_s())\nprint(\"42\".to_i())\nprint(\"2.5\".to_f())\nprint(\"12\".to_number())\nprint(\"12.5\".to_number())\n"
+	src := "print(20.to_string())\nprint(\"42\".to_i())\nprint(\"2.5\".to_f())\nprint(\"12\".to_number())\nprint(\"12.5\".to_number())\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -1249,6 +1249,53 @@ func TestRunNilCoalescingAssignment(t *testing.T) {
 	want := "fallback\nfallback\nfalse\n0\ntrue\n0\nfirst\ntya\nbox\n"
 	if out != want {
 		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestRunToStringAndInspectDisplay(t *testing.T) {
+	src := "class User\n  name: nil\n\n  initialize: user_name ->\n    self.name = user_name\n\n  to_string: -> self.name\n\n  inspect: -> \"User(name: {self.name.inspect()})\"\n\nuser = User(\"komagata\")\nprint(user)\nprint(\"{user}\")\nprint(user.inspect())\nprint(inspect(user))\nclass Point\n  x: 0\n  y: \"zero\"\n\npoint = Point()\nprint(point.inspect())\nstruct Pair\n  left\n  right\n\nrecord Spot\n  x\n  y\n\nprint(Pair(\"a\", [\"b\"]))\nprint(\"{Spot(1, \\\"two\\\")}\")\nprint(Spot(1, \"two\").inspect())\nprint(\"raw\".to_string())\nprint(\"raw\".inspect())\n"
+	out := runEval(t, src)
+	want := "komagata\nkomagata\nUser(name: \"komagata\")\nUser(name: \"komagata\")\nPoint(x: 0, y: \"zero\")\nPair(left: \"a\", right: [\"b\"])\nSpot(x: 1, y: \"two\")\nSpot(x: 1, y: \"two\")\nraw\n\"raw\"\n"
+	if out != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestRunToStringAndInspectRejectNonString(t *testing.T) {
+	tests := []struct {
+		name string
+		src  string
+		want string
+	}{
+		{
+			name: "to_string",
+			src:  "class Bad\n  to_string: -> 1\n\nprint(Bad())\n",
+			want: "to_string must return string",
+		},
+		{
+			name: "inspect",
+			src:  "class Bad\n  inspect: -> 1\n\nprint(Bad().inspect())\n",
+			want: "inspect must return string",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := runEvalError(t, tt.src)
+			if err == nil {
+				t.Fatal("expected runtime error")
+			}
+			if !strings.Contains(err.Error(), tt.want) {
+				t.Fatalf("got error %q, want %q", err.Error(), tt.want)
+			}
+		})
+	}
+}
+
+func TestRunToSIsNotSpecial(t *testing.T) {
+	src := "class Legacy\n  to_s: -> \"legacy\"\n\nprint(Legacy())\n"
+	out := runEval(t, src)
+	if strings.Contains(out, "legacy") {
+		t.Fatalf("to_s affected display: %q", out)
 	}
 }
 

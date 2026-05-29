@@ -9,4 +9,4 @@ reader.skip(1)
 major = reader.read_u8()
 minor = reader.read_u8()
 
-println(magic + " " + major.to_s() + "." + minor.to_s())
+println(magic + " " + major.to_string() + "." + minor.to_string())

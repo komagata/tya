@@ -38,7 +38,7 @@ class Json
         return "true"
       return "false"
     if json_value.class == Number
-      return json_value.to_s()
+      return json_value.to_string()
     if json_value.class == String
       return Json(nil).escape_string(json_value)
     if json_value.class == Array

@@ -40,7 +40,7 @@ t = spawn boom(1)
 print("spawned")
 try
   v = await t
-  print("got: " + v.to_s())
+  print("got: " + v.to_string())
 catch e
   print("caught: " + e["message"])
 

@@ -23,9 +23,9 @@ after = runtime.Runtime().gc_stats()
 keys_ok = before.has("alloc_count") and before.has("alloc_bytes")
 keys_ok = keys_ok and before.has("freed_count") and before.has("freed_bytes")
 keys_ok = keys_ok and before.has("live_count") and before.has("live_bytes")
-print("has all keys: " + keys_ok.to_s())
+print("has all keys: " + keys_ok.to_string())
 
 # Allocations track new heap structs.
 grew = after["alloc_count"] > before["alloc_count"]
 grew = grew and after["live_count"] > before["live_count"]
-print("live grew: " + grew.to_s())
+print("live grew: " + grew.to_string())

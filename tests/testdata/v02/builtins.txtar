@@ -15,7 +15,7 @@ stdout 'empty\n'
 -- builtins.tya --
 items = [1, 2, 3, 4]
 mapped = items.map(item -> item * 2)
-print(mapped.map(item -> item.to_s()).join(","))
+print(mapped.map(item -> item.to_string()).join(","))
 filtered = items.filter(item -> item > 2)
 sum = total, item -> total + item
 print(filtered.len())

@@ -443,13 +443,13 @@ class Server
       options = {}
     out = name + "=" + value
     if options.get("path", nil) != nil
-      out = out + "; Path=" + options["path"].to_s()
+      out = out + "; Path=" + options["path"].to_string()
     if options.get("domain", nil) != nil
-      out = out + "; Domain=" + options["domain"].to_s()
+      out = out + "; Domain=" + options["domain"].to_string()
     if options.get("max_age", nil) != nil
-      out = out + "; Max-Age=" + options["max_age"].to_s()
+      out = out + "; Max-Age=" + options["max_age"].to_string()
     if options.get("expires", nil) != nil
-      out = out + "; Expires=" + options["expires"].to_s()
+      out = out + "; Expires=" + options["expires"].to_string()
     if options.get("secure", false)
       out = out + "; Secure"
     if options.get("http_only", false)

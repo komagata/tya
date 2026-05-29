@@ -288,7 +288,7 @@ print(text.ends_with("Tya"))
 print("42".to_i())
 print("2.5".to_f())
 print("12.5".to_number())
-print(["nested", "expr"].join("-").to_s())
+print(["nested", "expr"].join("-").to_string())
 path = "/tmp/tya_selfhost_v01.txt"
 write_file(path, "file text")
 print(file_exists(path))

@@ -109,7 +109,7 @@ class Toml
         return "true"
       return "false"
     if value_arg.class == Number
-      return value_arg.to_s()
+      return value_arg.to_string()
     if value_arg.class == String
       return Toml(nil).format_string(value_arg)
     if value_arg.class == Array

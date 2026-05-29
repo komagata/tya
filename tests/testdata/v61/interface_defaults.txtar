@@ -91,9 +91,9 @@ class Post implements Timestamped
   title: nil
 
 post = Post()
-print("created: " + post.created.to_s())
+print("created: " + post.created.to_string())
 post.touch()
-print("created: " + post.created.to_s())
+print("created: " + post.created.to_string())
 
 -- initializer.tya --
 interface Ready
@@ -106,7 +106,7 @@ class Job implements Ready
   title: nil
 
 job = Job()
-print("ready: " + job.ready.to_s())
+print("ready: " + job.ready.to_string())
 
 -- initializer_super_point.tya --
 interface Ready
@@ -117,9 +117,9 @@ interface Ready
 
 class Job implements Ready
   initialize: ->
-    print("before:" + self.ready.to_s())
+    print("before:" + self.ready.to_string())
     super()
-    print("after:" + self.ready.to_s())
+    print("after:" + self.ready.to_string())
 
 Job()
 
@@ -139,8 +139,8 @@ class Base
 class Job extends Base implements Ready
   initialize: ->
     super()
-    print("base:" + self.base_ready.to_s())
-    print("ready:" + self.ready.to_s())
+    print("base:" + self.base_ready.to_string())
+    print("ready:" + self.ready.to_string())
 
 Job()
 

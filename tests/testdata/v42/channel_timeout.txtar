@@ -22,7 +22,7 @@ else
 c2 = channel.Channel(1)
 c2.send(42)
 v2 = c2.receive_timeout(0.1)
-print("got " + v2.to_s())
+print("got " + v2.to_string())
 
 -- zero_poll.tya --
 import channel

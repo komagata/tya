@@ -31,6 +31,6 @@ p1 = await t1
 p2 = await t2
 p3 = await t3
 
-print("produced 1: " + (p1 > 0).to_s())
-print("produced 2: " + (p2 > 0).to_s())
-print("produced 3: " + (p3 > 0).to_s())
+print("produced 1: " + (p1 > 0).to_string())
+print("produced 2: " + (p2 > 0).to_string())
+print("produced 3: " + (p3 > 0).to_string())

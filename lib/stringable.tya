@@ -1,5 +1,5 @@
 # Stringable provides the stringable standard library API.
 interface Stringable
-  # to_s provides the stringable API operation.
+  # to_string provides the stringable API operation.
   # @return String the resulting value.
-  to_s: ->
+  to_string: ->

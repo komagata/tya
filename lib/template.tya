@@ -446,7 +446,7 @@ class Template
     found = Template(nil).lookup(path, env)
     if not found["ok"]
       return ""
-    text = found["value"].to_s()
+    text = found["value"].to_string()
     if (
       escaped and Template(nil).option(env["options"], "escape", "none") == "html"
     )

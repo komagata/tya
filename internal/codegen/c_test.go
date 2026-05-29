@@ -306,7 +306,7 @@ func TestEmitCCompilesFileAndConversionProgram(t *testing.T) {
 		t.Fatal(err)
 	}
 	main := filepath.Join(dir, "main.tya")
-	src := "import file\npath = args()[0]\ntext = file.File(path).read()\nparts = text.split(\"\\n\")\nfirst = parts[0].to_i()\nprint(first + 8)\nprint(true.to_s())\nprint(parts.join(\":\"))\n"
+	src := "import file\npath = args()[0]\ntext = file.File(path).read()\nparts = text.split(\"\\n\")\nfirst = parts[0].to_i()\nprint(first + 8)\nprint(true.to_string())\nprint(parts.join(\":\"))\n"
 	if err := os.WriteFile(main, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -450,6 +450,15 @@ func TestEmitCCompilesNilCoalescingAssignment(t *testing.T) {
 	out := compileAndRun(t, src)
 	if string(out) != "fallback\nfallback\nfirst\ntya\nbox\n" {
 		t.Fatalf("got %q", out)
+	}
+}
+
+func TestEmitCCompilesToStringAndInspectDisplay(t *testing.T) {
+	src := "class User\n  name: nil\n\n  initialize: user_name ->\n    self.name = user_name\n\n  to_string: -> self.name\n\n  inspect: -> \"User(name: {self.name.inspect()})\"\n\nuser = User(\"komagata\")\nprint(user)\nprint(\"{user}\")\nprint(user.inspect())\nprint(inspect(user))\nclass Point\n  x: 0\n  y: \"zero\"\n\npoint = Point()\nprint(point.inspect())\nstruct Pair\n  left\n  right\n\nrecord Spot\n  x\n  y\n\nprint(Pair(\"a\", [\"b\"]))\nprint(\"{Spot(1, \\\"two\\\")}\")\nprint(Spot(1, \"two\").inspect())\nprint(\"raw\".to_string())\nprint(\"raw\".inspect())\n"
+	out := compileAndRun(t, src)
+	want := "komagata\nkomagata\nUser(name: \"komagata\")\nUser(name: \"komagata\")\nPoint(x: 0, y: \"zero\")\nPair(left: \"a\", right: [\"b\"])\nSpot(x: 1, y: \"two\")\nSpot(x: 1, y: \"two\")\nraw\n\"raw\"\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
 	}
 }
 

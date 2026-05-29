@@ -198,7 +198,8 @@ static int tya_utf8_byte_offset_at(const char *text, int rune_index);
 static int tya_utf8_rune_index_at_byte(const char *text, int byte_index);
 static TyaValue tya_method_len(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_empty_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
-static TyaValue tya_method_to_s(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_to_string(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_inspect(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_to_i(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_to_f(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_compare(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
@@ -1261,6 +1262,8 @@ TyaValue tya_member(TyaValue dict, const char *key) {
     }
   }
   if (dict.kind == TYA_OBJECT) {
+    if (strcmp(key, "to_string") == 0) return tya_bind_method(dict, tya_method_to_string);
+    if (strcmp(key, "inspect") == 0) return tya_bind_method(dict, tya_method_inspect);
     fprintf(stderr, "missing object field or method: %s\n", key == NULL ? "" : key);
     exit(1);
   }
@@ -2343,6 +2346,19 @@ TyaValue tya_join(TyaValue array, TyaValue sep) {
 }
 
 TyaValue tya_to_string(TyaValue value) {
+  if (value.kind == TYA_OBJECT) {
+    TyaValue data_type = tya_member_optional(value, "__data_type");
+    if (data_type.kind == TYA_STRING) return tya_inspect(value);
+    TyaValue method = tya_member_optional(value, "to_string");
+    if (method.kind == TYA_FUNCTION) {
+      TyaValue result = tya_call0(method);
+      if (result.kind != TYA_STRING) {
+        fprintf(stderr, "to_string must return string\n");
+        exit(1);
+      }
+      return result;
+    }
+  }
   if (value.kind == TYA_STRING) {
     return value;
   }
@@ -2350,6 +2366,133 @@ TyaValue tya_to_string(TyaValue value) {
   builder.text[0] = '\0';
   tya_build_value(&builder, value);
   return tya_string(builder.text);
+}
+
+static void tya_build_inspect(TyaStringBuilder *builder, TyaValue value);
+
+static void tya_builder_append_quoted(TyaStringBuilder *builder, const char *text) {
+  tya_builder_append(builder, "\"");
+  if (text != NULL) {
+    for (const char *p = text; *p != '\0'; p++) {
+      switch (*p) {
+      case '\\':
+        tya_builder_append(builder, "\\\\");
+        break;
+      case '"':
+        tya_builder_append(builder, "\\\"");
+        break;
+      case '\n':
+        tya_builder_append(builder, "\\n");
+        break;
+      case '\r':
+        tya_builder_append(builder, "\\r");
+        break;
+      case '\t':
+        tya_builder_append(builder, "\\t");
+        break;
+      default: {
+        char one[2] = {*p, '\0'};
+        tya_builder_append(builder, one);
+        break;
+      }
+      }
+    }
+  }
+  tya_builder_append(builder, "\"");
+}
+
+static void tya_build_object_inspect(TyaStringBuilder *builder, TyaValue value, const char *type_name) {
+  tya_builder_append(builder, type_name == NULL || type_name[0] == '\0' ? "Object" : type_name);
+  tya_builder_append(builder, "(");
+  if (value.dict != NULL) {
+    int written = 0;
+    for (int i = 0; i < value.dict->len; i++) {
+      const char *key = value.dict->entries[i].key;
+      TyaValue item = value.dict->entries[i].value;
+      if (key == NULL || key[0] == '_' || key[0] == '@' || item.kind == TYA_FUNCTION || strcmp(key, "class") == 0 || strcmp(key, "class_name") == 0) continue;
+      if (written > 0) tya_builder_append(builder, ", ");
+      tya_builder_append(builder, key);
+      tya_builder_append(builder, ": ");
+      tya_build_inspect(builder, item);
+      written++;
+    }
+  }
+  tya_builder_append(builder, ")");
+}
+
+TyaValue tya_inspect(TyaValue value) {
+  if (value.kind == TYA_OBJECT) {
+    TyaValue method = tya_member_optional(value, "inspect");
+    if (method.kind == TYA_FUNCTION) {
+      TyaValue result = tya_call0(method);
+      if (result.kind != TYA_STRING) {
+        fprintf(stderr, "inspect must return string\n");
+        exit(1);
+      }
+      return result;
+    }
+  }
+  TyaStringBuilder builder = {.text = malloc(64), .len = 0, .cap = 64};
+  builder.text[0] = '\0';
+  tya_build_inspect(&builder, value);
+  return tya_string(builder.text);
+}
+
+static void tya_build_inspect(TyaStringBuilder *builder, TyaValue value) {
+  char scratch[64];
+  switch (value.kind) {
+  case TYA_STRING:
+    tya_builder_append_quoted(builder, value.string);
+    break;
+  case TYA_ARRAY:
+    tya_builder_append(builder, "[");
+    if (value.array != NULL) {
+      for (int i = 0; i < value.array->len; i++) {
+        if (i > 0) tya_builder_append(builder, ", ");
+        tya_build_inspect(builder, value.array->items[i]);
+      }
+    }
+    tya_builder_append(builder, "]");
+    break;
+  case TYA_DICT:
+    tya_builder_append(builder, "{");
+    if (value.dict != NULL) {
+      int written = 0;
+      for (int i = 0; i < value.dict->len; i++) {
+        const char *key = value.dict->entries[i].key;
+        if (key == NULL || key[0] == '_') continue;
+        if (written > 0) tya_builder_append(builder, ", ");
+        tya_builder_append_quoted(builder, key);
+        tya_builder_append(builder, ": ");
+        tya_build_inspect(builder, value.dict->entries[i].value);
+        written++;
+      }
+    }
+    tya_builder_append(builder, "}");
+    break;
+  case TYA_OBJECT: {
+    TyaValue data_type = tya_member_optional(value, "__data_type");
+    TyaValue class_name = tya_member_optional(value, "__class_name");
+    if (class_name.kind != TYA_STRING) class_name = tya_member_optional(value, "class_name");
+    const char *name = data_type.kind == TYA_STRING ? data_type.string : (class_name.kind == TYA_STRING ? class_name.string : "Object");
+    tya_build_object_inspect(builder, value, name);
+    break;
+  }
+  case TYA_NIL:
+  case TYA_MISSING:
+    tya_builder_append(builder, "nil");
+    break;
+  case TYA_BOOL:
+    tya_builder_append(builder, value.boolean ? "true" : "false");
+    break;
+  case TYA_NUMBER:
+    snprintf(scratch, sizeof(scratch), "%g", value.number);
+    tya_builder_append(builder, scratch);
+    break;
+  default:
+    tya_build_value(builder, value);
+    break;
+  }
 }
 
 static void tya_build_value(TyaStringBuilder *builder, TyaValue value) {
@@ -3206,7 +3349,8 @@ void tya_raise_user(TyaValue value) {
 }
 
 void tya_print(TyaValue value) {
-  tya_write_value(stdout, value);
+  TyaValue text = tya_to_string(value);
+  fprintf(stdout, "%s", text.string == NULL ? "" : text.string);
   putchar('\n');
 }
 
@@ -4223,15 +4367,18 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
   if (key == NULL) return tya_nil();
   switch (receiver.kind) {
   case TYA_NIL:
-    if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
+    if (strcmp(key, "to_string") == 0) return tya_bind_method(receiver, tya_method_to_string);
+    if (strcmp(key, "inspect") == 0) return tya_bind_method(receiver, tya_method_inspect);
     if (strcmp(key, "equal?") == 0) return tya_bind_method(receiver, tya_method_equal_p);
     return tya_nil();
   case TYA_BOOL:
-    if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
+    if (strcmp(key, "to_string") == 0) return tya_bind_method(receiver, tya_method_to_string);
+    if (strcmp(key, "inspect") == 0) return tya_bind_method(receiver, tya_method_inspect);
     if (strcmp(key, "equal?") == 0) return tya_bind_method(receiver, tya_method_equal_p);
     return tya_nil();
   case TYA_NUMBER:
-    if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
+    if (strcmp(key, "to_string") == 0) return tya_bind_method(receiver, tya_method_to_string);
+    if (strcmp(key, "inspect") == 0) return tya_bind_method(receiver, tya_method_inspect);
     if (strcmp(key, "equal?") == 0) return tya_bind_method(receiver, tya_method_equal_p);
     if (strcmp(key, "to_i") == 0) return tya_bind_method(receiver, tya_method_to_i);
     if (strcmp(key, "to_f") == 0 || strcmp(key, "to_number") == 0) return tya_bind_method(receiver, tya_method_to_f);
@@ -4277,7 +4424,8 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
     if (strcmp(key, "lines") == 0) return tya_bind_method(receiver, tya_method_lines);
     if (strcmp(key, "chars") == 0) return tya_bind_method(receiver, tya_method_chars);
     if (strcmp(key, "bytes") == 0) return tya_bind_method(receiver, tya_method_bytes);
-    if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
+    if (strcmp(key, "to_string") == 0) return tya_bind_method(receiver, tya_method_to_string);
+    if (strcmp(key, "inspect") == 0) return tya_bind_method(receiver, tya_method_inspect);
     if (strcmp(key, "equal?") == 0) return tya_bind_method(receiver, tya_method_equal_p);
     if (strcmp(key, "to_i") == 0) return tya_bind_method(receiver, tya_method_to_i);
     if (strcmp(key, "to_f") == 0 || strcmp(key, "to_number") == 0) return tya_bind_method(receiver, tya_method_to_f);
@@ -4296,7 +4444,8 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
     return tya_nil();
   case TYA_BYTES:
     if (strcmp(key, "len") == 0) return tya_bind_method(receiver, tya_method_len);
-    if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
+    if (strcmp(key, "to_string") == 0) return tya_bind_method(receiver, tya_method_to_string);
+    if (strcmp(key, "inspect") == 0) return tya_bind_method(receiver, tya_method_inspect);
     if (strcmp(key, "iter") == 0) return tya_bind_method(receiver, tya_method_iter);
     if (strcmp(key, "sequence") == 0) return tya_bind_method(receiver, tya_method_sequence);
     return tya_nil();
@@ -4319,7 +4468,8 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
     if (strcmp(key, "reverse") == 0) return tya_bind_method(receiver, tya_method_reverse);
     if (strcmp(key, "sort") == 0) return tya_bind_method(receiver, tya_method_sort);
     if (strcmp(key, "sort_by") == 0) return tya_bind_method(receiver, tya_method_sort_by);
-    if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
+    if (strcmp(key, "to_string") == 0) return tya_bind_method(receiver, tya_method_to_string);
+    if (strcmp(key, "inspect") == 0) return tya_bind_method(receiver, tya_method_inspect);
     if (strcmp(key, "equal?") == 0) return tya_bind_method(receiver, tya_method_equal_p);
     if (strcmp(key, "iter") == 0) return tya_bind_method(receiver, tya_method_iter);
     if (strcmp(key, "sequence") == 0) return tya_bind_method(receiver, tya_method_sequence);
@@ -4336,7 +4486,8 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
     if (strcmp(key, "entries") == 0) return tya_bind_method(receiver, tya_method_entries);
     if (strcmp(key, "merge") == 0) return tya_bind_method(receiver, tya_method_merge);
     if (strcmp(key, "merge!") == 0) return tya_bind_method(receiver, tya_method_merge_bang);
-    if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
+    if (strcmp(key, "to_string") == 0) return tya_bind_method(receiver, tya_method_to_string);
+    if (strcmp(key, "inspect") == 0) return tya_bind_method(receiver, tya_method_inspect);
     if (strcmp(key, "equal?") == 0) return tya_bind_method(receiver, tya_method_equal_p);
     if (strcmp(key, "iter") == 0) return tya_bind_method(receiver, tya_method_iter);
     if (strcmp(key, "sequence") == 0) return tya_bind_method(receiver, tya_method_sequence);
@@ -4347,12 +4498,14 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
     if (strcmp(key, "receive_timeout") == 0) return tya_bind_method(receiver, tya_method_channel_receive_timeout);
     if (strcmp(key, "close") == 0) return tya_bind_method(receiver, tya_method_channel_close);
     if (strcmp(key, "closed?") == 0) return tya_bind_method(receiver, tya_method_channel_closed_p);
-    if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
+    if (strcmp(key, "to_string") == 0) return tya_bind_method(receiver, tya_method_to_string);
+    if (strcmp(key, "inspect") == 0) return tya_bind_method(receiver, tya_method_inspect);
     return tya_nil();
   case TYA_TASK:
     if (strcmp(key, "cancel") == 0) return tya_bind_method(receiver, tya_method_task_cancel);
     if (strcmp(key, "cancelled?") == 0) return tya_bind_method(receiver, tya_method_task_cancelled_p);
-    if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
+    if (strcmp(key, "to_string") == 0) return tya_bind_method(receiver, tya_method_to_string);
+    if (strcmp(key, "inspect") == 0) return tya_bind_method(receiver, tya_method_inspect);
     return tya_nil();
   case TYA_RESOURCE:
     if (receiver.resource == NULL) return tya_nil();
@@ -4373,7 +4526,8 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
       if (strcmp(key, "done") == 0) return tya_bind_method(receiver, tya_method_wait_group_done);
       if (strcmp(key, "wait") == 0) return tya_bind_method(receiver, tya_method_wait_group_wait);
     }
-    if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
+    if (strcmp(key, "to_string") == 0) return tya_bind_method(receiver, tya_method_to_string);
+    if (strcmp(key, "inspect") == 0) return tya_bind_method(receiver, tya_method_inspect);
     return tya_nil();
   default:
     return tya_nil();
@@ -4382,7 +4536,8 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
 
 static TyaValue tya_method_len(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_len(receiver); }
 static TyaValue tya_method_empty_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_bool((int)tya_len(receiver).number == 0); }
-static TyaValue tya_method_to_s(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_to_string(receiver); }
+static TyaValue tya_method_to_string(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_to_string(receiver); }
+static TyaValue tya_method_inspect(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_inspect(receiver); }
 static TyaValue tya_method_to_i(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_to_int(receiver); }
 static TyaValue tya_method_to_f(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_to_number(receiver); }
 static TyaValue tya_method_compare(TyaValue receiver, TyaValue other, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_compare(receiver, other); }

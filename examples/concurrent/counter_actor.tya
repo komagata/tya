@@ -24,7 +24,7 @@ inbox.send("inc")
 
 reply_chan = channel.Channel(1)
 inbox.send(reply_chan)
-print("count = " + reply_chan.receive().to_s())
+print("count = " + reply_chan.receive().to_string())
 
 inbox.send("stop")
-print("final = " + (await counter).to_s())
+print("final = " + (await counter).to_string())

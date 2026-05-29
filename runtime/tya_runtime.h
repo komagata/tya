@@ -155,6 +155,7 @@ void tya_write_file(TyaValue path, TyaValue text);
 TyaValue tya_split(TyaValue text, TyaValue sep);
 TyaValue tya_join(TyaValue array, TyaValue sep);
 TyaValue tya_to_string(TyaValue value);
+TyaValue tya_inspect(TyaValue value);
 TyaValue tya_to_int(TyaValue value);
 TyaValue tya_to_float(TyaValue value);
 TyaValue tya_to_number(TyaValue value);

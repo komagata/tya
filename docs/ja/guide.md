@@ -184,7 +184,7 @@ user["city"] = "London"
 
 ```tya
 print(" tya ".trim().upper())
-print(42.to_s())
+print(42.to_string())
 print([1, 2, 3].len())
 ```
 

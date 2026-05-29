@@ -61,7 +61,7 @@ tagged = sql"""
 plain = """
   select 1
   """
-print("tag same: " + (tagged == plain).to_s())
+print("tag same: " + (tagged == plain).to_string())
 
 -- heredoc_format.tya --
 query = sql<<<SQL

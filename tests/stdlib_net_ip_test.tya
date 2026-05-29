@@ -8,7 +8,7 @@ class StdlibNetIpTest extends TestCase
     addr = parser.parse("192.168.1.10")
     self.assert_equal(net.ip.Address, addr.class, "class")
     self.assert_equal(4, addr.version_of(), "version")
-    self.assert_equal("192.168.1.10", addr.to_s(), "format")
+    self.assert_equal("192.168.1.10", addr.to_string(), "format")
     self.assert(addr.private_address?(), "private")
     self.assert(parser.parse("127.0.0.1").loopback?(), "loopback")
     self.assert(parser.parse("0.0.0.0").unspecified?(), "unspecified")
@@ -17,14 +17,14 @@ class StdlibNetIpTest extends TestCase
     parser = net.ip.Address()
     addr = parser.parse("2001:0db8:0000:0000:0000:0000:0000:0001")
     self.assert_equal(6, addr.version_of(), "version")
-    self.assert_equal("2001:db8::1", addr.to_s(), "format")
+    self.assert_equal("2001:db8::1", addr.to_string(), "format")
     self.assert(parser.parse("::1").loopback?(), "loopback")
     self.assert(parser.parse("::").unspecified?(), "unspecified")
     self.assert(parser.parse("fd00::1").private_address?(), "private")
 
   test_ipv4_mapped_ipv6: ->
     addr = net.ip.Address().parse("::ffff:192.0.2.1")
-    self.assert_equal("::ffff:192.0.2.1", addr.to_s(), "mapped")
+    self.assert_equal("::ffff:192.0.2.1", addr.to_string(), "mapped")
 
   test_cidr_contains: ->
     net4 = net.ip.Network(nil, 0).parse("192.168.1.0/24")

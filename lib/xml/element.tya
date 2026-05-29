@@ -104,6 +104,6 @@ class Element
       i = i + 1
     out
 
-  # Element.to_s provides the xml/Element standard library operation.
+  # Element.to_string provides the xml/Element standard library operation.
   # @return String the resulting value.
-  to_s: -> Xml(nil).stringify(self)
+  to_string: -> Xml(nil).stringify(self)

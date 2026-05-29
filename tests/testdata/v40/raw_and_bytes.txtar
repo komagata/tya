@@ -27,7 +27,7 @@ multi = b"""
   hello
   world
   """
-print("bytes len: " + (multi.len()).to_s())
+print("bytes len: " + (multi.len()).to_string())
 
 rawh = r<<<REGEX
   \d+ files in {dir}
@@ -37,4 +37,4 @@ print("raw heredoc: " + rawh)
 payload = b<<<BYTES
   hi\x0a!
   BYTES
-print("bytes heredoc len: " + (payload.len()).to_s())
+print("bytes heredoc len: " + (payload.len()).to_string())

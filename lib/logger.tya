@@ -90,7 +90,7 @@ class Logger
         + ",\""
         + escape_json(name)
         + "\":\""
-        + escape_json(log_fields[name].to_s())
+        + escape_json(log_fields[name].to_string())
         + "\""
     out = out + chr(125)
     out
@@ -167,7 +167,7 @@ class Logger
     out = ts + " " + level + " " + message
     names = log_fields.keys().sort()
     for name in names
-      out = out + " " + name + "=" + log_fields[name].to_s()
+      out = out + " " + name + "=" + log_fields[name].to_string()
     out
 
   # Logger.warn provides the log/Logger standard library operation.

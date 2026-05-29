@@ -20,7 +20,7 @@ app = net.http.Server()
 
 class App
   static show: req ->
-    return { status: 200, body: req["path"] + ":" + req["keep_alive"].to_s() }
+    return { status: 200, body: req["path"] + ":" + req["keep_alive"].to_string() }
 
 app.get("/one", App.show)
 app.get("/two", App.show)

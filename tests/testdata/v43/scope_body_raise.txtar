@@ -30,5 +30,5 @@ try
 catch e
   elapsed = time.Time().now() - start
   print("caught: " + e["message"])
-  print("fast: " + (elapsed < 1.0).to_s())
+  print("fast: " + (elapsed < 1.0).to_string())
 print("after")

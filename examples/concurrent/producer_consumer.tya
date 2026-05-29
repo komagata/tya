@@ -18,6 +18,6 @@ while true
   v = c.receive()
   if v == nil
     break
-  print("got " + v.to_s())
+  print("got " + v.to_string())
 
 await producer
