@@ -118,7 +118,7 @@ fail = "tools/fail.tya"
 import os
 
 println("pkg:tool_pkg")
-println("cwd:" + os.Os().cwd())
+println("cwd:" + os.Os.cwd())
 for arg in args()
   println("arg:{arg}")
 

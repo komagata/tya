@@ -3,12 +3,15 @@ record Option
   # Option.kind stores "long" or "short".
   # @type String
   kind
+
   # Option.name stores the option name without dashes.
   # @type String
   name
+
   # Option.value stores the parsed option value.
   # @type Any
   value
+
   # Option.raw stores the original option token.
   # @type String
   raw
@@ -55,14 +58,6 @@ class OptionParser
         self.arguments.push(arg)
     self
 
-  # OptionParser.long_option builds a long option token.
-  # @param name String long option name.
-  # @param value Any parsed option value.
-  # @param raw String original option token.
-  # @return Option parsed option token.
-  private long_option: name, value, raw ->
-    Option("long", name, value, raw)
-
   # OptionParser.parse_long! parses one long option token.
   # @param arg String command-line token.
   # @return Nil no meaningful value.
@@ -72,9 +67,13 @@ class OptionParser
     if eq != -1
       name = raw_name.slice(0, eq)
       value = raw_name.slice(eq + 1, raw_name.len())
-      self.options.push(long_option(name, value, arg))
+      self.options.push(
+        Option(kind: "long", name: name, value: value, raw: arg)
+      )
     else
-      self.options.push(long_option(raw_name, true, arg))
+      self.options.push(
+        Option(kind: "long", name: raw_name, value: true, raw: arg)
+      )
 
   # OptionParser.parse_short! parses one short option token or cluster.
   # @param arg String command-line token.
@@ -84,13 +83,7 @@ class OptionParser
     i = 0
     while i != raw.byte_len()
       name = raw[i]
-      self.options.push(short_option(name, true, "-{name}"))
+      self.options.push(
+        Option(kind: "short", name: name, value: true, raw: "-{name}")
+      )
       i = i + 1
-
-  # OptionParser.short_option builds a short option token.
-  # @param name String short option name.
-  # @param value Any parsed option value.
-  # @param raw String original option token.
-  # @return Option parsed option token.
-  private short_option: name, value, raw ->
-    Option("short", name, value, raw)

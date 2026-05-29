@@ -30,7 +30,7 @@ catch err
     print("json")
 
 try
-  process.Process([]).run()
+  process.Process.run([])
 catch err
   if err["message"] != ""
     print("process")

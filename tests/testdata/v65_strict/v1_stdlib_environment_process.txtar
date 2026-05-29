@@ -46,34 +46,34 @@ stderr 'process.run: string command requires shell option'
 import os
 import process
 
-os.Os().setenv("TYA_V1_ENV_PROCESS", "one")
-print(os.Os().env("TYA_V1_ENV_PROCESS"))
-print(os.Os().environ()["TYA_V1_ENV_PROCESS"])
+os.Os.setenv("TYA_V1_ENV_PROCESS", "one")
 print(os.Os.env("TYA_V1_ENV_PROCESS"))
 print(os.Os.environ()["TYA_V1_ENV_PROCESS"])
-os.Os().unsetenv("TYA_V1_ENV_PROCESS")
-print(os.Os().env("TYA_V1_ENV_PROCESS"))
+print(os.Os.env("TYA_V1_ENV_PROCESS"))
+print(os.Os.environ()["TYA_V1_ENV_PROCESS"])
+os.Os.unsetenv("TYA_V1_ENV_PROCESS")
+print(os.Os.env("TYA_V1_ENV_PROCESS"))
 os.Os.setenv("TYA_V1_ENV_PROCESS", "two")
-print(os.Os().env("TYA_V1_ENV_PROCESS"))
+print(os.Os.env("TYA_V1_ENV_PROCESS"))
 os.Os.unsetenv("TYA_V1_ENV_PROCESS")
 print(os.Os.env("TYA_V1_ENV_PROCESS"))
 
-r = process.Process(["sh", "-c", "printf direct"]).run({})
+r = process.Process.run(["sh", "-c", "printf direct"], {})
 print(r["status"])
 print(r["success"])
 print(r["stdout"])
 
-failed = process.Process(["sh", "-c", "exit 7"]).run({})
+failed = process.Process.run(["sh", "-c", "exit 7"], {})
 print(failed["success"])
 print(failed["status"])
 
-shell = process.Process("printf shell").run({ shell: true })
+shell = process.Process.run("printf shell", { shell: true })
 print(shell["stdout"])
 
-piped = process.Process(["cat"]).run({ stdin: "pipe" })
+piped = process.Process.run(["cat"], { stdin: "pipe" })
 print(piped["stdout"] == "pipe")
 
 -- invalid_process.tya --
 import process
 
-process.Process("printf nope").run({})
+process.Process.run("printf nope", {})

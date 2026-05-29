@@ -258,7 +258,7 @@ func TestSpecDocumentsEnvironmentProcessContract(t *testing.T) {
 		"`environ()`",
 		"`setenv(name, value)`",
 		"`unsetenv(name)`",
-		"`process/Process().run(command, options = {})`",
+		"`process/Process.run(command, options = {})`",
 		"`options[\"shell\"] == true`",
 		"`status`, `success`, `stdout`, `stderr`, and `timed_out`",
 		"Non-zero child exit status is reported in the result dictionary",

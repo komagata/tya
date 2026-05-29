@@ -1,65 +1,35 @@
 # Path provides the path/Path standard library API.
 class Path
+  # Path.basename stores the last path element without its extension.
+  # @type String
+  basename: nil
+
+  # Path.dirname stores all but the last path element.
+  # @type String
+  dirname: nil
+
+  # Path.extname stores the extension without the leading dot.
+  # @type String
+  extname: nil
+
   # Path.value stores instance state.
   # @type Nil
   value: nil
-
-  # Path.basename returns the last path element.
-  # @param value String value value.
-  # @return String the resulting value.
-  static basename: value -> Path(nil).basename(value)
-
-  # Path.clean normalizes dot segments and repeated separators.
-  # @param value String value value.
-  # @return Any the resulting value.
-  static clean: value -> Path(nil).clean(value)
-
-  # Path.dirname returns all but the last path element.
-  # @param value String value value.
-  # @return String the resulting value.
-  static dirname: value -> Path(nil).dirname(value)
-
-  # Path.expand_user expands a leading ~ using the current home directory.
-  # @param value String value value.
-  # @return Any the resulting value.
-  static expand_user: value -> path_expand_user(value)
-
-  # Path.extname returns the extension of value.
-  # @param value String value value.
-  # @return String the resulting value.
-  static extname: value -> Path(nil).extname(value)
-
-  # Path.join joins path parts and cleans the result.
-  # @param parts Array parts value.
-  # @return String the resulting value.
-  static join: parts -> Path(nil).join(parts)
 
   # Path.initialize stores a filesystem path.
   # @param value String value value.
   # @return Self the initialized object.
   initialize: path_value = nil ->
-    self.value = path_value
-
-  # Path.basename provides the path/Path standard library operation.
-  # @param value String value value.
-  # @return String the resulting value.
-  basename: path_value = nil ->
-    if path_value == nil
-      path_value = self.value
-    parts = path_value.split("/")
-    i = parts.len() - 1
-    while i >= 0
-      if parts[i] != ""
-        return parts[i]
-      i = i - 1
-    ""
+    if path_value != nil and path_value.class == String
+      self.value = path_value
+      parse!()
 
   # Path.clean provides the path/Path standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
   clean: path_value = nil ->
     if path_value == nil
-      path_value = self.value
+      path_value = value
     if path_value == ""
       return "."
     is_abs = path_value.starts_with("/")
@@ -82,65 +52,26 @@ class Path
       return "."
     joined
 
-  # Path.dirname provides the path/Path standard library operation.
-  # @param value String value value.
-  # @return String the resulting value.
-  dirname: path_value = nil ->
-    if path_value == nil
-      path_value = self.value
-    parts = path_value.split("/")
-    last = parts.len() - 1
-    while last >= 0 and parts[last] == ""
-      last = last - 1
-    if last <= 0
-      if path_value.starts_with("/")
-        return "/"
-      return "."
-    head = []
-    i = 0
-    while i < last
-      head.push(parts[i])
-      i = i + 1
-    joined = head.join("/")
-    if joined == ""
-      return "."
-    joined
-
   # Path.expand_user provides the path/Path standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
   expand_user: path_value = nil ->
     if path_value == nil
-      path_value = self.value
+      path_value = value
     path_expand_user(path_value)
 
-  # Path.extname provides the path/Path standard library operation.
-  # @param value String value value.
-  # @return String the resulting value.
-  extname: path_value = nil ->
-    if path_value == nil
-      path_value = self.value
-    bparts = path_value.split("/")
-    bi = bparts.len() - 1
-    base = ""
-    while bi >= 0 and base == ""
-      if bparts[bi] != ""
-        base = bparts[bi]
-      bi = bi - 1
-    parts = base.split(".")
-    n = parts.len()
-    if n < 2
-      return ""
-    if parts[0] == "" and n == 2
-      return ""
-    "." + parts[n - 1]
+  # Path.expand_user! expands a leading ~ in this path.
+  # @return Self this path.
+  expand_user!: ->
+    self.value = path_expand_user(value)
+    parse!()
 
   # Path.join provides the path/Path standard library operation.
   # @param parts Array parts value.
   # @return String the resulting value.
   join: parts = nil ->
     if parts == nil
-      parts = self.value
+      parts = value
     raw = parts.join("/")
     if raw == ""
       return "."
@@ -163,3 +94,62 @@ class Path
     if joined == ""
       return "."
     joined
+
+  # Path.to_string returns the current path value.
+  # @return String current path value.
+  to_string: -> value
+
+  # Path.parse! updates derived fields from the current path value.
+  # @return Self this path.
+  private parse!: ->
+    path_value = value
+    if path_value == nil
+      self.dirname = nil
+      self.basename = nil
+      self.extname = nil
+      return self
+    if path_value.class != String
+      self.dirname = nil
+      self.basename = nil
+      self.extname = nil
+      return self
+    parts = path_value.split("/")
+    i = parts.len() - 1
+    full_basename = ""
+    while i >= 0
+      if parts[i] != "" and full_basename == ""
+        full_basename = parts[i]
+      i = i - 1
+    last = parts.len() - 1
+    while last >= 0 and parts[last] == ""
+      last = last - 1
+    if last <= 0
+      if path_value.starts_with("/")
+        self.dirname = "/"
+      else
+        self.dirname = "."
+    else
+      head = []
+      i = 0
+      while i < last
+        head.push(parts[i])
+        i = i + 1
+      joined = head.join("/")
+      if joined == ""
+        self.dirname = "."
+      else
+        self.dirname = joined
+    name_parts = full_basename.split(".")
+    n = name_parts.len()
+    if n < 2 or name_parts[0] == "" and n == 2
+      self.basename = full_basename
+      self.extname = ""
+    else
+      self.extname = name_parts[n - 1]
+      base_parts = []
+      j = 0
+      while j < n - 1
+        base_parts.push(name_parts[j])
+        j = j + 1
+      self.basename = base_parts.join(".")
+    self

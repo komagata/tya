@@ -157,8 +157,8 @@ func TestV1StdlibBlockersRemainImplemented(t *testing.T) {
 		"print(file.File(root).exists?())",
 		"dir.Dir(root).remove_all()",
 		"print(time.Time().unix(0).format(\"unix\"))",
-		"print(os.Os().env(\"TYA_NO_SUCH_V1_ENV\") == nil)",
-		"print(process.Process([\"sh\", \"-c\", \"printf ok\"]).run({})[\"stdout\"])",
+		"print(os.Os.env(\"TYA_NO_SUCH_V1_ENV\") == nil)",
+		"print(process.Process.run([\"sh\", \"-c\", \"printf ok\"], {})[\"stdout\"])",
 		"print(hmac.Hmac(\"sha256\", \"key\").verify(\"The quick brown fox jumps over the lazy dog\", \"f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8\"))",
 		"",
 	}, "\n")

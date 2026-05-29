@@ -34,19 +34,19 @@ class StdlibFilesystemTest extends TestCase
     file.File(p).remove()
 
   test_path_expand_user_tilde: ->
-    home = os.Os().env("HOME")
+    home = os.Os.env("HOME")
     self.assert_equal(home, path.Path("~").expand_user(), "tilde alone")
     self.assert_equal("{home}/foo", path.Path("~/foo").expand_user(), "tilde slash")
     self.assert_equal("/abs/path", path.Path("/abs/path").expand_user(), "absolute unchanged")
 
   test_os_cwd_returns_string: ->
-    here = os.Os().cwd()
+    here = os.Os.cwd()
     self.assert(here != nil, "cwd not nil")
 
   test_os_chdir_round_trip: ->
-    original = os.Os().cwd()
-    os.Os().chdir("/tmp")
-    new = os.Os().cwd()
+    original = os.Os.cwd()
+    os.Os.chdir("/tmp")
+    new = os.Os.cwd()
     self.assert(new != original, "cwd changed")
-    os.Os().chdir(original)
-    self.assert_equal(original, os.Os().cwd(), "restored")
+    os.Os.chdir(original)
+    self.assert_equal(original, os.Os.cwd(), "restored")
