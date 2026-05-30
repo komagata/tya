@@ -196,6 +196,7 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key);
 static char *tya_utf8_char_at(const char *text, int rune_index);
 static int tya_utf8_byte_offset_at(const char *text, int rune_index);
 static int tya_utf8_rune_index_at_byte(const char *text, int byte_index);
+void tya_raise(TyaValue value);
 static TyaValue tya_method_len(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_empty_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_to_string(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
@@ -869,59 +870,71 @@ TyaValue tya_error2(TyaValue message, TyaValue options) {
   return tya_error_from_parts(message, options, true);
 }
 
-TyaValue tya_call0(TyaValue fn) {
-  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
+static TyaValue tya_callable_target(TyaValue value) {
+  if (value.kind == TYA_FUNCTION && value.function != NULL && value.function->fn != NULL) {
+    return value;
+  }
+  if (value.kind == TYA_OBJECT && value.dict != NULL) {
+    for (int i = 0; i < value.dict->len; i++) {
+      if (value.dict->entries[i].key != NULL && strcmp(value.dict->entries[i].key, "call") == 0) {
+        TyaValue method = value.dict->entries[i].value;
+        if (method.kind == TYA_FUNCTION && method.function != NULL && method.function->fn != NULL) {
+          return method;
+        }
+        break;
+      }
+    }
+    tya_raise(tya_string("object is not callable"));
     return tya_nil();
   }
+  return value;
+}
+
+TyaValue tya_call0(TyaValue fn) {
+  fn = tya_callable_target(fn);
+  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) return tya_nil();
   return fn.function->fn(fn.function->receiver, tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil());
 }
 
 TyaValue tya_call1(TyaValue fn, TyaValue arg) {
-  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
-    return tya_nil();
-  }
+  fn = tya_callable_target(fn);
+  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) return tya_nil();
   return fn.function->fn(fn.function->receiver, arg, tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil());
 }
 
 TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second) {
-  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
-    return tya_nil();
-  }
+  fn = tya_callable_target(fn);
+  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) return tya_nil();
   return fn.function->fn(fn.function->receiver, first, second, tya_nil(), tya_nil(), tya_nil(), tya_nil());
 }
 
 TyaValue tya_call3(TyaValue fn, TyaValue first, TyaValue second, TyaValue third) {
-  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
-    return tya_nil();
-  }
+  fn = tya_callable_target(fn);
+  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) return tya_nil();
   return fn.function->fn(fn.function->receiver, first, second, third, tya_nil(), tya_nil(), tya_nil());
 }
 
 TyaValue tya_call4(TyaValue fn, TyaValue first, TyaValue second, TyaValue third, TyaValue fourth) {
-  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
-    return tya_nil();
-  }
+  fn = tya_callable_target(fn);
+  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) return tya_nil();
   return fn.function->fn(fn.function->receiver, first, second, third, fourth, tya_nil(), tya_nil());
 }
 
 TyaValue tya_call5(TyaValue fn, TyaValue first, TyaValue second, TyaValue third, TyaValue fourth, TyaValue fifth) {
-  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
-    return tya_nil();
-  }
+  fn = tya_callable_target(fn);
+  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) return tya_nil();
   return fn.function->fn(fn.function->receiver, first, second, third, fourth, fifth, tya_nil());
 }
 
 TyaValue tya_call6(TyaValue fn, TyaValue first, TyaValue second, TyaValue third, TyaValue fourth, TyaValue fifth, TyaValue sixth) {
-  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
-    return tya_nil();
-  }
+  fn = tya_callable_target(fn);
+  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) return tya_nil();
   return fn.function->fn(fn.function->receiver, first, second, third, fourth, fifth, sixth);
 }
 
 TyaValue tya_call_keywords(TyaValue fn, const TyaValue *positional, int positional_count, TyaValue keywords) {
-  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
-    return tya_nil();
-  }
+  fn = tya_callable_target(fn);
+  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) return tya_nil();
   if (keywords.kind != TYA_DICT || keywords.dict == NULL) {
     tya_panic(tya_string("keyword expansion expects dictionary"));
   }

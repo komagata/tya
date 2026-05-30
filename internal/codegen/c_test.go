@@ -58,6 +58,15 @@ func TestEmitCImplicitSelfAndSelfMethodCalls(t *testing.T) {
 	}
 }
 
+func TestEmitCCallableObjectCallSyntax(t *testing.T) {
+	src := "class Greeter\n  prefix: \"\"\n\n  initialize: prefix ->\n    self.prefix = prefix\n\n  call: name, punctuation ->\n    self.prefix + name + punctuation\n\nclass Widget\n  label: -> \"instance\"\n\n  static call: -> \"static\"\n\ngreeter = Greeter(\"hi \")\nprint(greeter(\"Tya\", \"!\"))\nprint(greeter(name: \"Tya\", punctuation: \"?\"))\nitems = [greeter]\nprint(items[0](\"Box\", \".\"))\nmake = -> greeter\nprint(make()(\"Again\", \"!\"))\nprint(Widget.call())\nprint(Widget().label())\n"
+	out := compileAndRun(t, src)
+	want := "hi Tya!\nhi Tya?\nhi Box.\nhi Again!\nstatic\ninstance\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestEmitCBareInstanceFieldRead(t *testing.T) {
 	src := "interface Tagged\n  tags: []\n\nclass Base\n  values: []\n\nclass Command extends Base implements Tagged\n  arguments: []\n\n  argument: spec ->\n    arguments.push(spec)\n    self\n\n  first: -> arguments[0]\n\n  local_shadow: ->\n    arguments = [\"local\"]\n    arguments[0]\n\n  replace_arguments: arguments ->\n    self.arguments = arguments\n\n  add_value: value -> values.push(value)\n\n  add_tag: tag -> tags.push(tag)\n\ncmd = Command()\ncmd.argument(\"one\")\nprint(cmd.first())\nprint(cmd.local_shadow())\ncmd.replace_arguments([\"two\"])\nprint(cmd.first())\ncmd.add_value(\"base\")\nprint(cmd.values[0])\ncmd.add_tag(\"iface\")\nprint(cmd.tags[0])\n"
 	out := compileAndRun(t, src)

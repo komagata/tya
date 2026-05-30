@@ -537,6 +537,16 @@ including inside `initialize`. Method parameters and local bindings may reuse
 instance field names; the bare name refers to the local binding or parameter,
 and the field remains available through explicit `self.<name>` access.
 
+An object that provides an instance method named `call` is callable with
+function-call syntax. `handler(args)` is equivalent to `handler.call(args)` for
+such objects, including keyword arguments and dynamically produced receiver
+expressions. A field named `call` is not enough; the member must be an instance
+method. Calling a known class instance that has no visible instance `call`
+method is a checker error, and dynamic non-callable object calls fail at
+runtime. Class objects are not function objects: `Foo(args)` remains a
+constructor call even when `Foo` defines `static call`, while `Foo.call(args)`
+remains the explicit static method call.
+
 Inside `initialize` and instance methods, an unqualified call such as
 `helper(args)` resolves to `self.helper(args)` when ordinary callable lookup
 does not find `helper` and the current class, a parent class, or an interface
@@ -558,7 +568,10 @@ method calls: `self.helper(args)`, `Self.helper(args)`, and
 calls inside `CurrentClass`. Same-class class constant reads such as
 `Self.NAME` and `CurrentClass.NAME` are formatted as `NAME`. Same-class
 `self.field` reads are formatted as `field` when no method parameter or local
-binding with that name can change the meaning.
+binding with that name can change the meaning. Formatted Syntax writes
+callable-object calls directly: `handler.call(args)` is formatted as
+`handler(args)` when the receiver expression is not a class object. Explicit
+static calls such as `Foo.call(args)` and `pkg.Foo.call(args)` are preserved.
 
 Tya supports:
 

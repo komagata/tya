@@ -1,0 +1,66 @@
+# Object instances with an instance `call` method can use function-call syntax.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/callable.tya
+stdout 'hi Tya!'
+stdout 'hi Tya?'
+stdout 'hi Box.'
+stdout 'hi Again!'
+stdout 'static'
+stdout 'instance'
+
+exec go run ./cmd/tya build $WORK/callable.tya -o $WORK/callable
+exec $WORK/callable
+stdout 'hi Tya!'
+stdout 'hi Tya?'
+stdout 'hi Box.'
+stdout 'hi Again!'
+stdout 'static'
+stdout 'instance'
+
+exec go run ./cmd/tya format $WORK/format.tya
+stdout 'foo\(1, b: 2\)'
+stdout 'Foo.call\(\)'
+stdout 'pkg.Foo.call\(\)'
+stdout 'handler = foo.call'
+
+! exec go run ./cmd/tya check $WORK/not_callable.tya
+stderr 'object is not callable'
+
+-- callable.tya --
+class Greeter
+  prefix: ""
+
+  initialize: prefix ->
+    self.prefix = prefix
+
+  call: name, punctuation ->
+    self.prefix + name + punctuation
+
+class Widget
+  label: -> "instance"
+
+  static call: -> "static"
+
+greeter = Greeter("hi ")
+print(greeter("Tya", "!"))
+print(greeter(name: "Tya", punctuation: "?"))
+items = [greeter]
+print(items[0]("Box", "."))
+make = -> greeter
+print(make()("Again", "!"))
+print(Widget.call())
+print(Widget().label())
+
+-- format.tya --
+foo.call(1, b: 2)
+Foo.call()
+pkg.Foo.call()
+handler = foo.call
+
+-- not_callable.tya --
+class Plain
+  label: -> "plain"
+
+plain = Plain()
+plain()

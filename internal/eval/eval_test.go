@@ -357,6 +357,39 @@ func TestRunMethodReceiverEvaluatedOnce(t *testing.T) {
 	}
 }
 
+func TestRunCallableObjectCallSyntax(t *testing.T) {
+	src := strings.Join([]string{
+		"class Greeter",
+		"  prefix: \"\"",
+		"",
+		"  initialize: prefix ->",
+		"    self.prefix = prefix",
+		"",
+		"  call: name, punctuation ->",
+		"    self.prefix + name + punctuation",
+		"",
+		"class Widget",
+		"  label: -> \"instance\"",
+		"",
+		"  static call: -> \"static\"",
+		"",
+		"greeter = Greeter(\"hi \")",
+		"print(greeter(\"Tya\", \"!\"))",
+		"print(greeter(name: \"Tya\", punctuation: \"?\"))",
+		"items = [greeter]",
+		"print(items[0](\"Box\", \".\"))",
+		"make = -> greeter",
+		"print(make()(\"Again\", \"!\"))",
+		"print(Widget.call())",
+		"print(Widget().label())",
+		"",
+	}, "\n")
+	want := "hi Tya!\nhi Tya?\nhi Box.\nhi Again!\nstatic\ninstance\n"
+	if got := runEval(t, src); got != want {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+}
+
 func TestRunAssignmentTargetEvaluationOrder(t *testing.T) {
 	src := strings.Join([]string{
 		"events = []",
@@ -1585,7 +1618,6 @@ func TestRunRejectsStrictDynamicErrors(t *testing.T) {
 		{name: "nil indexing", src: "print(nil[0])\n", want: "index target is not array or string"},
 		{name: "wrong array index", src: "print([1][\"0\"])\n", want: "array index must be int"},
 		{name: "wrong dict index", src: "print({ name: \"tya\" }[0])\n", want: "dictionary index must be string"},
-		{name: "nil call", src: "fn = nil\nprint(fn())\n", want: "value is not callable"},
 		{name: "nil member", src: "print(nil.name)\n", want: "unknown member name on nil"},
 		{name: "assignment arity", src: "first, second = [1]\n", want: "assignment expects 2 values, got 1"},
 		{name: "function arity", src: "add = a, b -> a + b\nprint(add(1))\n", want: "function expects 2 arguments, got 1"},

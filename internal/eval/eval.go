@@ -119,6 +119,12 @@ type Function struct {
 
 type Builtin func([]Value) (Value, error)
 
+type boundMethod struct {
+	method   Value
+	receiver Value
+	name     string
+}
+
 func applyErrorOptions(errValue *ErrorValue, options Dict) error {
 	for key, value := range options {
 		switch key {
@@ -1949,14 +1955,24 @@ func evalCall(c *ast.CallExpr, env *Env) (Value, error) {
 	switch fn := fnVal.(type) {
 	case Builtin, *Function:
 		return callValueWithKeywords(fn, args, kwargs)
+	case boundMethod:
+		return callValueWithKeywords(fn, args, kwargs)
 	case *ast.StructDecl:
 		return instantiateStruct(fn, args, kwargs, env)
 	case Dict:
 		if isModuleNamespace(fn) {
 			return instantiateClassWithKeywords(fn, args, kwargs)
 		}
+		if class, ok := fn["__class"].(Dict); ok {
+			if methods, ok := class["__instance_methods"].(Dict); ok {
+				if method, ok := methods["call"]; ok {
+					return callValueWithKeywords(boundMethod{method: method, receiver: fn, name: "call"}, args, kwargs)
+				}
+			}
+			return nil, fmt.Errorf("object is not callable")
+		}
 	}
-	return nil, fmt.Errorf("value is not callable")
+	return nil, nil
 }
 
 func instantiateStruct(decl *ast.StructDecl, args []Value, keywords []keywordArgValue, env *Env) (Value, error) {
@@ -2812,6 +2828,17 @@ func callValueWithKeywords(fn Value, args []Value, keywords []keywordArgValue) (
 			return nil, fmt.Errorf("builtin function does not accept keyword arguments")
 		}
 		return f(args)
+	case boundMethod:
+		value, err := callMethodWithKeywords(f.method, f.receiver, args, keywords)
+		if err != nil {
+			return nil, err
+		}
+		if f.name == "to_string" || f.name == "inspect" {
+			if _, ok := value.(string); !ok {
+				return nil, fmt.Errorf("%s must return string", f.name)
+			}
+		}
+		return value, nil
 	case *Function:
 		var err error
 		args, err = bindKeywordArgs(f.Params, args, keywords)
@@ -2889,7 +2916,7 @@ func callValueWithKeywords(fn Value, args []Value, keywords []keywordArgValue) (
 		}
 		return checkPredicate(v, err)
 	}
-	return nil, fmt.Errorf("value is not callable")
+	return nil, nil
 }
 
 func bindKeywordArgs(params []string, args []Value, keywords []keywordArgValue) ([]Value, error) {
@@ -3027,20 +3054,12 @@ func evalCallee(e ast.Expr, env *Env) (Value, error) {
 			if class, ok := dict["__class"].(Dict); ok {
 				if methods, ok := class["__instance_methods"].(Dict); ok {
 					if method, ok := methods[m.Name]; ok {
-						return Builtin(func(args []Value) (Value, error) {
-							value, err := callMethod(method, dict, args)
-							if err != nil {
-								return nil, err
-							}
-							if m.Name == "to_string" || m.Name == "inspect" {
-								if _, ok := value.(string); !ok {
-									return nil, fmt.Errorf("%s must return string", m.Name)
-								}
-							}
-							return value, nil
-						}), nil
+						return boundMethod{method: method, receiver: dict, name: m.Name}, nil
 					}
 				}
+			}
+			if value, ok := dict[m.Name]; ok {
+				return value, nil
 			}
 		}
 		if method := primitiveMethodValue(obj, m.Name, env); method != nil {

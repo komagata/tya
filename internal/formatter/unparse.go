@@ -29,7 +29,10 @@ import (
 	"tya/internal/token"
 )
 
-var constNameRE = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
+var (
+	classNameRE = regexp.MustCompile(`^[A-Z][a-zA-Z0-9]*$`)
+	constNameRE = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
+)
 
 // Unparse renders prog as formatted Tya source. When prog was
 // produced by parser.ParseWithComments, header and per-statement
@@ -1135,7 +1138,13 @@ func (u *unparser) emitWrappedCallChain(stmt ast.Stmt, prefix string, call *ast.
 //
 // prefix is "" for an ExprStmt or "name = " for an AssignStmt rhs.
 func (u *unparser) emitWrappedCall(stmt ast.Stmt, prefix string, call *ast.CallExpr) error {
-	callee, err := u.expr(call.Callee)
+	callee, ok, err := u.callableObjectCallTarget(call.Callee)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		callee, err = u.expr(call.Callee)
+	}
 	if err != nil {
 		return err
 	}
@@ -1812,7 +1821,13 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 			}
 			return name + "(" + strings.Join(args, ", ") + ")", nil
 		}
-		callee, err := u.postfixTarget(n.Callee)
+		callee, ok, err := u.callableObjectCallTarget(n.Callee)
+		if err != nil {
+			return "", err
+		}
+		if !ok {
+			callee, err = u.postfixTarget(n.Callee)
+		}
 		if err != nil {
 			return "", err
 		}
@@ -1921,6 +1936,29 @@ func (u *unparser) bareSameClassCallName(e ast.Expr) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+func (u *unparser) callableObjectCallTarget(e ast.Expr) (string, bool, error) {
+	member, ok := e.(*ast.MemberExpr)
+	if !ok || member.Name != "call" || isStaticCallTarget(member.Target) {
+		return "", false, nil
+	}
+	target, err := u.postfixTarget(member.Target)
+	if err != nil {
+		return "", false, err
+	}
+	return target, true, nil
+}
+
+func isStaticCallTarget(e ast.Expr) bool {
+	switch n := e.(type) {
+	case *ast.Ident:
+		return classNameRE.MatchString(n.Name) || n.Name == "Self"
+	case *ast.MemberExpr:
+		return classNameRE.MatchString(n.Name)
+	default:
+		return false
+	}
 }
 
 func (u *unparser) bareSameClassConstantName(e *ast.MemberExpr) (string, bool) {

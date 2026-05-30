@@ -841,6 +841,7 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 					constants[name.Name] = true
 				}
 				scope.define(name.Name, nextKind)
+				delete(scope.objectClasses, name.Name)
 				if nextKind == kindObject {
 					if classKey := exprObjectClassKey(n.Values, scope); classKey != "" {
 						scope.objectClasses[name.Name] = classKey
@@ -1972,6 +1973,11 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 				return fmt.Errorf("%d:%d: cannot construct interface %s", member.NameTok.Line, member.NameTok.Col, member.Name)
 			}
 		}
+		if !n.ImplicitSelf && !n.ImplicitClass {
+			if err := checkCallableObjectCall(n, scope); err != nil {
+				return err
+			}
+		}
 		if member, ok := n.Callee.(*ast.MemberExpr); ok {
 			if err := removedConcurrencyHelperError(member); err != nil {
 				return err
@@ -2582,6 +2588,36 @@ func checkCallKeywords(call *ast.CallExpr, params []string) error {
 			return fmt.Errorf("%d:%d: argument %s supplied multiple times", arg.NameTok.Line, arg.NameTok.Col, arg.Name)
 		}
 		filled[index] = arg.Name
+	}
+	return nil
+}
+
+func checkCallableObjectCall(call *ast.CallExpr, scope *scope) error {
+	id, ok := call.Callee.(*ast.Ident)
+	if !ok {
+		return nil
+	}
+	classKey := scope.objectClass(id.Name)
+	if classKey == "" {
+		return nil
+	}
+	if _, ok := scope.classes[classKey]; !ok {
+		return nil
+	}
+	if _, ok := effectiveMethodArity(classKey, "call", scope); !ok {
+		return fmt.Errorf("%d:%d: object is not callable", id.Tok.Line, id.Tok.Col)
+	}
+	member := &ast.MemberExpr{Target: id, Name: "call", NameTok: id.Tok}
+	if err := checkExternalInstanceMemberAccess(member, scope); err != nil {
+		return err
+	}
+	if params, ok := effectiveMethodParams(classKey, "call", scope); ok {
+		if err := checkCallKeywords(call, params); err != nil {
+			return err
+		}
+	}
+	if arity, ok := effectiveMethodArity(classKey, "call", scope); ok && len(call.EffectiveArgs()) != arity {
+		return fmt.Errorf("%d:%d: method call expects %d arguments", id.Tok.Line, id.Tok.Col, arity)
 	}
 	return nil
 }

@@ -73,6 +73,37 @@ func TestUnparseKeepsCommentedFunctionBodyBlockBodied(t *testing.T) {
 	}
 }
 
+func TestUnparseCanonicalizesCallableObjectCallSyntax(t *testing.T) {
+	src := strings.Join([]string{
+		"foo.call(1, b: 2)",
+		"Foo.call()",
+		"pkg.Foo.call()",
+		"handler = foo.call",
+		"",
+	}, "\n")
+	got, err := unparseSourceWithComments(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := strings.Join([]string{
+		"foo(1, b: 2)",
+		"Foo.call()",
+		"pkg.Foo.call()",
+		"handler = foo.call",
+		"",
+	}, "\n")
+	if got != want {
+		t.Fatalf("got:\n%swant:\n%s", got, want)
+	}
+	again, err := unparseSourceWithComments(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again != got {
+		t.Fatalf("not idempotent:\nfirst:\n%s\nsecond:\n%s", got, again)
+	}
+}
+
 func TestUnparseWrapsLongClassArrayLiteral(t *testing.T) {
 	src := strings.Join([]string{
 		"class FlakewatchCommand",
