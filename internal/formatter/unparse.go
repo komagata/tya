@@ -246,6 +246,17 @@ func (u *unparser) fitsInline(body string) bool {
 	return u.currentIndent()+len(body) <= columnLimit
 }
 
+func (u *unparser) canInlineExpr(expr ast.Expr) bool {
+	if lit, ok := expr.(*ast.StringLit); ok && strings.Contains(lit.Value, "\n") {
+		return false
+	}
+	return true
+}
+
+func (u *unparser) canInlineRenderedExpr(expr ast.Expr, rendered string) bool {
+	return u.canInlineExpr(expr) && !strings.Contains(rendered, `\n`)
+}
+
 // preStmt writes leading comments for stmt, when any are attached.
 func (u *unparser) preStmt(stmt ast.Stmt) {
 	if u.comments == nil {
@@ -332,6 +343,13 @@ func (u *unparser) stmt(s ast.Stmt) error {
 		if err != nil {
 			return err
 		}
+		if lit, ok := n.Expr.(*ast.StringLit); ok && (strings.Contains(lit.Value, "\n") || strings.Contains(ex, `\n`)) && !strings.Contains(lit.Value, `"""`) {
+			return u.emitTripleQuoted(s, "", lit)
+		}
+		if u.isMultilineZeroArgCall(n.Expr, ex) {
+			u.emitStmtLine(s, ex)
+			return nil
+		}
 		if !u.fitsInline(ex) {
 			switch expr := n.Expr.(type) {
 			case *ast.CallExpr:
@@ -339,6 +357,14 @@ func (u *unparser) stmt(s ast.Stmt) error {
 					return u.emitWrappedCallChain(s, "", expr)
 				}
 				return u.emitWrappedCall(s, "", expr)
+			case *ast.ArrayLit:
+				if u.emitWrappedExpr(s, "", expr) {
+					return nil
+				}
+			case *ast.StringLit:
+				if strings.Contains(expr.Value, "\n") && !strings.Contains(expr.Value, `"""`) {
+					return u.emitTripleQuoted(s, "", expr)
+				}
 			case *ast.BinaryExpr:
 				return u.emitWrappedBinary(s, "", expr)
 			}
@@ -365,6 +391,14 @@ func (u *unparser) stmt(s ast.Stmt) error {
 						return u.emitWrappedCallChain(s, "return ", expr)
 					}
 					return u.emitWrappedCall(s, "return ", expr)
+				case *ast.ArrayLit:
+					if u.emitWrappedExpr(s, "return ", expr) {
+						return nil
+					}
+				case *ast.StringLit:
+					if strings.Contains(expr.Value, "\n") && !strings.Contains(expr.Value, `"""`) {
+						return u.emitTripleQuoted(s, "return ", expr)
+					}
 				case *ast.BinaryExpr:
 					return u.emitWrappedBinary(s, "return ", expr)
 				}
@@ -576,7 +610,7 @@ func (u *unparser) moduleMember(m ast.ModuleMember) error {
 				return err
 			}
 			line := prefix + " " + body
-			if u.fitsInline(line) {
+			if u.canInlineRenderedExpr(expr, body) && u.fitsInline(line) {
 				u.line(line)
 				return nil
 			}
@@ -825,13 +859,20 @@ func (u *unparser) classMethod(m ast.ClassMethod) error {
 			return err
 		}
 		line := prefix + m.Name + ": " + defArrow(head) + " " + body
-		if u.fitsInline(line) {
+		if u.canInlineRenderedExpr(fn.Expr, body) && u.fitsInline(line) {
 			u.line(line)
 			return nil
 		}
 		u.line(prefix + m.Name + ": " + defArrow(head))
 		u.indent++
-		u.line(body)
+		if lit, ok := fn.Expr.(*ast.StringLit); ok && strings.Contains(lit.Value, "\n") && !strings.Contains(lit.Value, `"""`) {
+			if err := u.emitTripleQuoted(nil, "", lit); err != nil {
+				u.indent--
+				return err
+			}
+		} else {
+			u.line(body)
+		}
 		u.indent--
 		return nil
 	}
@@ -845,7 +886,7 @@ func (u *unparser) classMethod(m ast.ClassMethod) error {
 				return err
 			}
 			line := linePrefix + " " + body
-			if u.fitsInline(line) {
+			if u.canInlineRenderedExpr(m.Func.Expr, body) && u.fitsInline(line) {
 				u.line(line)
 				return nil
 			}
@@ -893,13 +934,20 @@ func (u *unparser) interfaceDecl(n *ast.InterfaceDecl) error {
 				return err
 			}
 			line := head + " " + body
-			if u.fitsInline(line) {
+			if u.canInlineRenderedExpr(m.Func.Expr, body) && u.fitsInline(line) {
 				u.line(line)
 				continue
 			}
 			u.line(head)
 			u.indent++
-			u.line(body)
+			if lit, ok := m.Func.Expr.(*ast.StringLit); ok && strings.Contains(lit.Value, "\n") && !strings.Contains(lit.Value, `"""`) {
+				if err := u.emitTripleQuoted(nil, "", lit); err != nil {
+					u.indent--
+					return err
+				}
+			} else {
+				u.line(body)
+			}
 			u.indent--
 			continue
 		}
@@ -912,7 +960,7 @@ func (u *unparser) interfaceDecl(n *ast.InterfaceDecl) error {
 					return err
 				}
 				line := head + " " + body
-				if u.fitsInline(line) {
+				if u.canInlineRenderedExpr(expr, body) && u.fitsInline(line) {
 					u.line(line)
 					continue
 				}
@@ -970,7 +1018,7 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 					return err
 				}
 				line := prefix + " " + body
-				if u.fitsInline(line) {
+				if u.canInlineRenderedExpr(fn.Expr, body) && u.fitsInline(line) {
 					u.emitStmtLine(n, line)
 					return nil
 				}
@@ -983,7 +1031,7 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 						return err
 					}
 					line := prefix + " " + body
-					if u.fitsInline(line) {
+					if u.canInlineRenderedExpr(expr, body) && u.fitsInline(line) {
 						u.emitStmtLine(n, line)
 						return nil
 					}
@@ -1152,15 +1200,17 @@ func (u *unparser) emitWrappedCall(stmt ast.Stmt, prefix string, call *ast.CallE
 	u.indent++
 	args := call.EffectiveArgs()
 	for i, a := range args {
-		s, err := u.callArg(a)
+		lines, err := u.callArgLines(a)
 		if err != nil {
 			u.indent--
 			return err
 		}
 		if i < len(args)-1 {
-			s += ","
+			lines[len(lines)-1] += ","
 		}
-		u.line(s)
+		for _, line := range lines {
+			u.line(line)
+		}
 	}
 	u.indent--
 	closing := ")"
@@ -1170,6 +1220,25 @@ func (u *unparser) emitWrappedCall(stmt ast.Stmt, prefix string, call *ast.CallE
 		u.line(closing)
 	}
 	return nil
+}
+
+func (u *unparser) callArgLines(arg ast.CallArg) ([]string, error) {
+	return u.callArgLinesAt(arg, u.currentIndent())
+}
+
+func (u *unparser) callArgLinesAt(arg ast.CallArg, columns int) ([]string, error) {
+	prefix := ""
+	if arg.Expand {
+		prefix = "**"
+	} else if arg.Name != "" {
+		prefix = arg.Name + ": "
+	}
+	valueLines, err := u.exprLinesAt(arg.Value, columns+len(prefix))
+	if err != nil {
+		return nil, err
+	}
+	valueLines[0] = prefix + valueLines[0]
+	return valueLines, nil
 }
 
 func (u *unparser) callArg(arg ast.CallArg) (string, error) {
@@ -1271,26 +1340,28 @@ func (u *unparser) binaryOperand(e ast.Expr, parentOp string, left bool) (string
 // numbers bind tighter. Mirrors the parser's precedence ordering.
 func opPrecedence(op string) int {
 	switch op {
-	case "or":
+	case "??":
 		return 1
-	case "and":
+	case "or":
 		return 2
-	case "==", "!=":
+	case "and":
 		return 3
-	case "<", "<=", ">", ">=":
+	case "==", "!=":
 		return 4
-	case "|":
+	case "<", "<=", ">", ">=":
 		return 5
-	case "^":
+	case "|":
 		return 6
-	case "&":
+	case "^":
 		return 7
-	case "<<", ">>":
+	case "&":
 		return 8
-	case "+", "-":
+	case "<<", ">>":
 		return 9
-	case "*", "/", "%":
+	case "+", "-":
 		return 10
+	case "*", "/", "%":
+		return 11
 	}
 	return 0
 }
@@ -1386,11 +1457,14 @@ func (u *unparser) emitDictBlock(stmt ast.Stmt, target string, dict *ast.DictLit
 	u.indent++
 	defer func() { u.indent-- }()
 	for _, p := range dict.Props {
-		v, err := u.expr(p.Value)
+		valueLines, err := u.exprLinesAt(p.Value, u.currentIndent()+len(p.Name)+len(": "))
 		if err != nil {
 			return err
 		}
-		u.line(p.Name + ": " + v)
+		valueLines[0] = p.Name + ": " + valueLines[0]
+		for _, line := range valueLines {
+			u.line(line)
+		}
 	}
 	return nil
 }
@@ -1400,11 +1474,40 @@ func (u *unparser) emitValueLine(prefix string, value ast.Expr) error {
 	if err != nil {
 		return err
 	}
-	if arr, ok := value.(*ast.ArrayLit); ok && !u.fitsInline(prefix+val) {
-		return u.emitWrappedArrayLiteral(prefix, arr, "")
+	if _, ok := value.(*ast.ArrayLit); ok && !u.fitsInline(prefix+val) {
+		if u.emitWrappedExpr(nil, prefix, value) {
+			return nil
+		}
 	}
 	u.line(prefix + val)
 	return nil
+}
+
+func (u *unparser) emitWrappedExpr(stmt ast.Stmt, prefix string, expr ast.Expr) bool {
+	lines, err := u.exprLinesAt(expr, u.currentIndent()+len(prefix))
+	if err != nil || len(lines) <= 1 {
+		return false
+	}
+	trailing := ""
+	if stmt != nil {
+		trailing = u.trailingFor(stmt)
+	}
+	u.emitLinesWithPrefix(prefix, lines, trailing)
+	return true
+}
+
+func (u *unparser) emitLinesWithPrefix(prefix string, lines []string, trailing string) {
+	if len(lines) == 0 {
+		return
+	}
+	u.line(prefix + lines[0])
+	for i := 1; i < len(lines); i++ {
+		line := lines[i]
+		if i == len(lines)-1 && trailing != "" {
+			line += "  #" + trailing
+		}
+		u.line(line)
+	}
 }
 
 // emitWrappedArray emits an array literal as the multi-line form
@@ -1414,27 +1517,103 @@ func (u *unparser) emitWrappedArray(stmt ast.Stmt, prefix string, arr *ast.Array
 }
 
 func (u *unparser) emitWrappedArrayLiteral(prefix string, arr *ast.ArrayLit, trailing string) error {
-	u.line(prefix + "[")
-	u.indent++
-	for i, el := range arr.Elems {
-		s, err := u.expr(el)
-		if err != nil {
-			u.indent--
-			return err
-		}
-		if i < len(arr.Elems)-1 {
-			s += ","
-		}
-		u.line(s)
+	lines, err := u.exprLinesAt(arr, u.currentIndent()+len(prefix))
+	if err != nil {
+		return err
 	}
-	u.indent--
-	closing := "]"
-	if trailing != "" {
-		u.line(closing + "  #" + trailing)
-	} else {
-		u.line(closing)
-	}
+	u.emitLinesWithPrefix(prefix, lines, trailing)
 	return nil
+}
+
+func (u *unparser) exprLines(expr ast.Expr) ([]string, error) {
+	return u.exprLinesAt(expr, u.currentIndent())
+}
+
+func (u *unparser) exprLinesAt(expr ast.Expr, columns int) ([]string, error) {
+	switch n := expr.(type) {
+	case *ast.ArrayLit:
+		if len(n.Elems) == 0 {
+			return []string{"[]"}, nil
+		}
+		lines := []string{"["}
+		for i, elem := range n.Elems {
+			elemLines, err := u.exprLinesAt(elem, columns+2)
+			if err != nil {
+				return nil, err
+			}
+			if i < len(n.Elems)-1 {
+				elemLines[len(elemLines)-1] += ","
+			}
+			lines = append(lines, indentExprLines(elemLines)...)
+		}
+		lines = append(lines, "]")
+		return lines, nil
+	case *ast.DictLit:
+		if len(n.Props) == 0 {
+			return []string{"{}"}, nil
+		}
+		lines := []string{"{"}
+		for i, prop := range n.Props {
+			valueColumns := columns + 2 + len(prop.Name) + len(": ")
+			valueLines, err := u.exprLinesAt(prop.Value, valueColumns)
+			if err != nil {
+				return nil, err
+			}
+			valueLines[0] = prop.Name + ": " + valueLines[0]
+			if i < len(n.Props)-1 {
+				valueLines[len(valueLines)-1] += ","
+			}
+			lines = append(lines, indentExprLines(valueLines)...)
+		}
+		lines = append(lines, "}")
+		return lines, nil
+	case *ast.CallExpr:
+		inline, err := u.expr(n)
+		if err != nil {
+			return nil, err
+		}
+		if columns+len(inline) <= columnLimit {
+			return []string{inline}, nil
+		}
+		callee, ok, err := u.callableObjectCallTarget(n.Callee)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			callee, err = u.expr(n.Callee)
+			if err != nil {
+				return nil, err
+			}
+		}
+		lines := []string{callee + "("}
+		args := n.EffectiveArgs()
+		for i, arg := range args {
+			argLines, err := u.callArgLinesAt(arg, columns+2)
+			if err != nil {
+				return nil, err
+			}
+			if i < len(args)-1 {
+				argLines[len(argLines)-1] += ","
+			}
+			lines = append(lines, indentExprLines(argLines)...)
+		}
+		lines = append(lines, ")")
+		return lines, nil
+	default:
+		text, err := u.expr(expr)
+		if err != nil {
+			return nil, err
+		}
+		return []string{text}, nil
+	}
+}
+
+func indentExprLines(lines []string) []string {
+	out := make([]string, 0, len(lines))
+	for _, line := range lines {
+		out = append(out, "  "+line)
+	}
+	return out
 }
 
 func (u *unparser) ifStmt(n *ast.IfStmt) error {
@@ -1654,6 +1833,9 @@ func (u *unparser) funcTailStmt(st ast.Stmt) error {
 		if err != nil {
 			return err
 		}
+		if lit, ok := n.Values[0].(*ast.StringLit); ok && strings.Contains(lit.Value, "\n") && !strings.Contains(lit.Value, `"""`) {
+			return u.emitTripleQuoted(st, "", lit)
+		}
 		u.emitStmtLine(&ast.ExprStmt{Expr: n.Values[0]}, ex)
 		return nil
 	case *ast.IfStmt:
@@ -1748,8 +1930,8 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 		}
 		return s, nil
 	case *ast.StringLit:
-		if n.Lang != "" && n.Form == "triple" && !strings.Contains(n.Value, `"""`) {
-			return n.Lang + `"""` + n.Value + `"""`, nil
+		if n.Form == "triple" && !strings.Contains(n.Value, `"""`) {
+			return u.tripleQuotedExpr(n), nil
 		}
 		return strconv.Quote(n.Value), nil
 	case *ast.BoolLit:
@@ -2005,6 +2187,35 @@ func (u *unparser) postfixTarget(e ast.Expr) (string, error) {
 	default:
 		return s, nil
 	}
+}
+
+func (u *unparser) isMultilineZeroArgCall(expr ast.Expr, rendered string) bool {
+	call, ok := expr.(*ast.CallExpr)
+	return ok && len(call.EffectiveArgs()) == 0 && strings.Contains(rendered, "\n")
+}
+
+func (u *unparser) tripleQuotedExpr(lit *ast.StringLit) string {
+	indent := strings.Repeat(" ", u.currentIndent())
+	body := lit.Value
+	if strings.HasSuffix(body, "\n") {
+		body = strings.TrimSuffix(body, "\n")
+	}
+	lines := strings.Split(body, "\n")
+	var b strings.Builder
+	b.WriteString(lit.Lang)
+	b.WriteString(`"""`)
+	for _, line := range lines {
+		b.WriteByte('\n')
+		if line == "" {
+			continue
+		}
+		b.WriteString(indent)
+		b.WriteString(strings.ReplaceAll(line, `\`, `\\`))
+	}
+	b.WriteByte('\n')
+	b.WriteString(indent)
+	b.WriteString(`"""`)
+	return b.String()
 }
 
 func fieldReadShadowNames(fn *ast.FuncLit) map[string]bool {

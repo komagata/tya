@@ -117,13 +117,161 @@ func TestUnparseWrapsLongClassArrayLiteral(t *testing.T) {
 	want := strings.Join([]string{
 		"class FlakewatchCommand",
 		"  options: [",
-		"    cli.Spec.option(\"junit\", \"JUnit XML glob or file path\", { default: [], array: true }),",
-		"    cli.Spec.option(\"history\", \"JSONL history glob or file path\", { default: [], array: true })",
+		"    cli.Spec.option(",
+		"      \"junit\",",
+		"      \"JUnit XML glob or file path\",",
+		"      {",
+		"        default: [],",
+		"        array: true",
+		"      }",
+		"    ),",
+		"    cli.Spec.option(",
+		"      \"history\",",
+		"      \"JSONL history glob or file path\",",
+		"      {",
+		"        default: [],",
+		"        array: true",
+		"      }",
+		"    )",
 		"  ]",
 		"",
 	}, "\n")
 	if got != want {
 		t.Fatalf("got:\n%swant:\n%s", got, want)
+	}
+	again, err := unparseSourceWithComments(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again != got {
+		t.Fatalf("not idempotent:\nfirst:\n%s\nsecond:\n%s", got, again)
+	}
+}
+
+func TestUnparseWrapsLongExpressionArrayAndNestedDict(t *testing.T) {
+	src := strings.Join([]string{
+		"class Report",
+		"  failing_headers: ->",
+		"    [header(\"Test\", \"test-col\", \"text\"), header(\"Failures\", \"num\", \"number\"), header(\"Fail\", \"num\", \"number\")]",
+		"",
+		"  failing_table: rows, source_base_url, source_root, source_cache, source_line_cache ->",
+		"    data_rows.push({ cells: [cell(\"test-col\", test_link(row, source_base_url, source_root, source_cache, source_line_cache)), cell(\"num\", escape(text(row[\"failure_count\"]))) ] })",
+		"",
+		"  template_data: ->",
+		"    data =",
+		"      metrics: [{ value: text(total), label: \"tests\" }, { value: text(observations), label: \"observations\" }]",
+		"    data",
+		"",
+	}, "\n")
+	got, err := unparseSourceWithComments(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := strings.Join([]string{
+		"class Report",
+		"  failing_headers: ->",
+		"    [",
+		"      header(\"Test\", \"test-col\", \"text\"),",
+		"      header(\"Failures\", \"num\", \"number\"),",
+		"      header(\"Fail\", \"num\", \"number\")",
+		"    ]",
+		"",
+		"  failing_table: rows, source_base_url, source_root, source_cache, source_line_cache ->",
+		"    data_rows.push(",
+		"      {",
+		"        cells: [",
+		"          cell(",
+		"            \"test-col\",",
+		"            test_link(",
+		"              row,",
+		"              source_base_url,",
+		"              source_root,",
+		"              source_cache,",
+		"              source_line_cache",
+		"            )",
+		"          ),",
+		"          cell(\"num\", escape(text(row[\"failure_count\"])))",
+		"        ]",
+		"      }",
+		"    )",
+		"",
+		"  template_data: ->",
+		"    data =",
+		"      metrics: [",
+		"        {",
+		"          value: text(total),",
+		"          label: \"tests\"",
+		"        },",
+		"        {",
+		"          value: text(observations),",
+		"          label: \"observations\"",
+		"        }",
+		"      ]",
+		"    data",
+		"",
+	}, "\n")
+	if got != want {
+		t.Fatalf("got:\n%swant:\n%s", got, want)
+	}
+	again, err := unparseSourceWithComments(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again != got {
+		t.Fatalf("not idempotent:\nfirst:\n%s\nsecond:\n%s", got, again)
+	}
+}
+
+func TestUnparseKeepsFinalMultilineStringBlock(t *testing.T) {
+	src := strings.Join([]string{
+		"class Report",
+		"  style_template: ->",
+		"    r\"\"\"",
+		"    body {",
+		"      color: #1f2937;",
+		"    }",
+		"    \"\"\"",
+		"",
+	}, "\n")
+	got, err := unparseSourceWithComments(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := strings.Join([]string{
+		"class Report",
+		"  style_template: ->",
+		"    \"\"\"",
+		"      body {{",
+		"        color: #1f2937;",
+		"      }}",
+		"      \"\"\"",
+		"",
+	}, "\n")
+	if got != want {
+		t.Fatalf("got:\n%swant:\n%s", got, want)
+	}
+}
+
+func TestUnparsePreservesTripleQuotedStringMethodTarget(t *testing.T) {
+	src := strings.Join([]string{
+		"class Application",
+		"  summary_help: ->",
+		"    \"\"\"",
+		"    Usage:",
+		"      flakewatch --junit=PATH [options]",
+		"",
+		"    Options:",
+		"      --junit # JUnit XML glob or file path",
+		"      --output # HTML report output file path",
+		"    \"\"\".trim()",
+		"",
+	}, "\n")
+	got, err := unparseSourceWithComments(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != src {
+		t.Fatalf("got:\n%swant:\n%s", got, src)
 	}
 	again, err := unparseSourceWithComments(t, got)
 	if err != nil {
@@ -363,6 +511,18 @@ func TestUnparseIfElseifElse(t *testing.T) {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in:\n%s", want, got)
 		}
+	}
+}
+
+func TestUnparseNilCoalescingExpression(t *testing.T) {
+	src := "value=nil??\"fallback\"\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "value = nil ?? \"fallback\"\n"
+	if got != want {
+		t.Fatalf("got %q, want %q", got, want)
 	}
 }
 

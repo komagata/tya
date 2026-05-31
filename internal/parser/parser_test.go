@@ -57,6 +57,25 @@ func TestParseNilCoalescingAssignment(t *testing.T) {
 	}
 }
 
+func TestParseNilCoalescingExpression(t *testing.T) {
+	toks, errs := lexer.Lex("value = nil ?? \"fallback\"\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assign := prog.Stmts[0].(*ast.AssignStmt)
+	expr, ok := assign.Values[0].(*ast.BinaryExpr)
+	if !ok {
+		t.Fatalf("got %T", assign.Values[0])
+	}
+	if expr.Op.Type != token.NIL_COALESCE {
+		t.Fatalf("got token %s, want %s", expr.Op.Type, token.NIL_COALESCE)
+	}
+}
+
 func TestParseNilCoalescingAssignmentRejectsMultipleTargets(t *testing.T) {
 	toks, errs := lexer.Lex("a, b ??= pair()\n")
 	if len(errs) != 0 {

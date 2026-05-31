@@ -142,7 +142,7 @@ The token vocabulary includes identifiers, literals, indentation tokens,
 operators, and punctuation.
 
 ```text
-= ??= == != < <= > >= : , . ? ! @ + - * / % ->
+= ?? ??= == != < <= > >= : , . ? ! @ + - * / % ->
 ( ) [ ] { }
 & | ^ ~ << >>
 ```
@@ -323,6 +323,8 @@ The core formatted rules are:
 - function and method bodies that consist of one expression, or one final
   `return` of a single value, are formatted as `-> expr` when the rendered line
   fits within the column limit and no attached comments require a block body;
+- triple-quoted string literals remain triple-quoted and multi-line, including
+  when used as the receiver of a method call such as `"""...""".trim()`;
 - class and interface bodies have exactly one blank line between adjacent
   members, before any leading comments attached to the following member, and no
   extra blank line after the final member;
@@ -863,6 +865,7 @@ make_bad = items ->
 Tya supports arithmetic, comparison, logical, and bitwise operators.
 
 ```text
+??
 or
 and
 not
@@ -878,6 +881,15 @@ Logical operators use words: `and`, `or`, and `not`.
 ```tya
 if ready and not disabled
   print("ok")
+```
+
+The nil-coalescing operator `??` evaluates and returns its left operand when it
+is not `nil`; otherwise it evaluates and returns its right operand. Only `nil`
+falls through. `false`, `0`, `0.0`, `""`, empty arrays, and empty dictionaries
+are preserved.
+
+```tya
+name = maybe_name ?? "anonymous"
 ```
 
 Arithmetic operations require numbers unless a documented primitive method or

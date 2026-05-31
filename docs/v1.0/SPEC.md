@@ -134,7 +134,7 @@ The token vocabulary includes identifiers, literals, indentation tokens,
 operators, and punctuation.
 
 ```text
-= == != < <= > >= : , . ? ! @ + - * / % ->
+= ?? ??= == != < <= > >= : , . ? ! @ + - * / % ->
 ( ) [ ] { }
 & | ^ ~ << >>
 ```
@@ -299,8 +299,13 @@ The core canonical rules are:
 - blank lines are determined by AST shape, not user preference;
 - multi-line calls, arrays, dictionaries, parameter lists, operator chains, and
   long conditions use the formatter-defined continuation forms;
-- long array literal values in assignments and class members use a bracketed
-  block form with one element per line;
+- long array literals in expression statements, returns, assignments, and class
+  members use formatter-defined block forms when their rendered line would
+  exceed the column limit; long call arguments and nested collection values may
+  use multi-line array or dictionary block forms where the grammar accepts
+  them;
+- triple-quoted string literals remain triple-quoted and multi-line, including
+  when used as the receiver of a method call such as `"""...""".trim()`;
 - trailing commas are prohibited in arrays, dictionaries, calls, and parameter
   lists;
 - imports are atomic and not line-wrapped;
@@ -696,6 +701,7 @@ make_bad = items ->
 Tya supports arithmetic, comparison, logical, and bitwise operators.
 
 ```text
+??
 or
 and
 not
@@ -711,6 +717,15 @@ Logical operators use words: `and`, `or`, and `not`.
 ```tya
 if ready and not disabled
   print("ok")
+```
+
+The nil-coalescing operator `??` evaluates and returns its left operand when it
+is not `nil`; otherwise it evaluates and returns its right operand. Only `nil`
+falls through. `false`, `0`, `0.0`, `""`, empty arrays, and empty dictionaries
+are preserved.
+
+```tya
+name = maybe_name ?? "anonymous"
 ```
 
 Arithmetic operations require numbers unless a documented primitive method or
@@ -864,6 +879,18 @@ user["admin"] = true
 Multiple assignment evaluates the right-hand side and binds the corresponding
 left-hand targets. Right-hand expressions are evaluated first, left to right;
 after that, assignment targets are evaluated and assigned left to right.
+
+Nil-coalescing assignment uses `??=` and is available for the same single
+assignment targets as `=`. It reads the target's current value; if that value is
+`nil`, it evaluates the right-hand side and assigns it. If the current value is
+not `nil`, the right-hand side is not evaluated and no assignment happens.
+Only `nil` triggers assignment: unlike Ruby's `||=`, `false`, `0`, `0.0`, `""`,
+empty arrays, and empty dictionaries keep their existing value.
+
+```tya
+value = nil
+value ??= "fallback"
+```
 
 ### If Statements
 

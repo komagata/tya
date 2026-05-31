@@ -1617,7 +1617,7 @@ func (p *Parser) exprWithCommaFunc(allowCommaFunc bool) (ast.Expr, error) {
 		}
 		return p.finishFunc(params, paramToks, defaults)
 	}
-	left, err := p.logicOr()
+	left, err := p.nilCoalesce()
 	if err != nil {
 		return nil, err
 	}
@@ -1833,11 +1833,27 @@ func (p *Parser) functionParam() (token.Token, ast.Expr, error) {
 	if !p.match(token.ASSIGN) {
 		return name, nil, nil
 	}
-	def, err := p.logicOr()
+	def, err := p.nilCoalesce()
 	if err != nil {
 		return token.Token{}, nil, err
 	}
 	return name, def, nil
+}
+
+func (p *Parser) nilCoalesce() (ast.Expr, error) {
+	left, err := p.logicOr()
+	if err != nil {
+		return nil, err
+	}
+	for p.match(token.NIL_COALESCE) {
+		op := p.prev()
+		right, err := p.logicOr()
+		if err != nil {
+			return nil, err
+		}
+		left = &ast.BinaryExpr{Left: left, Op: op, Right: right}
+	}
+	return left, nil
 }
 
 func (p *Parser) logicOr() (ast.Expr, error) {

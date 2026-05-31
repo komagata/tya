@@ -3351,6 +3351,12 @@ func evalBinary(b *ast.BinaryExpr, env *Env) (Value, error) {
 		}
 		return truthy(r), nil
 	}
+	if b.Op.Lexeme == "??" {
+		if l != nil {
+			return l, nil
+		}
+		return evalExpr(b.Right, env)
+	}
 	r, err := evalExpr(b.Right, env)
 	if err != nil {
 		return nil, err

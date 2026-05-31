@@ -1121,6 +1121,10 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 				l.add(token.GTE, two, line, col)
 				i += 2
 				continue
+			case "??":
+				l.add(token.NIL_COALESCE, two, line, col)
+				i += 2
+				continue
 			case "<<":
 				l.add(token.SHL, two, line, col)
 				i += 2

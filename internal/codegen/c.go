@@ -2941,6 +2941,15 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			g.temp++
 			return fmt.Sprintf("({ TyaValue %s = %s; tya_truthy(%s) ? tya_bool(true) : tya_bool(tya_truthy(%s)); })", tmp, left, tmp, right), "TyaValue", nil
 		}
+		if op == "??" {
+			right, _, err := g.expr(n.Right)
+			if err != nil {
+				return "", "", err
+			}
+			tmp := fmt.Sprintf("__nil_coalesce%d", g.temp)
+			g.temp++
+			return fmt.Sprintf("({ TyaValue %s = %s; %s.kind == TYA_NIL ? %s : %s; })", tmp, left, tmp, right, tmp), "TyaValue", nil
+		}
 		right, _, err := g.expr(n.Right)
 		if err != nil {
 			return "", "", err

@@ -462,6 +462,14 @@ func TestEmitCCompilesNilCoalescingAssignment(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesNilCoalescingExpression(t *testing.T) {
+	src := "fail = ->\n  print(\"rhs\")\n  return \"unused\"\nprint(nil ?? \"fallback\")\nprint(\"value\" ?? fail())\nprint(false ?? true)\nprint(0 ?? 1)\nprint((\"\" ?? \"fallback\") == \"\")\nprint(nil ?? nil ?? \"last\")\n"
+	out := compileAndRun(t, src)
+	if string(out) != "fallback\nvalue\nfalse\n0\ntrue\nlast\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCCompilesToStringAndInspectDisplay(t *testing.T) {
 	src := "class User\n  name: nil\n\n  initialize: user_name ->\n    self.name = user_name\n\n  to_string: -> self.name\n\n  inspect: -> \"User(name: {self.name.inspect()})\"\n\nuser = User(\"komagata\")\nprint(user)\nprint(\"{user}\")\nprint(user.inspect())\nprint(inspect(user))\nclass Point\n  x: 0\n  y: \"zero\"\n\npoint = Point()\nprint(point.inspect())\nstruct Pair\n  left\n  right\n\nrecord Spot\n  x\n  y\n\nprint(Pair(\"a\", [\"b\"]))\nprint(\"{Spot(1, \\\"two\\\")}\")\nprint(Spot(1, \"two\").inspect())\nprint(\"raw\".to_string())\nprint(\"raw\".inspect())\n"
 	out := compileAndRun(t, src)

@@ -1285,6 +1285,15 @@ func TestRunNilCoalescingAssignment(t *testing.T) {
 	}
 }
 
+func TestRunNilCoalescingExpression(t *testing.T) {
+	src := "fail = ->\n  print(\"rhs\")\n  return \"unused\"\nprint(nil ?? \"fallback\")\nprint(\"value\" ?? fail())\nprint(false ?? true)\nprint(0 ?? 1)\nprint((\"\" ?? \"fallback\") == \"\")\nprint(nil ?? nil ?? \"last\")\n"
+	out := runEval(t, src)
+	want := "fallback\nvalue\nfalse\n0\ntrue\nlast\n"
+	if out != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestRunToStringAndInspectDisplay(t *testing.T) {
 	src := "class User\n  name: nil\n\n  initialize: user_name ->\n    self.name = user_name\n\n  to_string: -> self.name\n\n  inspect: -> \"User(name: {self.name.inspect()})\"\n\nuser = User(\"komagata\")\nprint(user)\nprint(\"{user}\")\nprint(user.inspect())\nprint(inspect(user))\nclass Point\n  x: 0\n  y: \"zero\"\n\npoint = Point()\nprint(point.inspect())\nstruct Pair\n  left\n  right\n\nrecord Spot\n  x\n  y\n\nprint(Pair(\"a\", [\"b\"]))\nprint(\"{Spot(1, \\\"two\\\")}\")\nprint(Spot(1, \"two\").inspect())\nprint(\"raw\".to_string())\nprint(\"raw\".inspect())\n"
 	out := runEval(t, src)
