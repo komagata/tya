@@ -10,6 +10,23 @@ exec $WORK/basic
 stdout 'komagata\n46\ntrue\ntrue\n1500\nJPY\ntrue\nfalse\n'
 ! stderr .
 
+exec go run ./cmd/tya run $WORK/wide_record.tya
+stdout '__data_type,__record,a,b,c,d,e,f,g,h'
+stdout '7'
+stdout '8'
+stdout '7'
+stdout '8'
+! stderr .
+
+exec go run ./cmd/tya build $WORK/wide_record.tya -o $WORK/wide_record
+exec $WORK/wide_record
+stdout '__data_type,__record,a,b,c,d,e,f,g,h'
+stdout '7'
+stdout '8'
+stdout '7'
+stdout '8'
+! stderr .
+
 ! exec go run ./cmd/tya check $WORK/missing_required.tya
 stderr 'missing required argument name'
 
@@ -68,6 +85,25 @@ print(next.amount)
 print(next.currency)
 print(Money(1200).with(**{ "amount": 1500 }) == next)
 print(Point(1, 2) == Pair(1, 2))
+
+-- wide_record.tya --
+record Row
+  a
+  b
+  c
+  d
+  e
+  f
+  g
+  h
+
+row = Row(1, 2, 3, 4, 5, 6, 7, 8)
+fields = serialization_public_fields(row)
+print(fields.keys().join(","))
+print(row.g)
+print(row.h)
+print(fields["g"])
+print(fields["h"])
 
 -- missing_required.tya --
 struct User

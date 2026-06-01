@@ -142,7 +142,7 @@ type CoverageRegistry struct {
 // Returns (csource, registry, diags, err). diags is nil on success,
 // or the same payload as err.(*CodegenError).Diags on failure.
 func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOptions) (string, *CoverageRegistry, []diag.Diagnostic, error) {
-	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, funcParams: map[string][]string{}, classes: map[string]string{}, classParams: map[string][]string{}, classMethods: map[string]string{}, methodParams: map[string][]string{}, classDecls: map[string]*ast.ClassDecl{}, structDecls: map[string]*ast.StructDecl{}, interfaceDecls: map[string]*ast.InterfaceDecl{}, moduleClasses: map[string]string{}, sourcePath: sourcePath}
+	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, funcParams: map[string][]string{}, classes: map[string]string{}, classParams: map[string][]string{}, classMethods: map[string]string{}, methodParams: map[string][]string{}, classDecls: map[string]*ast.ClassDecl{}, structDecls: map[string]*ast.StructDecl{}, structWithSyms: map[string]string{}, interfaceDecls: map[string]*ast.InterfaceDecl{}, moduleClasses: map[string]string{}, sourcePath: sourcePath}
 	if opt != nil {
 		g.coverEnabled = true
 		g.coverOpt = opt
@@ -253,6 +253,7 @@ type cgen struct {
 	methodParams   map[string][]string
 	classDecls     map[string]*ast.ClassDecl
 	structDecls    map[string]*ast.StructDecl
+	structWithSyms map[string]string
 	interfaceDecls map[string]*ast.InterfaceDecl
 	// moduleClasses maps a module-class key ("module_ClassName") to
 	// its module name. Populated for every v0.44 module class so the
@@ -705,6 +706,7 @@ func (g *cgen) assignStructDecl(name string, decl *ast.StructDecl) error {
 	if decl.Record {
 		withSym = cFuncName(name+"_record_with", g.temp)
 		g.temp++
+		g.structWithSyms[name] = withSym
 		var with strings.Builder
 		with.WriteString("TyaValue ")
 		with.WriteString(withSym)
@@ -736,7 +738,7 @@ func (g *cgen) assignStructDecl(name string, decl *ast.StructDecl) error {
 	out.WriteString("TyaValue ")
 	out.WriteString(sym)
 	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3, TyaValue __arg4, TyaValue __arg5) {\n")
-	child := &cgen{vars: map[string]bool{}, funcs: g.funcs, funcParams: g.funcParams, classes: g.classes, classParams: g.classParams, classMethods: g.classMethods, methodParams: g.methodParams, classDecls: g.classDecls, structDecls: g.structDecls, interfaceDecls: g.interfaceDecls, moduleClasses: g.moduleClasses, sourcePath: g.sourcePath, temp: g.temp, indent: 1, inFunc: true}
+	child := &cgen{vars: map[string]bool{}, funcs: g.funcs, funcParams: g.funcParams, classes: g.classes, classParams: g.classParams, classMethods: g.classMethods, methodParams: g.methodParams, classDecls: g.classDecls, structDecls: g.structDecls, structWithSyms: g.structWithSyms, interfaceDecls: g.interfaceDecls, moduleClasses: g.moduleClasses, sourcePath: g.sourcePath, temp: g.temp, indent: 1, inFunc: true}
 	child.line("(void)__this;")
 	child.line("TyaValue __obj = tya_object();")
 	child.line(fmt.Sprintf("tya_set_member(__obj, \"__data_type\", tya_string(%s));", strconv.Quote(name)))
@@ -780,6 +782,58 @@ func (g *cgen) assignStructDecl(name string, decl *ast.StructDecl) error {
 	g.classParams[name] = params
 	_ = required
 	return nil
+}
+
+func (g *cgen) structConstructorExpr(name string, decl *ast.StructDecl, call *ast.CallExpr) (string, error) {
+	args, err := g.callArgExprs(call, structFieldNames(decl))
+	if err != nil {
+		return "", err
+	}
+	if len(args) > len(decl.Fields) {
+		return "", fmt.Errorf("too many positional arguments")
+	}
+	for len(args) < len(decl.Fields) {
+		args = append(args, "tya_missing()")
+	}
+	obj := fmt.Sprintf("__struct%d", g.temp)
+	g.temp++
+	lines := []string{
+		fmt.Sprintf("TyaValue %s = tya_object();", obj),
+		fmt.Sprintf("tya_set_member(%s, \"__data_type\", tya_string(%s));", obj, strconv.Quote(name)),
+	}
+	if decl.Record {
+		lines = append(lines, fmt.Sprintf("tya_set_member(%s, \"__record\", tya_bool(true));", obj))
+	} else {
+		lines = append(lines, fmt.Sprintf("tya_set_member(%s, \"__struct\", tya_bool(true));", obj))
+	}
+	for i, field := range decl.Fields {
+		arg := fmt.Sprintf("__field%d_%d", g.temp, i)
+		lines = append(lines, fmt.Sprintf("TyaValue %s = %s;", arg, args[i]))
+		if field.HasDefault {
+			def, _, err := g.expr(field.Value)
+			if err != nil {
+				return "", err
+			}
+			lines = append(lines, fmt.Sprintf("if (%s.kind == TYA_MISSING) { %s = %s; }", arg, arg, def))
+		} else {
+			lines = append(lines, fmt.Sprintf("if (%s.kind == TYA_MISSING) { tya_panic(tya_string(%s)); }", arg, strconv.Quote("missing required argument "+field.Name)))
+		}
+		lines = append(lines, fmt.Sprintf("tya_set_member(%s, %s, %s);", obj, strconv.Quote(field.Name), arg))
+	}
+	if decl.Record {
+		if withSym := g.structWithSyms[name]; withSym != "" {
+			lines = append(lines, fmt.Sprintf("tya_set_member(%s, \"with\", tya_bind_method_params(%s, %s, %s));", obj, obj, withSym, cParamArray(structFieldNames(decl))))
+		}
+	}
+	return fmt.Sprintf("({ %s %s; })", strings.Join(lines, " "), obj), nil
+}
+
+func structFieldNames(decl *ast.StructDecl) []string {
+	names := make([]string, len(decl.Fields))
+	for i, field := range decl.Fields {
+		names[i] = field.Name
+	}
+	return names
 }
 
 func (g *cgen) sourceLine(line int) {
@@ -1371,6 +1425,7 @@ func (g *cgen) emitFuncWithCaptures(name string, fn *ast.FuncLit, classRef strin
 		methodParams:      g.methodParams,
 		classDecls:        g.classDecls,
 		structDecls:       g.structDecls,
+		structWithSyms:    g.structWithSyms,
 		interfaceDecls:    g.interfaceDecls,
 		moduleClasses:     g.moduleClasses,
 		sourcePath:        g.sourcePath,
@@ -3114,6 +3169,10 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 					args = append(args, "tya_missing()")
 				}
 				return fmt.Sprintf("%s(tya_nil(), %s)", sym, strings.Join(args[:6], ", ")), "TyaValue", nil
+			}
+			if decl, found := g.structDecls[id.Name]; found {
+				ex, err := g.structConstructorExpr(id.Name, decl, n)
+				return ex, "TyaValue", err
 			}
 		}
 		if ok && id.Name == "len" && len(n.Args) == 1 {
