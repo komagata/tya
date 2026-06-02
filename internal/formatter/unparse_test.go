@@ -783,6 +783,50 @@ func TestUnparseWrapsLongDictToBlock(t *testing.T) {
 	}
 }
 
+func TestUnparseShortArrayBlockAssignmentToBrackets(t *testing.T) {
+	src := strings.Join([]string{
+		"items =",
+		"  \"aaa\"",
+		"  \"bbb\"",
+		"  \"ccc\"",
+		"",
+	}, "\n")
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "items = [\"aaa\", \"bbb\", \"ccc\"]\n"
+	if got != want {
+		t.Fatalf("got:\n%swant:\n%s", got, want)
+	}
+}
+
+func TestUnparseWrapsLongArrayAssignmentToBlock(t *testing.T) {
+	src := "items = [\"alpha-alpha-alpha\", \"bravo-bravo-bravo\", \"charlie-charlie-charlie\", \"delta-delta-delta\"]\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"items =",
+		"  \"alpha-alpha-alpha\"",
+		"  \"bravo-bravo-bravo\"",
+		"  \"charlie-charlie-charlie\"",
+		"  \"delta-delta-delta\"",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in:\n%s", want, got)
+		}
+	}
+	second, err := unparseSource(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != second {
+		t.Errorf("not idempotent\nfirst:\n%s\nsecond:\n%s", got, second)
+	}
+}
+
 func TestUnparseWrapsBinaryChain(t *testing.T) {
 	src := "total = first_part_value + second_part_value + third_part_value + fourth_part_value\n"
 	got, err := unparseSource(t, src)
@@ -925,7 +969,7 @@ func TestUnparseWrapsLongArray(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"items = [\n  first_item_name,\n", "  fifth_item_name\n]\n"} {
+	for _, want := range []string{"items =\n", "  first_item_name\n", "  fifth_item_name\n"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in:\n%s", want, got)
 		}

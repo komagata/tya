@@ -935,6 +935,17 @@ items.push("c")
 print(items[0])
 ```
 
+Array assignment blocks are accepted when `=` is followed by an indented list
+of element expressions. The block is equivalent to a bracket array literal.
+Use `[]` for an empty array.
+
+```tya
+items =
+  "a"
+  "b"
+  "c"
+```
+
 Dictionaries use brace literals. Identifier keys and string-literal keys in
 dictionary literals are stored as string keys. String-literal keys support
 JSON-style names such as `"Content-Type"`, `"$schema"`, `"1"`, and `""`.
@@ -947,8 +958,10 @@ print(user["name"])
 user["admin"] = true
 ```
 
-Dictionary block forms and empty collection forms are canonicalized by the
-formatter.
+Array and dictionary block forms and empty collection forms are canonicalized
+by the formatter. Assigned arrays format in bracket style when they fit within
+80 characters, and in assignment block style when bracket style would exceed
+80 characters.
 
 Dictionary keys are read and written with string indexes. Dot access on
 dictionaries is reserved for documented dictionary receiver methods such as

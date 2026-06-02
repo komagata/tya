@@ -1515,11 +1515,17 @@ func (p *Parser) valuesAfterAssign() ([]ast.Expr, error) {
 	if p.at(token.NEWLINE) && p.peekN(1).Type == token.INDENT {
 		p.next()
 		p.next()
-		obj, err := p.dictBody()
+		var value ast.Expr
+		var err error
+		if p.dictLiteralKeyAhead() {
+			value, err = p.dictBody()
+		} else {
+			value, err = p.arrayBody()
+		}
 		if err != nil {
 			return nil, err
 		}
-		return []ast.Expr{obj}, nil
+		return []ast.Expr{value}, nil
 	}
 	return p.exprListLine()
 }
@@ -1568,6 +1574,32 @@ func (p *Parser) dictBody() (*ast.DictLit, error) {
 		return nil, p.err("expected dedent after dictionary")
 	}
 	return dict, nil
+}
+
+func (p *Parser) arrayBody() (*ast.ArrayLit, error) {
+	arr := &ast.ArrayLit{}
+	p.skipNewlines()
+	for !p.at(token.DEDENT) && !p.at(token.EOF) {
+		if p.dictLiteralKeyAhead() {
+			return nil, p.err("cannot mix array elements and dictionary entries in one block")
+		}
+		elem, err := p.exprLine()
+		if err != nil {
+			return nil, err
+		}
+		arr.Elems = append(arr.Elems, elem)
+		if !p.at(token.NEWLINE) && !p.at(token.DEDENT) && !p.at(token.EOF) {
+			return nil, p.err("expected newline after array element")
+		}
+		p.skipNewlines()
+	}
+	if !p.match(token.DEDENT) {
+		return nil, p.err("expected dedent after array")
+	}
+	if len(arr.Elems) == 0 {
+		return nil, p.err("empty blocks are prohibited")
+	}
+	return arr, nil
 }
 
 func (p *Parser) stmtExprLine() (ast.Expr, error) {

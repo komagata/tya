@@ -1,0 +1,39 @@
+# Bare array block assignment syntax behaves like bracket arrays.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+cd $WORK
+
+exec $WORK/tya check array_block.tya
+exec $WORK/tya run array_block.tya
+stdout 'aaa'
+stdout 'ccc'
+stdout 'inline'
+
+exec $WORK/tya build array_block.tya -o array_block
+exec ./array_block
+stdout 'aaa'
+stdout 'ccc'
+stdout 'inline'
+
+! exec $WORK/tya check mixed_block.tya
+stderr 'cannot mix array elements and dictionary entries'
+
+-- array_block.tya --
+array =
+  "aaa"
+  "bbb"
+  "ccc"
+
+values =
+  { name: "inline" }
+  ["nested"]
+
+print(array[0])
+print(array[2])
+print(values[0]["name"])
+
+-- mixed_block.tya --
+value =
+  "aaa"
+  name: "bbb"

@@ -1072,7 +1072,7 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 			}
 			return u.emitWrappedCall(n, strings.Join(targets, ", ")+" "+op+" ", v)
 		case *ast.ArrayLit:
-			return u.emitWrappedArray(n, strings.Join(targets, ", ")+" "+op+" ", v)
+			return u.emitArrayBlock(n, strings.Join(targets, ", "), v)
 		case *ast.BinaryExpr:
 			return u.emitWrappedBinary(n, strings.Join(targets, ", ")+" "+op+" ", v)
 		case *ast.DictLit:
@@ -1463,6 +1463,22 @@ func (u *unparser) emitDictBlock(stmt ast.Stmt, target string, dict *ast.DictLit
 		}
 		valueLines[0] = p.Name + ": " + valueLines[0]
 		for _, line := range valueLines {
+			u.line(line)
+		}
+	}
+	return nil
+}
+
+func (u *unparser) emitArrayBlock(stmt ast.Stmt, target string, arr *ast.ArrayLit) error {
+	u.line(target + " =")
+	u.indent++
+	defer func() { u.indent-- }()
+	for _, elem := range arr.Elems {
+		elemLines, err := u.exprLinesAt(elem, u.currentIndent())
+		if err != nil {
+			return err
+		}
+		for _, line := range elemLines {
 			u.line(line)
 		}
 	}

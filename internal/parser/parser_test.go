@@ -105,6 +105,45 @@ func TestParseInlineDict(t *testing.T) {
 	}
 }
 
+func TestParseIndentedArrayAssignment(t *testing.T) {
+	toks, errs := lexer.Lex("items =\n  \"aaa\"\n  \"bbb\"\n  \"ccc\"\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assign := prog.Stmts[0].(*ast.AssignStmt)
+	arr, ok := assign.Values[0].(*ast.ArrayLit)
+	if !ok {
+		t.Fatalf("got %T", assign.Values[0])
+	}
+	if len(arr.Elems) != 3 {
+		t.Fatalf("got %d elements", len(arr.Elems))
+	}
+}
+
+func TestParseIndentedArrayAssignmentRejectsEmptyBlock(t *testing.T) {
+	toks, errs := lexer.Lex("items =\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	if _, _, err := Parse(toks); err == nil {
+		t.Fatal("expected parse error")
+	}
+}
+
+func TestParseIndentedArrayAssignmentRejectsMixedDictEntries(t *testing.T) {
+	toks, errs := lexer.Lex("items =\n  \"aaa\"\n  name: \"bbb\"\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	if _, _, err := Parse(toks); err == nil || !strings.Contains(err.Error(), "cannot mix array elements and dictionary entries") {
+		t.Fatalf("got error %v", err)
+	}
+}
+
 func TestParseDictionaryStringKeys(t *testing.T) {
 	tests := []string{
 		"headers = { \"Content-Type\": \"text/plain\", \"$schema\": \"x\", \"\": \"empty\" }\n",
