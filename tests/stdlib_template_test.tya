@@ -1,6 +1,14 @@
 import unittest/* as *
 import template
 
+record TemplateTestRow
+  name
+
+  count
+
+class TemplateTestPresenter
+  label: -> "<Tya>"
+
 class StdlibTemplateTest extends TestCase
 
   test_render_variable: ->
@@ -67,3 +75,35 @@ class StdlibTemplateTest extends TestCase
     got = template.Template(path).render_file({ name: "Tya" })
     file_remove(path)
     self.assert_equal("File Tya", got, "file")
+
+  test_render_file_loads_partials_from_template_directory: ->
+    ob = chr(123) + chr(123)
+    cb = chr(125) + chr(125)
+    page = "template_page_test.html"
+    row = "template_row_test.html"
+    write_file(page, ob + " partial \"" + row + "\" user " + cb)
+    write_file(row, "<li>" + ob + " name " + cb + "</li>")
+    got = template.Template(page).render_file({ user: { name: "Tya" } })
+    file_remove(page)
+    file_remove(row)
+    assert_equal("<li>Tya</li>", got, "file partial")
+
+  test_record_field_paths: ->
+    ob = chr(123) + chr(123)
+    cb = chr(125) + chr(125)
+    page = "template_record_test.html"
+    write_file(page, ob + " row.name " + cb + " " + ob + " row.count " + cb)
+    got = template
+      .Template(page)
+      .render_file({ row: TemplateTestRow("test", 3) })
+    file_remove(page)
+    assert_equal("test 3", got, "record field")
+
+  test_zero_argument_method_calls: ->
+    ob = chr(123) + chr(123)
+    cb = chr(125) + chr(125)
+    page = "template_method_test.html"
+    write_file(page, ob + " row.label() " + cb)
+    got = template.Template(page).render_file({ row: TemplateTestPresenter() })
+    file_remove(page)
+    assert_equal("<Tya>", got, "method call")

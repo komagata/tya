@@ -52,16 +52,14 @@ class Template
         out = out + "&amp;"
       elseif c == "<"
         out = out + "&lt;"
+      elseif c == ">"
+        out = out + "&gt;"
+      elseif c == "\""
+        out = out + "&quot;"
+      elseif c == "'"
+        out = out + "&#39;"
       else
-        if c == ">"
-          out = out + "&gt;"
-        elseif c == "\""
-          out = out + "&quot;"
-        else
-          if c == "'"
-            out = out + "&#39;"
-          else
-            out = out + c
+        out = out + c
       i = i + 1
     out
 
@@ -79,7 +77,11 @@ class Template
       open = Template(nil).find_next_tag(source_arg, pos)
       if open < 0
         raise error("template.render: missing end")
-      close = Template(nil).find_close(source_arg, open + 2, Template(nil).close())
+      close = Template(nil).find_close(
+        source_arg,
+        open + 2,
+        Template(nil).close()
+      )
       tag = source_arg.slice(open + 2, close).trim()
       if (
         Template(nil).starts_text(tag, "if ") or Template(nil).starts_text(tag, "for ")
@@ -89,10 +91,9 @@ class Template
         if depth == 0
           return { else: else_pos, else_end: else_end, end: open, end_end: close + 2 }
         depth = depth - 1
-      else
-        if tag == "else" and depth == 0
-          else_pos = open
-          else_end = close + 2
+      elseif tag == "else" and depth == 0
+        else_pos = open
+        else_end = close + 2
       pos = close + 2
     raise error("template.render: missing end")
 
@@ -109,6 +110,17 @@ class Template
       i = i + 1
     -1
 
+  # Template.dirname returns the directory portion of a path.
+  # @param path String path value.
+  # @return String directory path.
+  dirname: path ->
+    i = path.byte_len() - 1
+    while i >= 0
+      if path[i] == "/"
+        return path.slice(0, i)
+      i = i - 1
+    "."
+
   # Template.find_next_tag provides the template/Template standard library operation.
   # @param source_arg String source_arg value.
   # @param start Int start value.
@@ -122,6 +134,11 @@ class Template
         return i
       i = i + 1
     -1
+
+  # Template.is_call returns whether text is a zero-argument call segment.
+  # @param text String text value.
+  # @return Boolean whether text ends with ().
+  is_call: text -> text.byte_len() > 2 and text.ends_with("()")
 
   # Template.is_number provides the template/Template standard library operation.
   # @param text String text value.
@@ -171,10 +188,28 @@ class Template
       key = parts[i]
       if key == ""
         return { ok: true, value: value }
-      if Template(nil).is_number(key)
+      if Template(nil).is_call(key)
+        method = key.slice(0, key.len() - 2)
+        if (
+          serialization_kind(value) == "object" and serialization_has_member(value, method)
+        )
+          value = value[method]()
+        else
+          if Template(nil).strict(options)
+            raise error("template.render: missing " + p)
+          return { ok: false, value: "" }
+      elseif Template(nil).is_number(key)
         value = value[key.to_i()]
-      elseif value.has(key)
+      elseif serialization_kind(value) == "dict" and value.has(key)
         value = value[key]
+      elseif serialization_kind(value) == "object"
+        fields = serialization_public_fields(value)
+        if fields.has(key)
+          value = fields[key]
+        else
+          if Template(nil).strict(options)
+            raise error("template.render: missing " + p)
+          return { ok: false, value: "" }
       else
         if Template(nil).strict(options)
           raise error("template.render: missing " + p)
@@ -266,13 +301,13 @@ class Template
   # @param options Dict options value.
   # @return Any the resulting value.
   render: source_arg, data = nil, options = nil ->
-    if self.source != nil and data != nil and data.class == Dict
+    if source != nil and data != nil and data.class == Dict
       options = data
       data = source_arg
-      source_arg = self.source
+      source_arg = source
     if data == nil
       data = source_arg
-      source_arg = self.source
+      source_arg = source
     if options == nil
       options = {}
     Template(nil).render_with_options(source_arg, data, options)
@@ -284,15 +319,17 @@ class Template
   # @param options Dict options value.
   # @return Any the resulting value.
   render_file: path, data = nil, options = nil ->
-    if self.source != nil and data != nil and data.class == Dict
+    if source != nil and data != nil and data.class == Dict
       options = data
       data = path
-      path = self.source
+      path = source
     if data == nil
       data = path
-      path = self.source
+      path = source
     if options == nil
       options = {}
+    if not options.has("partial_dir")
+      options["partial_dir"] = dirname(path)
     Template(nil).render_with_options(read_file(path), data, options)
 
   # Template.render_for provides the template/Template standard library operation.
@@ -328,7 +365,7 @@ class Template
   render_html: source_arg, data = nil ->
     if data == nil
       data = source_arg
-      source_arg = self.source
+      source_arg = source
     Template(nil).render_with_options(source_arg, data, { escape: "html" })
 
   # Template.render_if provides the template/Template standard library operation.
@@ -347,10 +384,25 @@ class Template
     state["pos"] = split["end_end"]
     if split["else"] >= 0
       if truth
-        return Template(nil).render_range(state["source"], then_start, split["else"], env)
-      return Template(nil).render_range(state["source"], split["else_end"], split["end"], env)
+        return Template(nil).render_range(
+          state["source"],
+          then_start,
+          split["else"],
+          env
+        )
+      return Template(nil).render_range(
+        state["source"],
+        split["else_end"],
+        split["end"],
+        env
+      )
     if truth
-      return Template(nil).render_range(state["source"], then_start, split["end"], env)
+      return Template(nil).render_range(
+        state["source"],
+        then_start,
+        split["end"],
+        env
+      )
     ""
 
   # Template.render_partial provides the template/Template standard library operation.
@@ -370,11 +422,13 @@ class Template
       raise error("template.render: invalid partial")
     ctx_path = rest.slice(i + 1, rest.len()).trim()
     options = env["options"]
-    if not options.has("partials")
+    source_arg = ""
+    if options.has("partials") and options["partials"].has(name)
+      source_arg = options["partials"][name]
+    elseif options.has("partial_dir")
+      source_arg = read_file(options["partial_dir"] + "/" + name)
+    else
       raise error("template.render: missing partials")
-    partials = options["partials"]
-    if not partials.has(name)
-      raise error("template.render: missing partial " + name)
     ctx = env["data"]
     if ctx_path != ""
       found = Template(nil).lookup(ctx_path, env)
@@ -382,7 +436,7 @@ class Template
         ctx = found["value"]
       else
         ctx = {}
-    Template(nil).render_with_options(partials[name], ctx, options)
+    Template(nil).render_with_options(source_arg, ctx, options)
 
   # Template.render_range provides the template/Template standard library operation.
   # @param source String source value.
@@ -423,13 +477,12 @@ class Template
           out = out + Template(nil).render_if(state, tag, env)
         elseif Template(nil).starts_text(tag, "for ")
           out = out + Template(nil).render_for(state, tag, env)
+        elseif Template(nil).starts_text(tag, "partial ")
+          out = out + Template(nil).render_partial(tag, env)
+        elseif tag == "else" or tag == "end"
+          raise error(Template(nil).error(state, "unexpected " + tag))
         else
-          if Template(nil).starts_text(tag, "partial ")
-            out = out + Template(nil).render_partial(tag, env)
-          elseif tag == "else" or tag == "end"
-            raise error(Template(nil).error(state, "unexpected " + tag))
-          else
-            out = out + Template(nil).render_value(tag, env, true)
+          out = out + Template(nil).render_value(tag, env, true)
       else
         out = out + src[state["pos"]]
         state["pos"] = state["pos"] + 1

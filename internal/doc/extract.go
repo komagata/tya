@@ -451,12 +451,16 @@ func buildModuleIndex(paths []string) map[string]string {
 		parts := strings.Split(noExt, "/")
 		for i := 0; i < len(parts); i++ {
 			name := strings.Join(parts[i:], "/")
-			if _, exists := index[name]; !exists {
+			if existing, exists := index[name]; !exists || pathDepth(p) < pathDepth(existing) {
 				index[name] = p
 			}
 		}
 	}
 	return index
+}
+
+func pathDepth(path string) int {
+	return len(strings.Split(filepath.ToSlash(path), "/"))
 }
 
 func duplicateDiagnostics(items []DocItem) []Diagnostic {
