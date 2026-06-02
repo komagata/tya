@@ -1,0 +1,71 @@
+# Bare dictionary blocks in value-producing contexts.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+cd $WORK
+
+exec $WORK/tya check bare_dict.tya
+exec $WORK/tya run bare_dict.tya
+stdout 'aaa'
+stdout 'komagata'
+stdout 'Tokyo'
+stdout 'instance'
+stdout 'static'
+stdout 'Home:aaa'
+
+exec $WORK/tya build bare_dict.tya -o bare_dict
+exec ./bare_dict
+stdout 'aaa'
+stdout 'komagata'
+stdout 'Tokyo'
+stdout 'instance'
+stdout 'static'
+stdout 'Home:aaa'
+
+! exec $WORK/tya check duplicate_key.tya
+stderr 'duplicate dictionary key name'
+
+! exec $WORK/tya check array_bare_dict.tya
+stderr 'expected .\].'
+
+-- bare_dict.tya --
+summary = ->
+  aaa: "aaa"
+  bbb: "bbb"
+
+user =
+  name: "komagata"
+  profile:
+    github: "komagata"
+    location: "Tokyo"
+
+class Reporter
+  label: ->
+    value: "instance"
+
+  static label: ->
+    value: "static"
+
+render = title, user ->
+  print("{title}:{user}")
+  nil
+
+print(summary()["aaa"])
+print(user["profile"]["github"])
+print(user["profile"]["location"])
+print(Reporter().label()["value"])
+print(Reporter.label()["value"])
+render
+  title: "Home"
+  user: "aaa"
+
+-- duplicate_key.tya --
+summary = ->
+  name: "aaa"
+  "name": "bbb"
+
+-- array_bare_dict.tya --
+users = [
+  name: "Alice"
+  age: 20
+]

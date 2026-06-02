@@ -169,6 +169,82 @@ func TestParseDictionaryStringKeys(t *testing.T) {
 	}
 }
 
+func TestParseNestedIndentedDictionaryAssignment(t *testing.T) {
+	toks, errs := lexer.Lex("user =\n  name: \"komagata\"\n  profile:\n    github: \"komagata\"\n    location: \"Tokyo\"\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assign := prog.Stmts[0].(*ast.AssignStmt)
+	obj := assign.Values[0].(*ast.DictLit)
+	if len(obj.Props) != 2 {
+		t.Fatalf("got %d props", len(obj.Props))
+	}
+	nested, ok := obj.Props[1].Value.(*ast.DictLit)
+	if !ok {
+		t.Fatalf("got nested %T", obj.Props[1].Value)
+	}
+	if len(nested.Props) != 2 {
+		t.Fatalf("got %d nested props", len(nested.Props))
+	}
+}
+
+func TestParseBareDictionaryFunctionReturn(t *testing.T) {
+	toks, errs := lexer.Lex("summary = ->\n  aaa: \"aaa\"\n  bbb: \"bbb\"\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assign := prog.Stmts[0].(*ast.AssignStmt)
+	fn := assign.Values[0].(*ast.FuncLit)
+	if len(fn.Body) != 1 {
+		t.Fatalf("got %d body statements", len(fn.Body))
+	}
+	expr := fn.Body[0].(*ast.ExprStmt)
+	dict, ok := expr.Expr.(*ast.DictLit)
+	if !ok {
+		t.Fatalf("got %T", expr.Expr)
+	}
+	if len(dict.Props) != 2 {
+		t.Fatalf("got %d props", len(dict.Props))
+	}
+}
+
+func TestParseIndentedKeywordArgumentCall(t *testing.T) {
+	toks, errs := lexer.Lex("render\n  title: \"Home\"\n  user: \"aaa\"\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stmt := prog.Stmts[0].(*ast.ExprStmt)
+	call, ok := stmt.Expr.(*ast.CallExpr)
+	if !ok {
+		t.Fatalf("got %T", stmt.Expr)
+	}
+	if len(call.CallArgs) != 2 || call.CallArgs[0].Name != "title" || call.CallArgs[1].Name != "user" {
+		t.Fatalf("got call args %#v", call.CallArgs)
+	}
+}
+
+func TestParseRejectsBraceLessDictionaryArrayElement(t *testing.T) {
+	toks, errs := lexer.Lex("users = [\n  name: \"Alice\"\n  age: 20\n]\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	if _, _, err := Parse(toks); err == nil {
+		t.Fatal("expected parse error")
+	}
+}
+
 func TestParseFunctionDefaultParameters(t *testing.T) {
 	toks, errs := lexer.Lex("greet = name, suffix = \"!\" -> name + suffix\n")
 	if len(errs) != 0 {

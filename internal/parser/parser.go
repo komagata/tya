@@ -1547,6 +1547,17 @@ func (p *Parser) exprListLine() ([]ast.Expr, error) {
 }
 
 func (p *Parser) dictBody() (*ast.DictLit, error) {
+	dict, err := p.dictEntriesUntilDedent()
+	if err != nil {
+		return nil, err
+	}
+	if !p.match(token.DEDENT) {
+		return nil, p.err("expected dedent after dictionary")
+	}
+	return dict, nil
+}
+
+func (p *Parser) dictEntriesUntilDedent() (*ast.DictLit, error) {
 	dict := &ast.DictLit{}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
@@ -1559,7 +1570,11 @@ func (p *Parser) dictBody() (*ast.DictLit, error) {
 		}
 		var val ast.Expr
 		var err error
-		if p.match(token.ARROW) {
+		if p.at(token.NEWLINE) && p.peekN(1).Type == token.INDENT {
+			p.next()
+			p.next()
+			val, err = p.dictBody()
+		} else if p.match(token.ARROW) {
 			val, err = p.finishFunc(nil, nil, nil)
 		} else {
 			val, err = p.exprLine()
@@ -1569,9 +1584,6 @@ func (p *Parser) dictBody() (*ast.DictLit, error) {
 		}
 		dict.Props = append(dict.Props, ast.DictProp{Name: name.Lexeme, Tok: name, Value: val})
 		p.skipNewlines()
-	}
-	if !p.match(token.DEDENT) {
-		return nil, p.err("expected dedent after dictionary")
 	}
 	return dict, nil
 }
@@ -2154,6 +2166,16 @@ func (p *Parser) call() (ast.Expr, error) {
 			ex = &ast.CallExpr{Callee: ex, Args: args, CallArgs: callArgs}
 			continue
 		}
+		if p.at(token.NEWLINE) && p.peekN(1).Type == token.INDENT && p.peekN(2).Type == token.IDENT && p.peekN(3).Type == token.COLON {
+			p.next()
+			p.next()
+			args, callArgs, err := p.keywordArgBlock()
+			if err != nil {
+				return nil, err
+			}
+			ex = &ast.CallExpr{Callee: ex, Args: args, CallArgs: callArgs}
+			continue
+		}
 		if p.match(token.LBRACKET) {
 			index, err := p.expr()
 			if err != nil {
@@ -2177,6 +2199,33 @@ func (p *Parser) call() (ast.Expr, error) {
 		p.continuedLine = true
 	}
 	return ex, nil
+}
+
+func (p *Parser) keywordArgBlock() ([]ast.Expr, []ast.CallArg, error) {
+	var args []ast.Expr
+	var callArgs []ast.CallArg
+	p.skipNewlines()
+	for !p.at(token.DEDENT) && !p.at(token.EOF) {
+		if !p.at(token.IDENT) || p.peekN(1).Type != token.COLON {
+			return nil, nil, p.err("expected keyword argument")
+		}
+		name := p.next()
+		p.next()
+		arg, err := p.exprLine()
+		if err != nil {
+			return nil, nil, err
+		}
+		args = append(args, arg)
+		callArgs = append(callArgs, ast.CallArg{Name: name.Lexeme, NameTok: name, Value: arg})
+		if !p.at(token.NEWLINE) && !p.at(token.DEDENT) && !p.at(token.EOF) {
+			return nil, nil, p.err("expected newline after keyword argument")
+		}
+		p.skipNewlines()
+	}
+	if !p.match(token.DEDENT) {
+		return nil, nil, p.err("expected dedent after keyword arguments")
+	}
+	return args, callArgs, nil
 }
 
 func (p *Parser) primary() (ast.Expr, error) {
@@ -2353,6 +2402,14 @@ func (p *Parser) finishFunc(params []string, paramToks []token.Token, defaults [
 		var body []ast.Stmt
 		p.skipNewlines()
 		for !p.at(token.DEDENT) && !p.at(token.EOF) {
+			if p.dictLiteralKeyAhead() {
+				dict, err := p.dictEntriesUntilDedent()
+				if err != nil {
+					return nil, err
+				}
+				body = append(body, &ast.ExprStmt{Expr: dict})
+				break
+			}
 			s, err := p.stmt()
 			if err != nil {
 				return nil, err

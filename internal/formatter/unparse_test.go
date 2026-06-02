@@ -783,6 +783,84 @@ func TestUnparseWrapsLongDictToBlock(t *testing.T) {
 	}
 }
 
+func TestUnparseShortBareDictFunctionReturnToBraces(t *testing.T) {
+	src := strings.Join([]string{
+		"summary = ->",
+		"  aaa: \"aaa\"",
+		"  bbb: \"bbb\"",
+		"",
+	}, "\n")
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "summary = -> { aaa: \"aaa\", bbb: \"bbb\" }\n"
+	if got != want {
+		t.Fatalf("got:\n%swant:\n%s", got, want)
+	}
+}
+
+func TestUnparseLongBareDictFunctionReturnStaysBlock(t *testing.T) {
+	src := "summary = -> { alpha_alpha_alpha: \"alpha-alpha-alpha\", bravo_bravo_bravo: \"bravo-bravo-bravo\", charlie_charlie_charlie: \"charlie-charlie-charlie\" }\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"summary = ->",
+		"  alpha_alpha_alpha: \"alpha-alpha-alpha\"",
+		"  bravo_bravo_bravo: \"bravo-bravo-bravo\"",
+		"  charlie_charlie_charlie: \"charlie-charlie-charlie\"",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in:\n%s", want, got)
+		}
+	}
+	second, err := unparseSource(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != second {
+		t.Errorf("not idempotent\nfirst:\n%s\nsecond:\n%s", got, second)
+	}
+}
+
+func TestUnparseNestedDictValueBlock(t *testing.T) {
+	src := "user = { name: \"komagata\", profile: { github_account_name: \"komagata\", location_name: \"Tokyo\", homepage_url: \"https://example.test/komagata\" } }\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"user =",
+		"  name: \"komagata\"",
+		"  profile:",
+		"    github_account_name: \"komagata\"",
+		"    location_name: \"Tokyo\"",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in:\n%s", want, got)
+		}
+	}
+}
+
+func TestUnparseIndentedKeywordArgumentCall(t *testing.T) {
+	src := strings.Join([]string{
+		"render",
+		"  title: \"Home\"",
+		"  user: \"aaa\"",
+		"",
+	}, "\n")
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "render(title: \"Home\", user: \"aaa\")\n"
+	if got != want {
+		t.Fatalf("got:\n%swant:\n%s", got, want)
+	}
+}
+
 func TestUnparseShortArrayBlockAssignmentToBrackets(t *testing.T) {
 	src := strings.Join([]string{
 		"items =",

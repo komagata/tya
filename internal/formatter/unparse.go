@@ -1101,7 +1101,14 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 				}
 				u.line(strings.Join(targets, ", ") + " " + op + " " + defArrow(head))
 				u.indent++
-				u.line(bodyStr)
+				if dict, ok := v.Expr.(*ast.DictLit); ok {
+					if err := u.emitBareDictProps(dict); err != nil {
+						u.indent--
+						return err
+					}
+				} else {
+					u.line(bodyStr)
+				}
 				u.indent--
 				return nil
 			}
@@ -1456,7 +1463,28 @@ func (u *unparser) emitDictBlock(stmt ast.Stmt, target string, dict *ast.DictLit
 	u.line(target + " =")
 	u.indent++
 	defer func() { u.indent-- }()
+	return u.emitBareDictProps(dict)
+}
+
+func (u *unparser) emitBareDictProps(dict *ast.DictLit) error {
 	for _, p := range dict.Props {
+		if nested, ok := p.Value.(*ast.DictLit); ok && len(nested.Props) > 0 {
+			inline, err := u.expr(nested)
+			if err != nil {
+				return err
+			}
+			line := p.Name + ": " + inline
+			if !u.fitsInline(line) {
+				u.line(p.Name + ":")
+				u.indent++
+				if err := u.emitBareDictProps(nested); err != nil {
+					u.indent--
+					return err
+				}
+				u.indent--
+				continue
+			}
+		}
 		valueLines, err := u.exprLinesAt(p.Value, u.currentIndent()+len(p.Name)+len(": "))
 		if err != nil {
 			return err
@@ -1838,6 +1866,19 @@ func (u *unparser) funcBlock(stmts []ast.Stmt) error {
 
 func (u *unparser) funcTailStmt(st ast.Stmt) error {
 	switch n := st.(type) {
+	case *ast.ExprStmt:
+		if dict, ok := n.Expr.(*ast.DictLit); ok {
+			ex, err := u.expr(dict)
+			if err != nil {
+				return err
+			}
+			if u.fitsInline(ex) {
+				u.emitStmtLine(st, ex)
+				return nil
+			}
+			return u.emitBareDictProps(dict)
+		}
+		return u.stmt(st)
 	case *ast.ReturnStmt:
 		if len(n.Values) != 1 {
 			return u.stmt(st)

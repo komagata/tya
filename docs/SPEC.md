@@ -482,6 +482,15 @@ request("https://example.test", timeout: 10)
 request(method: "POST", url: "https://example.test")
 ```
 
+Calls may also use an indented keyword argument block. This is a multi-line
+keyword call, not a dictionary literal.
+
+```tya
+render
+  title: "Home"
+  user: "komagata"
+```
+
 Required parameters may be supplied by keyword. Unknown keywords, duplicate
 keywords, and parameters supplied both positionally and by keyword are invalid.
 Dictionary expansion with `**expr` expands string keys into keyword arguments.
@@ -958,10 +967,33 @@ print(user["name"])
 user["admin"] = true
 ```
 
+Dictionary assignment blocks may contain nested dictionary block values.
+
+```tya
+user =
+  name: "komagata"
+  profile:
+    github: "komagata"
+```
+
+Function and method bodies may return a dictionary by ending with a bare
+dictionary block.
+
+```tya
+summary = ->
+  name: "komagata"
+  active: true
+```
+
 Array and dictionary block forms and empty collection forms are canonicalized
 by the formatter. Assigned arrays format in bracket style when they fit within
 80 characters, and in assignment block style when bracket style would exceed
-80 characters.
+80 characters. Dictionary expressions format in brace style when they fit
+within 80 characters, and in supported block style when brace style would
+exceed 80 characters.
+
+Brace-less dictionary literals are not accepted as array elements or call
+arguments. Use braces for dictionary values in those positions.
 
 Dictionary keys are read and written with string indexes. Dot access on
 dictionaries is reserved for documented dictionary receiver methods such as
