@@ -404,13 +404,4 @@ class Json
   # @param code Int code value.
   # @return Any the resulting value.
   utf8_encode: code ->
-    if code < 128
-      return chr(code)
-    if code < 2048
-      b1 = 192 + code / 64.to_i()
-      b2 = 128 + code % 64
-      return chr(b1) + chr(b2)
-    b1 = 224 + code / 4096.to_i()
-    b2 = 128 + code % 4096 / 64.to_i()
-    b3 = 128 + code % 64
-    chr(b1) + chr(b2) + chr(b3)
+    chr(code)

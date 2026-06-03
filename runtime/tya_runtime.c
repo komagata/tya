@@ -1072,7 +1072,19 @@ static int tya_string_len(const char *text) {
     return last_len;
   }
   int n = 0;
-  while (text[n] != '\0') {
+  for (int i = 0; text[i] != '\0';) {
+    unsigned char c = (unsigned char)text[i];
+    int width = 1;
+    if ((c & 0x80) == 0) {
+      width = 1;
+    } else if ((c & 0xE0) == 0xC0) {
+      width = 2;
+    } else if ((c & 0xF0) == 0xE0) {
+      width = 3;
+    } else if ((c & 0xF8) == 0xF0) {
+      width = 4;
+    }
+    i += width;
     n++;
   }
   last_string = text;
@@ -1199,6 +1211,65 @@ static int tya_utf8_rune_index_at_byte(const char *text, int byte_index) {
     current++;
   }
   return current;
+}
+
+static int tya_utf8_decode_first(const char *text) {
+  if (text == NULL || text[0] == '\0') {
+    return -1;
+  }
+  unsigned char c = (unsigned char)text[0];
+  if ((c & 0x80) == 0) {
+    return (int)c;
+  }
+  int width = 0;
+  int code = 0;
+  if ((c & 0xE0) == 0xC0) {
+    width = 2;
+    code = c & 0x1F;
+  } else if ((c & 0xF0) == 0xE0) {
+    width = 3;
+    code = c & 0x0F;
+  } else if ((c & 0xF8) == 0xF0) {
+    width = 4;
+    code = c & 0x07;
+  } else {
+    return -1;
+  }
+  for (int i = 1; i < width; i++) {
+    unsigned char cc = (unsigned char)text[i];
+    if ((cc & 0xC0) != 0x80) {
+      return -1;
+    }
+    code = (code << 6) | (cc & 0x3F);
+  }
+  return code;
+}
+
+static char *tya_utf8_from_codepoint(int code) {
+  if (code < 0 || code > 0x10FFFF || (code >= 0xD800 && code <= 0xDFFF)) {
+    return NULL;
+  }
+  char *out = malloc(5);
+  if (code <= 0x7F) {
+    out[0] = (char)code;
+    out[1] = '\0';
+  } else if (code <= 0x7FF) {
+    out[0] = (char)(0xC0 | (code >> 6));
+    out[1] = (char)(0x80 | (code & 0x3F));
+    out[2] = '\0';
+  } else if (code <= 0xFFFF) {
+    out[0] = (char)(0xE0 | (code >> 12));
+    out[1] = (char)(0x80 | ((code >> 6) & 0x3F));
+    out[2] = (char)(0x80 | (code & 0x3F));
+    out[3] = '\0';
+  } else {
+    out[0] = (char)(0xF0 | (code >> 18));
+    out[1] = (char)(0x80 | ((code >> 12) & 0x3F));
+    out[2] = (char)(0x80 | ((code >> 6) & 0x3F));
+    out[3] = (char)(0x80 | (code & 0x3F));
+    out[4] = '\0';
+  }
+  return out;
 }
 
 void tya_set_index(TyaValue value, TyaValue index, TyaValue item) {
@@ -1788,7 +1859,12 @@ TyaValue tya_ord(TyaValue text) {
     tya_raise(tya_string("ord: argument must be a non-empty string"));
     return tya_nil();
   }
-  return tya_number((double)((unsigned char)text.string[0]));
+  int code = tya_utf8_decode_first(text.string);
+  if (code < 0) {
+    tya_raise(tya_string("ord: invalid UTF-8"));
+    return tya_nil();
+  }
+  return tya_number((double)code);
 }
 
 TyaValue tya_kind(TyaValue value) {
@@ -1844,13 +1920,11 @@ TyaValue tya_chr(TyaValue code) {
     return tya_nil();
   }
   int v = (int)code.number;
-  if (v < 0 || v > 255) {
-    tya_raise(tya_string("chr: byte value out of range (0..255)"));
+  char *out = tya_utf8_from_codepoint(v);
+  if (out == NULL) {
+    tya_raise(tya_string("chr: code point out of range"));
     return tya_nil();
   }
-  char *out = malloc(2);
-  out[0] = (char)v;
-  out[1] = '\0';
   return tya_string(out);
 }
 

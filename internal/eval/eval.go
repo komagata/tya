@@ -650,7 +650,8 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		if len(s) == 0 {
 			return nil, &raisedSignal{value: "ord: argument must be a non-empty string"}
 		}
-		return int64(s[0]), nil
+		r, _ := utf8.DecodeRuneInString(s)
+		return int64(r), nil
 	}))
 	env.set("chr", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
@@ -660,10 +661,10 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		if !ok {
 			return nil, fmt.Errorf("chr expects int argument")
 		}
-		if v < 0 || v > 255 {
-			return nil, &raisedSignal{value: "chr: byte value out of range (0..255)"}
+		if v < 0 || v > utf8.MaxRune || (v >= 0xD800 && v <= 0xDFFF) {
+			return nil, &raisedSignal{value: "chr: code point out of range"}
 		}
-		return string([]byte{byte(v)}), nil
+		return string(rune(v)), nil
 	}))
 	env.set("byte_len", Builtin(func(args []Value) (Value, error) {
 		text, err := oneString("byte_len", args)
@@ -2139,7 +2140,11 @@ func isStandardDictCall(name string) bool {
 func evalStringModuleCall(name string, args []Value, env *Env) (Value, error) {
 	switch name {
 	case "len":
-		return evalLen("string.len", args, env)
+		text, err := oneString("string.len", args)
+		if err != nil {
+			return nil, err
+		}
+		return int64(len([]rune(text))), nil
 	case "byte_len":
 		text, err := oneString("string.byte_len", args)
 		if err != nil {

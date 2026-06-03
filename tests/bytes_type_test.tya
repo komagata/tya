@@ -26,8 +26,16 @@ class BytesTypeTest extends TestCase
     b = bytes_of("Tya")
     self.assert_equal(3, b.len(), "len 3")
     self.assert_equal(84, b[0], "T")
+  test_bytes_of_unicode_uses_utf8: ->
+    b = bytes_of("日報")
+    self.assert_equal(6, b.len(), "utf8 bytes")
+    self.assert_equal(230, b[0], "first byte")
+    self.assert_equal(151, b[1], "second byte")
+    self.assert_equal(165, b[2], "third byte")
   test_bytes_text: ->
     self.assert_equal("Tya", bytes_text(b"Tya"), "round trip")
+  test_bytes_text_rejects_invalid_utf8: ->
+    self.assert_raises(-> bytes_text(b"\xff"), "invalid UTF-8")
   test_bytes_array: ->
     self.assert_equal([97, 98, 99], bytes_array(b"abc"), "to array")
   test_bytes_from_array: ->

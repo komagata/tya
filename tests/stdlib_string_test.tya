@@ -10,3 +10,30 @@ class StdlibStringTest extends TestCase
     self.assert_equal(false, "tya".blank?(), "blank false")
   test_present_returns_true_for_content: ->
     self.assert_equal(true, "tya".present?(), "present true")
+  test_unicode_len_and_byte_len_are_distinct: ->
+    text = "日報"
+    self.assert_equal(2, text.len(), "rune len")
+    self.assert_equal(2, text.char_len(), "char len alias")
+    self.assert_equal(6, text.byte_len(), "utf8 byte len")
+  test_unicode_index_and_slice_use_characters: ->
+    text = "日報"
+    self.assert_equal("日", text[0], "first rune")
+    self.assert_equal("報", text[1], "second rune")
+    self.assert_equal("日", text.slice(0, 1), "slice rune")
+    self.assert_equal("報", text.slice(1, 2), "slice second rune")
+  test_unicode_iteration_indexes_are_characters: ->
+    chars = []
+    indexes = []
+    for char, index in "日報"
+      chars.push(char)
+      indexes.push(index)
+    self.assert_equal(["日", "報"], chars, "chars")
+    self.assert_equal([0, 1], indexes, "indexes")
+  test_unicode_index_of_uses_characters: ->
+    text = "a日報b"
+    self.assert_equal(1, text.index_of("日"), "index 日")
+    self.assert_equal(2, text.index_of("報"), "index 報")
+    self.assert_equal(3, text.index_of("b", 2), "start index")
+  test_ord_and_chr_use_unicode_code_points: ->
+    self.assert_equal(26085, ord("日"), "ord unicode")
+    self.assert_equal("日", chr(26085), "chr unicode")
