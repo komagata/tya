@@ -975,6 +975,9 @@ void tya_keywords_merge(TyaValue target, TyaValue source) {
 
 TyaValue tya_len(TyaValue value) {
   if (value.kind == TYA_STRING && value.string != NULL) {
+    if (getenv("TYA_LEGACY_MODULES") != NULL) {
+      return tya_number((double)strlen(value.string));
+    }
     return tya_number(tya_string_len(value.string));
   }
   if (value.kind == TYA_ARRAY && value.array != NULL) {
@@ -1009,7 +1012,7 @@ TyaValue tya_index(TyaValue value, TyaValue index) {
   }
   if (value.kind == TYA_STRING && value.string != NULL && i >= 0) {
     if (getenv("TYA_LEGACY_MODULES") != NULL) {
-      int n = tya_string_len(value.string);
+      int n = (int)strlen(value.string);
       if (i >= n) {
         return tya_nil();
       }
