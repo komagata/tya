@@ -46,7 +46,7 @@ class Template
   escape_html: text ->
     out = ""
     i = 0
-    while i < text.byte_len()
+    while i < text.len()
       c = text[i]
       if c == "&"
         out = out + "&amp;"
@@ -72,7 +72,7 @@ class Template
     depth = 0
     else_pos = -1
     else_end = -1
-    n = source_arg.byte_len()
+    n = source_arg.len()
     while pos < n
       open = Template(nil).find_next_tag(source_arg, pos)
       if open < 0
@@ -104,7 +104,7 @@ class Template
   # @return Any the resulting value.
   find_close: source_arg, start, marker ->
     i = start
-    while i + marker.len() <= source_arg.byte_len()
+    while i + marker.len() <= source_arg.len()
       if source_arg.slice(i, i + marker.len()) == marker
         return i
       i = i + 1
@@ -114,7 +114,7 @@ class Template
   # @param path String path value.
   # @return String directory path.
   dirname: path ->
-    i = path.byte_len() - 1
+    i = path.len() - 1
     while i >= 0
       if path[i] == "/"
         return path.slice(0, i)
@@ -127,7 +127,7 @@ class Template
   # @return Any the resulting value.
   find_next_tag: source_arg, start ->
     i = start
-    while i + 1 < source_arg.byte_len()
+    while i + 1 < source_arg.len()
       if (
         source_arg[i] == Template(nil).lbrace() and source_arg[i + 1] == Template(nil).lbrace()
       )
@@ -138,7 +138,7 @@ class Template
   # Template.is_call returns whether text is a zero-argument call segment.
   # @param text String text value.
   # @return Boolean whether text ends with ().
-  is_call: text -> text.byte_len() > 2 and text.ends_with("()")
+  is_call: text -> text.len() > 2 and text.ends_with("()")
 
   # Template.is_number provides the template/Template standard library operation.
   # @param text String text value.
@@ -147,7 +147,7 @@ class Template
     if text == ""
       return false
     i = 0
-    while i < text.byte_len()
+    while i < text.len()
       c = ord(text[i])
       if c < 48 or c > 57
         return false
@@ -238,7 +238,7 @@ class Template
     parts = []
     cur = ""
     i = 0
-    while i < path.byte_len()
+    while i < path.len()
       c = path[i]
       if c == "."
         if cur != ""
@@ -250,7 +250,7 @@ class Template
           cur = ""
         i = i + 1
         idx = ""
-        while i < path.byte_len() and path[i] != "]"
+        while i < path.len() and path[i] != "]"
           idx = idx + path[i]
           i = i + 1
         parts.push(idx)
@@ -411,14 +411,14 @@ class Template
   # @return Any the resulting value.
   render_partial: tag, env ->
     rest = tag.slice(8, tag.len()).trim()
-    if rest.byte_len() < 2 or rest[0] != "\""
+    if rest.len() < 2 or rest[0] != "\""
       raise error("template.render: invalid partial")
     i = 1
     name = ""
-    while i < rest.byte_len() and rest[i] != "\""
+    while i < rest.len() and rest[i] != "\""
       name = name + rest[i]
       i = i + 1
-    if i >= rest.byte_len()
+    if i >= rest.len()
       raise error("template.render: invalid partial")
     ctx_path = rest.slice(i + 1, rest.len()).trim()
     options = env["options"]
@@ -446,7 +446,7 @@ class Template
   # @return Any the resulting value.
   render_range: source_arg, start, finish, env ->
     part = source_arg.slice(start, finish)
-    state = { source: part, pos: 0, len: part.byte_len() }
+    state = { source: part, pos: 0, len: part.len() }
     Template(nil).render_until(state, env, "")
 
   # Template.render_raw_tag provides the template/Template standard library operation.
@@ -512,7 +512,7 @@ class Template
   # @param options Dict options value.
   # @return Dict the resulting value.
   render_with_options: source_arg, data, options ->
-    state = { source: source_arg, pos: 0, len: source_arg.byte_len() }
+    state = { source: source_arg, pos: 0, len: source_arg.len() }
     env = { data: data, locals: {}, options: options }
     Template(nil).render_until(state, env, "")
 
@@ -523,10 +523,10 @@ class Template
   starts: state, text ->
     src = state["source"]
     pos = state["pos"]
-    if pos + text.byte_len() > state["len"]
+    if pos + text.len() > state["len"]
       return false
     i = 0
-    while i < text.byte_len()
+    while i < text.len()
       if src[pos + i] != text[i]
         return false
       i = i + 1
@@ -554,7 +554,7 @@ class Template
   # @param prefix Any prefix value.
   # @return String the resulting value.
   starts_text: text, prefix ->
-    if prefix.len() > text.byte_len()
+    if prefix.len() > text.len()
       return false
     text.slice(0, prefix.len()) == prefix
 

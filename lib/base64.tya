@@ -7,7 +7,7 @@ class Base64
   # @return String the resulting value.
   static decode: text ->
     cleaned = ""
-    n = text.byte_len()
+    n = text.len()
     cr = chr(13)
     i = 0
     while i < n
@@ -15,7 +15,7 @@ class Base64
       if c != " " and c != "\n" and c != cr and c != "\t" and c != "="
         cleaned = cleaned + c
       i = i + 1
-    m = cleaned.byte_len()
+    m = cleaned.len()
     if m % 4 == 1
       raise error("base64.decode: invalid length")
     arr = []

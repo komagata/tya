@@ -14,7 +14,7 @@ class Client
   # @param text String text value.
   # @return Any the resulting value.
   chomp: text ->
-    n = text.byte_len()
+    n = text.len()
     if n > 0 and text[n - 1] == "\n"
       n = n - 1
     if n > 0 and text[n - 1] == chr(13)
@@ -35,7 +35,7 @@ class Client
   hex_to_i: text ->
     value = 0
     i = 0
-    while i < text.byte_len()
+    while i < text.len()
       c = ord(text[i])
       digit = -1
       if c >= 48 and c <= 57
@@ -67,8 +67,8 @@ class Client
   # @return Any the resulting value.
   index_of: text, needle, start ->
     i = start
-    n = text.byte_len()
-    m = needle.byte_len()
+    n = text.len()
+    m = needle.len()
     while i + m <= n
       if text.slice(i, i + m) == needle
         return i
@@ -89,7 +89,7 @@ class Client
     rest = target_arg.slice(prefix.len(), target_arg.len())
     slash = Client(nil).index_of(rest, "/", 0)
     query = Client(nil).index_of(rest, "?", 0)
-    end_auth = rest.byte_len()
+    end_auth = rest.len()
     if slash >= 0 and slash < end_auth
       end_auth = slash
     if query >= 0 and query < end_auth
@@ -223,7 +223,7 @@ class Client
     req = req + "Host: " + Client(nil).host_header(host, u["port"]) + crlf
     req = req + "Connection: close" + crlf
     if body != ""
-      req = req + "Content-Length: " + body.byte_len().to_string() + crlf
+      req = req + "Content-Length: " + body.len().to_string() + crlf
     for entry in headers.entries()
       req = req + entry[0] + ": " + entry[1].to_string() + crlf
     req = req + crlf + body

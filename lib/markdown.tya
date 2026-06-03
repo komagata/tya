@@ -37,7 +37,7 @@ class Markdown
   # @param start Int start value.
   # @return Any the resulting value.
   find_byte: text, b, start ->
-    n = text.byte_len()
+    n = text.len()
     i = start
     while i < n
       if text[i] == b
@@ -51,7 +51,7 @@ class Markdown
   # @param start Int start value.
   # @return Any the resulting value.
   find_double: text, b, start ->
-    n = text.byte_len()
+    n = text.len()
     i = start
     while i < n - 1
       if text[i] == b and text[i + 1] == b
@@ -74,7 +74,7 @@ class Markdown
   # @param s Any s value.
   # @return Any the resulting value.
   heading_level: s ->
-    n = s.byte_len()
+    n = s.len()
     i = 0
     while i < n and i < 6 and s[i] == "#"
       i = i + 1
@@ -91,7 +91,7 @@ class Markdown
   # @param level Any level value.
   # @return Any the resulting value.
   heading_rest: s, level ->
-    n = s.byte_len()
+    n = s.len()
     rest = ""
     i = level + 1
     while i < n
@@ -109,7 +109,7 @@ class Markdown
   # @param refs Any refs value.
   # @return Any the resulting value.
   inline_with_refs: text, refs ->
-    n = text.byte_len()
+    n = text.len()
     out = ""
     i = 0
     while i < n
@@ -213,7 +213,7 @@ class Markdown
   # @param s Any s value.
   # @return Boolean the resulting value.
   is_ordered_item: s ->
-    n = s.byte_len()
+    n = s.len()
     i = 0
     while i < n and "0123456789".contains(s[i])
       i = i + 1
@@ -236,7 +236,7 @@ class Markdown
     close = Markdown(nil).find_byte(s, "]", 1)
     if close <= 1
       return false
-    if close + 1 >= s.byte_len()
+    if close + 1 >= s.len()
       return false
     s[close + 1] == ":"
 
@@ -250,7 +250,7 @@ class Markdown
     if marker != "=" and marker != "-"
       return false
     i = 0
-    while i < s.byte_len()
+    while i < s.len()
       if s[i] != marker
         return false
       i = i + 1
@@ -271,7 +271,7 @@ class Markdown
         return false
       i = 0
       seen_dash = false
-      while i < c.byte_len()
+      while i < c.len()
         if c[i] == "-"
           seen_dash = true
         elseif c[i] != ":"
@@ -611,7 +611,7 @@ class Markdown
   # @param s Any s value.
   # @return Any the resulting value.
   strip_ordered_marker: s ->
-    n = s.byte_len()
+    n = s.len()
     i = 0
     while i < n and "0123456789".contains(s[i])
       i = i + 1
@@ -653,7 +653,7 @@ class Markdown
   # @param k Any k value.
   # @return Any the resulting value.
   trim_left_n: s, k ->
-    n = s.byte_len()
+    n = s.len()
     out = ""
     i = k
     while i < n
@@ -685,7 +685,7 @@ class Markdown
   # @param refs Any refs value.
   # @return Any the resulting value.
   try_image: text, start, refs ->
-    n = text.byte_len()
+    n = text.len()
     if start + 1 >= n or text[start + 1] != "["
       return nil
     close_text = Markdown(nil).find_byte(text, "]", start + 2)
@@ -726,7 +726,7 @@ class Markdown
   # @param refs Any refs value.
   # @return Any the resulting value.
   try_link: text, start, refs ->
-    n = text.byte_len()
+    n = text.len()
     close_text = Markdown(nil).find_byte(text, "]", start + 1)
     if close_text < 0
       return nil

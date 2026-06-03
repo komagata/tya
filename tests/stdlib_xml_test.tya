@@ -49,6 +49,15 @@ class StdlibXmlTest extends TestCase
     self.assert_equal("two", cases[1].attr("name"), "nested")
     self.assert(cases[1].find("skipped") != nil, "skipped")
 
+  test_unicode_attribute_text_and_entities: ->
+    text = "<?xml version=\"1.0\"?><testsuite><testcase name=\"test_日報\"><system-out>日報&amp;質問</system-out><system-err><![CDATA[警告]]></system-err><!-- コメント --></testcase><testcase name=\"test_&#26085;&#x5831;\"/></testsuite>"
+    root = xml.Xml(text).parse().root()
+    cases = root.find_all("testcase")
+    self.assert_equal("test_日報", cases[0].attr("name"), "unicode attr")
+    self.assert_equal("日報&質問", cases[0].find("system-out").text(), "unicode text entity")
+    self.assert_equal("警告", cases[0].find("system-err").text(), "unicode cdata")
+    self.assert_equal("test_日報", cases[1].attr("name"), "numeric entity")
+
   test_errors: ->
     self.assert_raises(-> xml.Xml("<!DOCTYPE root []><root/>").parse(), "DTD")
     self.assert_raises(-> xml.Xml("<root><a></root>").parse(), "mismatched")

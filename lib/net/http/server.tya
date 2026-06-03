@@ -470,7 +470,7 @@ class Server
     if name == nil or name == ""
       raise error("http.cookie: invalid cookie name")
     i = 0
-    while i < name.byte_len()
+    while i < name.len()
       c = name[i]
       code = ord(c)
       if code < 32 or code == 127 or c == " " or c == "=" or c == ";" or c == ","
@@ -484,7 +484,7 @@ class Server
     if value == nil
       raise error("http.cookie: invalid cookie value")
     i = 0
-    while i < value.byte_len()
+    while i < value.len()
       c = value[i]
       code = ord(c)
       if code < 32 or code == 127 or c == ";" or c == ","
@@ -586,7 +586,7 @@ class Server
   # @param path String path value.
   # @return Any the resulting value.
   strip_trailing: path ->
-    while path.byte_len() > 1 and path.ends_with("/")
+    while path.len() > 1 and path.ends_with("/")
       path = path.slice(0, path.len() - 1)
     return path
 
@@ -594,7 +594,7 @@ class Server
   # @param path String path value.
   # @return Any the resulting value.
   strip_leading: path ->
-    while path.byte_len() > 0 and path.starts_with("/")
+    while path.len() > 0 and path.starts_with("/")
       path = path.slice(1, path.len())
     return path
 

@@ -49,7 +49,7 @@ class Url
   # @param text String text value.
   # @return String the resulting value.
   static decode: text ->
-    n = text.byte_len()
+    n = text.len()
     out = ""
     i = 0
     while i < n
@@ -77,7 +77,7 @@ class Url
     for raw in raw_pairs
       if raw != ""
         eq_idx = -1
-        n = raw.byte_len()
+        n = raw.len()
         i = 0
         while i < n and eq_idx < 0
           if raw[i] == "="
@@ -106,7 +106,7 @@ class Url
   # @param text String text value.
   # @return String the resulting value.
   static encode: text ->
-    n = text.byte_len()
+    n = text.len()
     out = ""
     i = 0
     while i < n
@@ -255,7 +255,7 @@ class Url
   # @return Boolean whether the condition is true.
   private static contains_colon?: text ->
     i = 0
-    while i < text.byte_len()
+    while i < text.len()
       if text[i] == ":"
         return true
       i = i + 1
@@ -268,7 +268,7 @@ class Url
     if text == ""
       return false
     i = 0
-    while i < text.byte_len()
+    while i < text.len()
       c = ord(text[i])
       if c < 48 or c > 57
         return false
@@ -292,7 +292,7 @@ class Url
   # @param text String text value.
   # @return Any the resulting value.
   private static decode_query_value: text ->
-    n = text.byte_len()
+    n = text.len()
     out = ""
     i = 0
     while i < n
@@ -341,7 +341,7 @@ class Url
   private static merge_path: base_path, ref_path ->
     idx = -1
     i = 0
-    while i < base_path.byte_len()
+    while i < base_path.len()
       if base_path[i] == "/"
         idx = i
       i = i + 1
@@ -353,7 +353,7 @@ class Url
   # @param text String text value.
   # @return Boolean the resulting value.
   private static validate_percent: text ->
-    n = text.byte_len()
+    n = text.len()
     i = 0
     while i < n
       if text[i] == "%"
@@ -438,7 +438,7 @@ class Url
   # @param text String text value.
   # @return Self the parsed URL.
   parse: text ->
-    n = text.byte_len()
+    n = text.len()
     out =
       scheme: ""
       user: ""
@@ -487,7 +487,7 @@ class Url
       i = auth_end
       at_idx = -1
       ai = 0
-      auth_n = auth_text.byte_len()
+      auth_n = auth_text.len()
       while ai < auth_n
         if auth_text[ai] == "@"
           at_idx = ai
@@ -507,7 +507,7 @@ class Url
       if userinfo != ""
         colon_idx = -1
         ci = 0
-        ui_n = userinfo.byte_len()
+        ui_n = userinfo.len()
         while ci < ui_n
           if userinfo[ci] == ":"
             colon_idx = ci
@@ -528,7 +528,7 @@ class Url
             k = k + 1
           out["user"] = user_part
           out["password"] = pass_part
-      hp_n = hostport.byte_len()
+      hp_n = hostport.len()
       if hp_n > 0 and hostport[0] == "["
         close_idx = -1
         ci = 1

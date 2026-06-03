@@ -47,7 +47,7 @@ class Xml
   decode_entities: text, state ->
     out = ""
     i = 0
-    while i < text.byte_len()
+    while i < text.len()
       if text[i] == "&"
         semi = Xml(nil).index_of(text, ";", i + 1)
         if semi < 0
@@ -91,7 +91,7 @@ class Xml
   # @param message String message value_arg.
   # @return Any the resulting value_arg.
   error: state, message ->
-    raise error("xml.parse: " + message + " at byte " + state["pos"].to_string())
+    raise error("xml.parse: " + message + " at position " + state["pos"].to_string())
 
   # Xml.escape_attr provides the xml/Xml standard library operation.
   # @param text String text value.
@@ -105,7 +105,7 @@ class Xml
   escape_text: text ->
     out = ""
     i = 0
-    while i < text.byte_len()
+    while i < text.len()
       c = text[i]
       if c == "&"
         out = out + "&amp;"
@@ -135,7 +135,7 @@ class Xml
   expect_text: state, text ->
     if not Xml(nil).starts_at(state, text)
       Xml(nil).error(state, "expected " + text)
-    state["pos"] = state["pos"] + text.byte_len()
+    state["pos"] = state["pos"] + text.len()
 
   # Xml.index_of provides the xml/Xml standard library operation.
   # @param text String text value.
@@ -144,7 +144,7 @@ class Xml
   # @return Any the resulting value.
   index_of: text, needle, start ->
     i = start
-    while i < text.byte_len()
+    while i < text.len()
       if text[i] == needle
         return i
       i = i + 1
@@ -159,7 +159,7 @@ class Xml
     state =
       src: text
       pos: 0
-      len: text.byte_len()
+      len: text.len()
       version: "1.0"
       encoding: nil
     children = []
@@ -181,7 +181,7 @@ class Xml
     while true
       Xml(nil).skip_ws(state)
       if terminator != nil and Xml(nil).starts_at(state, terminator)
-        state["pos"] = state["pos"] + terminator.byte_len()
+        state["pos"] = state["pos"] + terminator.len()
         return attrs
       c = Xml(nil).peek(state)
       if c == ">" or Xml(nil).starts_at(state, "/>")
@@ -263,7 +263,7 @@ class Xml
   parse_hex: text ->
     result = 0
     i = 0
-    while i < text.byte_len()
+    while i < text.len()
       code = ord(text[i])
       digit = -1
       if code >= 48 and code <= 57
@@ -342,7 +342,7 @@ class Xml
     out = ""
     while state["pos"] < state["len"]
       if Xml(nil).starts_at(state, terminator)
-        state["pos"] = state["pos"] + terminator.byte_len()
+        state["pos"] = state["pos"] + terminator.len()
         return out
       out = out + Xml(nil).peek(state)
       state["pos"] = state["pos"] + 1
@@ -372,10 +372,10 @@ class Xml
   # @return Any the resulting value.
   starts_at: state, text ->
     src = state["src"]
-    if state["pos"] + text.byte_len() > state["len"]
+    if state["pos"] + text.len() > state["len"]
       return false
     i = 0
-    while i < text.byte_len()
+    while i < text.len()
       if src[state["pos"] + i] != text[i]
         return false
       i = i + 1

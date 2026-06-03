@@ -143,7 +143,7 @@ class Toml
     if Toml(nil).is_bare_key(text)
       return text
     out = "\""
-    n = text.byte_len()
+    n = text.len()
     i = 0
     while i < n
       c = text[i]
@@ -161,7 +161,7 @@ class Toml
   # @return String the resulting value.
   format_string: text ->
     out = "\""
-    n = text.byte_len()
+    n = text.len()
     i = 0
     while i < n
       c = text[i]
@@ -202,7 +202,7 @@ class Toml
   # @param text String text value_arg.
   # @return Boolean the resulting value_arg.
   is_bare_key: text ->
-    n = text.byte_len()
+    n = text.len()
     if n == 0
       return false
     i = 0
@@ -239,7 +239,7 @@ class Toml
   parse: text = nil ->
     if text == nil
       text = self.value
-    state = { src: text, pos: 0, len: text.byte_len() }
+    state = { src: text, pos: 0, len: text.len() }
     root = {}
     current = root
     while state["pos"] < state["len"]
@@ -581,7 +581,7 @@ class Toml
     src = state["src"]
     n = state["len"]
     p = state["pos"]
-    wn = word.byte_len()
+    wn = word.len()
     if p + wn > n
       return false
     k = 0
