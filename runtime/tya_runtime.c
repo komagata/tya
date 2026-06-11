@@ -274,13 +274,31 @@ static int tya_string_byte_len_value(TyaValue value) {
 
 static bool tya_string_ascii_only_value(TyaValue value) {
   if (value.string_value != NULL) return value.string_value->ascii_only;
+  static const char *last_string = NULL;
+  static bool last_ascii_only = true;
+  if (value.string == last_string) return last_ascii_only;
   int len = value.string == NULL ? 0 : (int)strlen(value.string);
-  return tya_ascii_only_bytes(value.string, len);
+  last_string = value.string;
+  last_ascii_only = tya_ascii_only_bytes(value.string, len);
+  return last_ascii_only;
+}
+
+static bool tya_ascii_only_text(const char *text) {
+  static const char *last_text = NULL;
+  static bool last_ascii_only = true;
+  if (text == last_text) return last_ascii_only;
+  int len = text == NULL ? 0 : (int)strlen(text);
+  last_text = text;
+  last_ascii_only = tya_ascii_only_bytes(text, len);
+  return last_ascii_only;
 }
 
 static bool tya_string_equal_value(TyaValue left, TyaValue right) {
   if (left.string == NULL || right.string == NULL) {
     return left.string == right.string;
+  }
+  if (left.string_value == NULL && right.string_value == NULL) {
+    return strcmp(left.string, right.string) == 0;
   }
   int left_len = tya_string_byte_len_value(left);
   int right_len = tya_string_byte_len_value(right);
@@ -1188,6 +1206,9 @@ TyaValue tya_len(TyaValue value) {
     if (tya_legacy_modules_enabled()) {
       return tya_number((double)strlen(value.string));
     }
+    if (tya_string_ascii_only_value(value)) {
+      return tya_number(tya_string_len(value.string));
+    }
     return tya_number(tya_string_len(value.string));
   }
   if (value.kind == TYA_ARRAY && value.array != NULL) {
@@ -1223,6 +1244,16 @@ TyaValue tya_index(TyaValue value, TyaValue index) {
   if (value.kind == TYA_STRING && value.string != NULL && i >= 0) {
     if (tya_legacy_modules_enabled()) {
       int n = (int)strlen(value.string);
+      if (i >= n) {
+        return tya_nil();
+      }
+      char *out = malloc(2);
+      out[0] = value.string[i];
+      out[1] = '\0';
+      return tya_string(out);
+    }
+    if (tya_string_ascii_only_value(value)) {
+      int n = tya_string_len(value.string);
       if (i >= n) {
         return tya_nil();
       }
@@ -1352,6 +1383,14 @@ static char *tya_utf8_char_at(const char *text, int rune_index) {
   if (text == NULL || rune_index < 0) {
     return NULL;
   }
+  if (tya_ascii_only_text(text)) {
+    int len = tya_string_len(text);
+    if (rune_index >= len) return NULL;
+    char *out = malloc(2);
+    out[0] = text[rune_index];
+    out[1] = '\0';
+    return out;
+  }
   int current = 0;
   for (int i = 0; text[i] != '\0';) {
     unsigned char c = (unsigned char)text[i];
@@ -1381,6 +1420,10 @@ static int tya_utf8_byte_offset_at(const char *text, int rune_index) {
   if (text == NULL || rune_index < 0) {
     return -1;
   }
+  if (tya_ascii_only_text(text)) {
+    int len = tya_string_len(text);
+    return rune_index <= len ? rune_index : -1;
+  }
   int current = 0;
   for (int i = 0; text[i] != '\0';) {
     if (current == rune_index) {
@@ -1406,6 +1449,10 @@ static int tya_utf8_byte_offset_at(const char *text, int rune_index) {
 static int tya_utf8_rune_index_at_byte(const char *text, int byte_index) {
   if (text == NULL || byte_index < 0) {
     return -1;
+  }
+  if (tya_ascii_only_text(text)) {
+    int len = tya_string_len(text);
+    return byte_index <= len ? byte_index : len;
   }
   int current = 0;
   for (int i = 0; text[i] != '\0' && i < byte_index;) {
