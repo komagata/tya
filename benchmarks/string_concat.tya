@@ -1,0 +1,8 @@
+text = ""
+i = 0
+while i < 6000
+  text = text + "x"
+  i = i + 1
+print(text.len())
+print(text[0])
+print(text[text.len() - 1])

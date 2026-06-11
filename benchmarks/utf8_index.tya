@@ -1,0 +1,18 @@
+text = "abcdefghijklmnopqrstuvwxyz"
+i = 0
+sum = 0
+while i < 50000
+  ch = text[i % text.len()]
+  if ch == "z"
+    sum = sum + 1
+  i = i + 1
+unicode_text = "日報テストabc"
+i = 0
+hits = 0
+while i < 3000
+  ch = unicode_text[i % unicode_text.len()]
+  if ch == "日"
+    hits = hits + 1
+  i = i + 1
+print(sum)
+print(hits)

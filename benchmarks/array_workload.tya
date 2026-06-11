@@ -1,0 +1,15 @@
+items = []
+i = 0
+while i < 10000
+  items.push(i)
+  i = i + 1
+sum = 0
+for item in items
+  sum = sum + item
+i = 0
+step_sum = 0
+while i < items.len()
+  step_sum = step_sum + items[i]
+  i = i + 3
+print(sum)
+print(step_sum)
