@@ -1,0 +1,135 @@
+selfhost/lexer.tya: stage-1 emitted and compiled C
+selfhost/parser.tya: stage-1 emitted and compiled C
+selfhost/checker.tya: stage-1 emitted and compiled C
+selfhost/codegen_c.tya: stage-1 emitted and compiled C
+examples/hello.tya: stage-2 lexer matched
+examples/hello.tya: stage-2 parser matched
+examples/hello.tya: stage-2 checker matched
+examples/hello.tya: stage-2 codegen deterministic
+examples/hello.tya: stage-2 codegen matched
+escaped string print: stage-2 codegen deterministic
+escaped string print: stage-2 pipeline matched
+string index print: stage-2 codegen deterministic
+string index print: stage-2 pipeline matched
+examples/string.tya: stage-2 codegen deterministic
+examples/string.tya: stage-2 pipeline matched
+int literal: stage-2 lexer matched
+operators: stage-2 lexer matched
+float and string escape: stage-2 lexer matched
+int assignment: stage-2 parser matched
+int assignment: stage-2 codegen deterministic
+literal assignments: stage-2 parser matched
+literal assignments: stage-2 codegen deterministic
+literal assignments: stage-2 checker matched
+int assignment: stage-2 codegen matched
+literal assignments: stage-2 codegen matched
+literal reassignment: stage-2 codegen deterministic
+literal reassignment: stage-2 pipeline matched
+read file arg: stage-2 codegen deterministic
+read file arg: stage-2 pipeline matched
+lex source: stage-2 codegen deterministic
+lex source: stage-2 pipeline matched
+long lex source: stage-2 pipeline matched
+parse tokens: stage-2 codegen deterministic
+parse tokens: stage-2 pipeline matched
+check nodes: stage-2 codegen deterministic
+check nodes: stage-2 pipeline matched
+constant reassignment: stage-1 checker matched
+emit_c nodes: stage-2 codegen deterministic
+emit_c nodes: stage-2 pipeline matched
+function body skip: stage-2 parser matched
+print int assignment: stage-2 codegen deterministic
+print int assignment: stage-2 pipeline matched
+print literal assignments: stage-2 codegen deterministic
+print literal assignments: stage-2 pipeline matched
+string len print: stage-2 codegen deterministic
+string len print: stage-2 pipeline matched
+string trim print: stage-2 codegen deterministic
+string trim print: stage-2 pipeline matched
+string contains print: stage-2 codegen deterministic
+string contains print: stage-2 pipeline matched
+string prefix suffix print: stage-2 codegen deterministic
+string prefix suffix print: stage-2 pipeline matched
+string replace print: stage-2 codegen deterministic
+string replace print: stage-2 pipeline matched
+string split join print: stage-2 codegen deterministic
+string split join print: stage-2 pipeline matched
+string byte char length print: stage-2 codegen deterministic
+string byte char length print: stage-2 pipeline matched
+int addition: stage-2 codegen deterministic
+int addition: stage-2 pipeline matched
+grouped int addition: stage-2 codegen deterministic
+grouped int addition: stage-2 pipeline matched
+int addition reassignment: stage-2 codegen deterministic
+int addition reassignment: stage-2 pipeline matched
+bool assignment: stage-2 codegen deterministic
+bool assignment: stage-2 pipeline matched
+bool logic: stage-2 codegen deterministic
+bool logic: stage-2 pipeline matched
+while false break: stage-2 codegen deterministic
+while false break: stage-2 pipeline matched
+while less-than break: stage-2 codegen deterministic
+while less-than break: stage-2 pipeline matched
+while bounded break: stage-2 codegen deterministic
+while bounded break: stage-2 pipeline matched
+array for: stage-2 codegen deterministic
+array for: stage-2 pipeline matched
+examples/selfhost_ops.tya: stage-2 codegen deterministic
+examples/selfhost_ops.tya: stage-2 pipeline matched
+examples/multiple_return.tya: stage-2 parser matched
+examples/multiple_return.tya: stage-2 checker matched
+examples/multiple_return.tya: stage-2 codegen deterministic
+examples/multiple_return.tya: stage-2 pipeline matched
+examples/while.tya: stage-2 codegen deterministic
+examples/while.tya: stage-2 pipeline matched
+equality comparison: stage-2 codegen deterministic
+equality comparison: stage-2 pipeline matched
+inequality comparison: stage-2 codegen deterministic
+inequality comparison: stage-2 pipeline matched
+less-than comparison: stage-2 codegen deterministic
+less-than comparison: stage-2 pipeline matched
+bounded comparison: stage-2 codegen deterministic
+bounded comparison: stage-2 pipeline matched
+grouped comparison: stage-2 codegen deterministic
+grouped comparison: stage-2 pipeline matched
+selfhost/lexer.tya: stage-3 parser emitted real nodes
+selfhost/lexer.tya: stage-3 codegen emitted executable lexer C
+selfhost/parser.tya: stage-3 parser emitted real nodes
+selfhost/parser.tya: stage-3 codegen emitted executable parser C
+selfhost/checker.tya: stage-3 parser emitted real nodes
+selfhost/checker.tya: stage-3 codegen emitted executable checker C
+selfhost/codegen_c.tya: stage-3 parser emitted real nodes
+selfhost/codegen_c.tya: stage-3 codegen emitted executable codegen C
+stage4 hello: self-host pipeline matched
+stage4 print string: self-host pipeline matched
+stage4 print int: self-host pipeline matched
+stage4 escaped string: self-host pipeline matched
+stage4 colon string: self-host pipeline matched
+stage4 two prints: self-host pipeline matched
+stage4 assign print: self-host pipeline matched
+stage4 int assign print: self-host pipeline matched
+stage4 int reassignment print: self-host pipeline matched
+stage4 int addition print: self-host pipeline matched
+stage4 less-than print: self-host pipeline matched
+stage4 while false print: self-host pipeline matched
+stage4 array for: self-host pipeline matched
+stage4 multiple return: self-host pipeline matched
+stage4 while example: self-host pipeline matched
+stage4 string example: self-host pipeline matched
+stage4 selfhost ops: self-host pipeline matched
+stage4 arithmetic: self-host pipeline matched
+stage4 function: self-host pipeline matched
+stage4 return: self-host pipeline matched
+stage4 object: self-host pipeline matched
+stage4 object inline: self-host pipeline matched
+stage4 if example: self-host pipeline matched
+stage4 logic: self-host pipeline matched
+stage4 error: self-host pipeline matched
+stage4 convert: self-host pipeline matched
+stage4 file: self-host pipeline matched
+stage4 args: self-host pipeline matched
+stage4 equal: self-host pipeline matched
+selfhost/lexer.tya: stage-4 emitted and compiled stage-5 C
+selfhost/parser.tya: stage-4 emitted and compiled stage-5 C
+selfhost/checker.tya: stage-4 emitted and compiled stage-5 C
+selfhost/codegen_c.tya: stage-4 emitted and compiled stage-5 C
