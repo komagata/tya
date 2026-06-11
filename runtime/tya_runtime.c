@@ -66,6 +66,7 @@ static void regfree(regex_t *re) { (void)re; }
 extern char **environ;
 
 static char *tya_dup_cstr(const char *s);
+static int tya_legacy_modules_enabled(void);
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -973,9 +974,17 @@ void tya_keywords_merge(TyaValue target, TyaValue source) {
   }
 }
 
+static int tya_legacy_modules_enabled(void) {
+  static int cached = -1;
+  if (cached < 0) {
+    cached = getenv("TYA_LEGACY_MODULES") != NULL ? 1 : 0;
+  }
+  return cached;
+}
+
 TyaValue tya_len(TyaValue value) {
   if (value.kind == TYA_STRING && value.string != NULL) {
-    if (getenv("TYA_LEGACY_MODULES") != NULL) {
+    if (tya_legacy_modules_enabled()) {
       return tya_number((double)strlen(value.string));
     }
     return tya_number(tya_string_len(value.string));
@@ -1011,7 +1020,7 @@ TyaValue tya_index(TyaValue value, TyaValue index) {
     return value.array->items[i];
   }
   if (value.kind == TYA_STRING && value.string != NULL && i >= 0) {
-    if (getenv("TYA_LEGACY_MODULES") != NULL) {
+    if (tya_legacy_modules_enabled()) {
       int n = (int)strlen(value.string);
       if (i >= n) {
         return tya_nil();
@@ -2238,25 +2247,15 @@ TyaValue tya_add(TyaValue left, TyaValue right) {
     return tya_bytes_concat(left, right);
   }
   if (left.kind == TYA_STRING && right.kind == TYA_STRING && left.string != NULL && right.string != NULL) {
-    int left_len = 0;
-    int right_len = 0;
-    while (left.string[left_len] != '\0') {
-      left_len++;
-    }
-    while (right.string[right_len] != '\0') {
-      right_len++;
-    }
+    size_t left_len = strlen(left.string);
+    size_t right_len = strlen(right.string);
     char *out = malloc(left_len + right_len + 1);
-    for (int i = 0; i < left_len; i++) {
-      out[i] = left.string[i];
-    }
-    for (int i = 0; i < right_len; i++) {
-      out[left_len + i] = right.string[i];
-    }
+    memcpy(out, left.string, left_len);
+    memcpy(out + left_len, right.string, right_len);
     out[left_len + right_len] = '\0';
     return tya_string(out);
   }
-  if (getenv("TYA_LEGACY_MODULES") != NULL && (left.kind == TYA_STRING || right.kind == TYA_STRING)) {
+  if (tya_legacy_modules_enabled() && (left.kind == TYA_STRING || right.kind == TYA_STRING)) {
     return tya_add(tya_to_string(left), tya_to_string(right));
   }
   if (left.kind == TYA_STRING || right.kind == TYA_STRING || left.kind == TYA_BYTES || right.kind == TYA_BYTES) {
@@ -4680,7 +4679,7 @@ static TyaValue tya_method_blank_p(TyaValue receiver, TyaValue a, TyaValue b, Ty
 static TyaValue tya_method_present_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_bool(!tya_equal(tya_trim(receiver), tya_string(""))); }
 static TyaValue tya_method_first(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_first(receiver); }
 static TyaValue tya_method_last(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_last(receiver); }
-static TyaValue tya_method_push(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; (void)tya_array_push(receiver, a); return getenv("TYA_LEGACY_MODULES") != NULL ? receiver : tya_nil(); }
+static TyaValue tya_method_push(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; (void)tya_array_push(receiver, a); return tya_legacy_modules_enabled() ? receiver : tya_nil(); }
 static TyaValue tya_method_pop(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_pop(receiver); }
 static TyaValue tya_method_slice(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)c; (void)d; return tya_slice(receiver, a, b); }
 static TyaValue tya_method_reverse(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_reverse(receiver); }
