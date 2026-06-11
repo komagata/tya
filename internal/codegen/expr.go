@@ -1104,6 +1104,12 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			if call, err := g.concurrencyConstructorCall(member, n.Args); call != "" || err != nil {
 				return call, "TyaValue", err
 			}
+			if key := packageMemberStructKey(member); key != "" {
+				if decl, found := g.structDecls[key]; found {
+					ex, err := g.structConstructorExpr(key, decl, n)
+					return ex, "TyaValue", err
+				}
+			}
 			if target, ok := member.Target.(*ast.Ident); ok {
 				if removedPrimitiveModuleNames[target.Name] && !g.vars[target.Name] && g.funcs[target.Name] == "" && g.classes[target.Name] == "" {
 					return "", "", fmt.Errorf("primitive helper %s.%s was removed; use receiver method syntax", target.Name, member.Name)
@@ -1258,6 +1264,24 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 	}
 	line, col, _ := exprPos(expr)
 	return "", "", codegenError(codeStmtUnsupported, fmt.Sprintf("C emitter does not support expression %T", expr), line, col)
+}
+
+func packageMemberStructKey(member *ast.MemberExpr) string {
+	parts := []string{member.Name}
+	for target := member.Target; ; {
+		switch n := target.(type) {
+		case *ast.Ident:
+			if len(parts) == 1 {
+				return aliasedPackageSymbolKey(n.Name, parts[0])
+			}
+			return strings.Join(append([]string{n.Name}, parts...), ".")
+		case *ast.MemberExpr:
+			parts = append([]string{n.Name}, parts...)
+			target = n.Target
+		default:
+			return ""
+		}
+	}
 }
 
 func (g *cgen) concurrencyConstructorCall(member *ast.MemberExpr, argExprs []ast.Expr) (string, error) {

@@ -55,6 +55,10 @@ exec go run ./cmd/tya run $WORK/import_main.tya
 stdout 'komagata\nJPY\ntrue\n'
 ! stderr .
 
+exec go run ./cmd/tya run $WORK/aliased_record_import.tya
+stdout 'false\n__data_type,__record,name,test_href,test_link,failure_count,fail_count,error_count,observations,last_status\nname\nfailed\n'
+! stderr .
+
 -- basic.tya --
 struct User
   name
@@ -167,6 +171,16 @@ print(user.name)
 print(money.currency)
 print(Point(1, 2) == Point(x: 1, y: 2))
 
+-- aliased_record_import.tya --
+import view_model/* as view_model
+
+row = view_model.Failing("name", "href", true, 1, 2, 3, 4, "failed")
+print(row == nil)
+fields = serialization_public_fields(row)
+print(fields.keys().join(","))
+print(fields["name"])
+print(fields["last_status"])
+
 -- data/user.tya --
 struct User
   name
@@ -181,3 +195,14 @@ record Money
 record Point
   x
   y
+
+-- view_model/failing.tya --
+record Failing
+  name
+  test_href
+  test_link
+  failure_count
+  fail_count
+  error_count
+  observations
+  last_status
