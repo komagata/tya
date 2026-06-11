@@ -78,6 +78,39 @@ int main(int argc, char **argv) {
 	}
 }
 
+func TestCRuntimeDictHashTablePreservesOrder(t *testing.T) {
+	src := `#include "tya_runtime.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+  TyaValue dict = tya_dict(0, 0);
+  for (int i = 0; i < 40; i++) {
+    char *key = malloc(16);
+    snprintf(key, 16, "k%d", i);
+    tya_dict_set(dict, tya_string(key), tya_number(i));
+  }
+  tya_dict_set(dict, tya_string("k10"), tya_string("ten"));
+  tya_dict_delete(dict, tya_string("k5"));
+  tya_dict_set(dict, tya_string("later"), tya_number(99));
+
+  tya_print(tya_len(dict));
+  tya_print(tya_dict_get(dict, tya_string("k10"), tya_nil(), false));
+  tya_print(tya_has(dict, tya_string("k5")));
+  tya_print(tya_dict_key_at(dict, tya_number(5)));
+  tya_print(tya_dict_value_at(dict, tya_number(5)));
+  tya_print(tya_dict_key_at(dict, tya_number(39)));
+  tya_print(tya_values(dict));
+  return 0;
+}
+`
+	out := compileAndRunRuntime(t, src)
+	want := "40\nten\nfalse\nk6\n6\nlater\n[0, 1, 2, 3, 4, 6, 7, 8, 9, ten, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 99]\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestCRuntimeProcessExitAndPanic(t *testing.T) {
 	out, code := compileAndRunRuntimeAllowExit(t, `#include "tya_runtime.h"
 

@@ -154,10 +154,18 @@ struct TyaBytes {
   uint8_t *data;
 };
 
+typedef struct TyaDictMapEntry {
+  const char *key;
+  int index;
+} TyaDictMapEntry;
+
 struct TyaDict {
   TyaGcHeader gc;
   int len;
+  int cap;
   TyaDictEntry *entries;
+  int map_cap;
+  TyaDictMapEntry *map;
 };
 
 struct TyaFunction {
@@ -183,6 +191,131 @@ static const char **tya_copy_params(const char **params, int param_count) {
     copy[i] = params[i];
   }
   return copy;
+}
+
+static int tya_dict_entry_cap(int count) {
+  int cap = 4;
+  while (cap < count) {
+    cap *= 2;
+  }
+  return cap;
+}
+
+static int tya_dict_map_cap(int count) {
+  int cap = 8;
+  while (cap < count * 2) {
+    cap *= 2;
+  }
+  return cap;
+}
+
+static uint64_t tya_dict_hash(const char *key) {
+  uint64_t hash = 1469598103934665603ULL;
+  const unsigned char *p = (const unsigned char *)(key == NULL ? "" : key);
+  while (*p != '\0') {
+    hash ^= (uint64_t)(*p);
+    hash *= 1099511628211ULL;
+    p++;
+  }
+  return hash;
+}
+
+static void tya_dict_init(TyaDict *dict, int cap) {
+  dict->len = 0;
+  dict->cap = tya_dict_entry_cap(cap);
+  dict->entries = malloc(sizeof(TyaDictEntry) * dict->cap);
+  dict->map_cap = 0;
+  dict->map = NULL;
+}
+
+static int tya_dict_map_slot(TyaDict *dict, const char *key) {
+  if (dict == NULL || dict->map_cap <= 0 || key == NULL) return -1;
+  uint64_t hash = tya_dict_hash(key);
+  int mask = dict->map_cap - 1;
+  for (int probe = 0; probe < dict->map_cap; probe++) {
+    int slot = (int)((hash + (uint64_t)probe) & (uint64_t)mask);
+    const char *entry_key = dict->map[slot].key;
+    if (entry_key == NULL || strcmp(entry_key, key) == 0) {
+      return slot;
+    }
+  }
+  return -1;
+}
+
+static void tya_dict_rebuild_map(TyaDict *dict) {
+  if (dict == NULL) return;
+  int map_cap = tya_dict_map_cap(dict->len > 0 ? dict->len : 1);
+  TyaDictMapEntry *map = calloc((size_t)map_cap, sizeof(TyaDictMapEntry));
+  for (int i = 0; i < dict->len; i++) {
+    const char *key = dict->entries[i].key;
+    if (key == NULL) continue;
+    uint64_t hash = tya_dict_hash(key);
+    int mask = map_cap - 1;
+    for (int probe = 0; probe < map_cap; probe++) {
+      int slot = (int)((hash + (uint64_t)probe) & (uint64_t)mask);
+      if (map[slot].key == NULL) {
+        map[slot] = (TyaDictMapEntry){key, i};
+        break;
+      }
+      if (strcmp(map[slot].key, key) == 0) {
+        break;
+      }
+    }
+  }
+  free(dict->map);
+  dict->map_cap = map_cap;
+  dict->map = map;
+}
+
+static TyaDictEntry *tya_dict_find_entry(TyaDict *dict, const char *key) {
+  if (dict == NULL || key == NULL || dict->len <= 0) return NULL;
+  if (dict->map == NULL || dict->map_cap <= 0) {
+    tya_dict_rebuild_map(dict);
+  }
+  int slot = tya_dict_map_slot(dict, key);
+  if (slot < 0 || dict->map[slot].key == NULL) return NULL;
+  return &dict->entries[dict->map[slot].index];
+}
+
+static void tya_dict_ensure_entry_cap(TyaDict *dict, int needed) {
+  if (dict->cap >= needed) return;
+  int cap = dict->cap <= 0 ? 4 : dict->cap;
+  while (cap < needed) {
+    cap *= 2;
+  }
+  dict->entries = realloc(dict->entries, sizeof(TyaDictEntry) * cap);
+  dict->cap = cap;
+}
+
+static void tya_dict_set_entry(TyaDict *dict, const char *key, TyaValue value) {
+  if (dict == NULL || key == NULL) return;
+  TyaDictEntry *entry = tya_dict_find_entry(dict, key);
+  if (entry != NULL) {
+    entry->value = value;
+    return;
+  }
+  tya_dict_ensure_entry_cap(dict, dict->len + 1);
+  dict->entries[dict->len] = (TyaDictEntry){key, value};
+  dict->len++;
+  if (dict->map == NULL || dict->len * 2 >= dict->map_cap) {
+    tya_dict_rebuild_map(dict);
+    return;
+  }
+  int slot = tya_dict_map_slot(dict, key);
+  if (slot >= 0) {
+    dict->map[slot] = (TyaDictMapEntry){key, dict->len - 1};
+  }
+}
+
+static void tya_dict_delete_entry(TyaDict *dict, const char *key) {
+  TyaDictEntry *entry = tya_dict_find_entry(dict, key);
+  if (dict == NULL || entry == NULL) return;
+  int index = (int)(entry - dict->entries);
+  for (int i = index + 1; i < dict->len; i++) {
+    dict->entries[i - 1] = dict->entries[i];
+  }
+  dict->len--;
+  tya_dict_rebuild_map(dict);
 }
 
 static TyaValue tya_class_number;
@@ -569,6 +702,7 @@ static void tya_gc_free_one(TyaGcHeader *h) {
     case TYA_GC_DICT: {
       TyaDict *d = (TyaDict *)h;
       free(d->entries);
+      free(d->map);
       free(d);
       break;
     }
@@ -695,18 +829,19 @@ TyaValue tya_array(const TyaValue *items, int count) {
 
 TyaValue tya_dict(const TyaDictEntry *entries, int count) {
   TyaDict *dict = tya_gc_alloc(sizeof(TyaDict), TYA_GC_DICT);
-  dict->len = count;
-  dict->entries = malloc(sizeof(TyaDictEntry) * count);
+  tya_dict_init(dict, count);
   for (int i = 0; i < count; i++) {
-    dict->entries[i] = entries[i];
+    tya_dict_ensure_entry_cap(dict, dict->len + 1);
+    dict->entries[dict->len] = entries[i];
+    dict->len++;
   }
+  tya_dict_rebuild_map(dict);
   return (TyaValue){.kind = TYA_DICT, .dict = dict};
 }
 
 TyaValue tya_object(void) {
   TyaDict *dict = tya_gc_alloc(sizeof(TyaDict), TYA_GC_DICT);
-  dict->len = 0;
-  dict->entries = NULL;
+  tya_dict_init(dict, 0);
   return (TyaValue){.kind = TYA_OBJECT, .dict = dict};
 }
 
@@ -719,8 +854,7 @@ TyaValue tya_function_params_raw(TyaFunctionPtr fn, const char **params, int par
   function->fn = fn;
   function->receiver = tya_nil();
   function->members = tya_gc_alloc(sizeof(TyaDict), TYA_GC_DICT);
-  function->members->len = 0;
-  function->members->entries = NULL;
+  tya_dict_init(function->members, 0);
   function->class_name = NULL;
   function->params = tya_copy_params(params, param_count);
   function->param_count = param_count;
@@ -792,8 +926,7 @@ TyaValue tya_bind_method_params_raw(TyaValue receiver, TyaFunctionPtr fn, const 
   function->fn = fn;
   function->receiver = receiver;
   function->members = tya_gc_alloc(sizeof(TyaDict), TYA_GC_DICT);
-  function->members->len = 0;
-  function->members->entries = NULL;
+  tya_dict_init(function->members, 0);
   function->class_name = NULL;
   function->params = tya_copy_params(params, param_count);
   function->param_count = param_count;
@@ -1321,10 +1454,9 @@ TyaValue tya_member(TyaValue dict, const char *key) {
     if (dict.function->is_class && key != NULL && strcmp(key, "parent") == 0) {
       return dict.function->parent;
     }
-    for (int i = 0; i < dict.function->members->len; i++) {
-      if (dict.function->members->entries[i].key != NULL && strcmp(dict.function->members->entries[i].key, key) == 0) {
-        return dict.function->members->entries[i].value;
-      }
+    TyaDictEntry *entry = tya_dict_find_entry(dict.function->members, key);
+    if (entry != NULL) {
+      return entry->value;
     }
     if (dict.function->is_class && dict.function->parent.kind == TYA_FUNCTION) {
       TyaValue inherited = tya_member(dict.function->parent, key);
@@ -1341,21 +1473,18 @@ TyaValue tya_member(TyaValue dict, const char *key) {
   }
   if (dict.kind == TYA_DICT) {
     bool module_namespace = false;
-    for (int i = 0; i < dict.dict->len; i++) {
-      if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, "__module_namespace") == 0) {
-        module_namespace = tya_truthy(dict.dict->entries[i].value);
-        break;
-      }
+    TyaDictEntry *entry = tya_dict_find_entry(dict.dict, "__module_namespace");
+    if (entry != NULL) {
+      module_namespace = tya_truthy(entry->value);
     }
     if (!module_namespace) {
       fprintf(stderr, "cannot use . access on dictionary; use index access\n");
       exit(1);
     }
   }
-  for (int i = 0; i < dict.dict->len; i++) {
-    if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, key) == 0) {
-      return dict.dict->entries[i].value;
-    }
+  TyaDictEntry *entry = tya_dict_find_entry(dict.dict, key);
+  if (entry != NULL) {
+    return entry->value;
   }
   if (dict.kind == TYA_OBJECT) {
     if (strcmp(key, "to_string") == 0) return tya_bind_method(dict, tya_method_to_string);
@@ -1368,15 +1497,7 @@ TyaValue tya_member(TyaValue dict, const char *key) {
 
 void tya_set_member(TyaValue dict, const char *key, TyaValue value) {
   if (dict.kind == TYA_FUNCTION && dict.function != NULL && dict.function->members != NULL) {
-    for (int i = 0; i < dict.function->members->len; i++) {
-      if (dict.function->members->entries[i].key != NULL && strcmp(dict.function->members->entries[i].key, key) == 0) {
-        dict.function->members->entries[i].value = value;
-        return;
-      }
-    }
-    dict.function->members->entries = realloc(dict.function->members->entries, sizeof(TyaDictEntry) * (dict.function->members->len + 1));
-    dict.function->members->entries[dict.function->members->len] = (TyaDictEntry){key, value};
-    dict.function->members->len++;
+    tya_dict_set_entry(dict.function->members, key, value);
     return;
   }
   if ((dict.kind != TYA_DICT && dict.kind != TYA_OBJECT) || dict.dict == NULL) {
@@ -1386,25 +1507,21 @@ void tya_set_member(TyaValue dict, const char *key, TyaValue value) {
     size_t hidden_len = strlen(key) + 2;
     char *hidden_key = malloc(hidden_len);
     snprintf(hidden_key, hidden_len, "@%s", key);
-    for (int i = 0; i < dict.dict->len; i++) {
-      if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, hidden_key) == 0) {
-        dict.dict->entries[i].value = value;
-        break;
-      }
+    TyaDictEntry *hidden_entry = tya_dict_find_entry(dict.dict, hidden_key);
+    if (hidden_entry != NULL) {
+      hidden_entry->value = value;
     }
+    free(hidden_key);
   }
-  for (int i = 0; i < dict.dict->len; i++) {
-    if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, key) == 0) {
-      if (dict.kind == TYA_OBJECT && value.kind != TYA_FUNCTION && dict.dict->entries[i].value.kind == TYA_FUNCTION && key != NULL && key[0] != '@') {
-        return;
-      }
-      dict.dict->entries[i].value = value;
+  TyaDictEntry *entry = tya_dict_find_entry(dict.dict, key);
+  if (entry != NULL) {
+    if (dict.kind == TYA_OBJECT && value.kind != TYA_FUNCTION && entry->value.kind == TYA_FUNCTION && key != NULL && key[0] != '@') {
       return;
     }
+    entry->value = value;
+    return;
   }
-  dict.dict->entries = realloc(dict.dict->entries, sizeof(TyaDictEntry) * (dict.dict->len + 1));
-  dict.dict->entries[dict.dict->len] = (TyaDictEntry){key, value};
-  dict.dict->len++;
+  tya_dict_set_entry(dict.dict, key, value);
 }
 
 TyaValue tya_dict_key_at(TyaValue dict, TyaValue index) {
@@ -1412,15 +1529,8 @@ TyaValue tya_dict_key_at(TyaValue dict, TyaValue index) {
     return tya_nil();
   }
   int target = (int)index.number;
-  int seen = 0;
-  for (int i = 0; i < dict.dict->len; i++) {
-    if (dict.dict->entries[i].key == NULL) {
-      continue;
-    }
-    if (seen == target) {
-      return tya_string(dict.dict->entries[i].key);
-    }
-    seen++;
+  if (target >= 0 && target < dict.dict->len) {
+    return tya_string(dict.dict->entries[target].key);
   }
   return tya_nil();
 }
@@ -1430,15 +1540,8 @@ TyaValue tya_dict_value_at(TyaValue dict, TyaValue index) {
     return tya_nil();
   }
   int target = (int)index.number;
-  int seen = 0;
-  for (int i = 0; i < dict.dict->len; i++) {
-    if (dict.dict->entries[i].key == NULL) {
-      continue;
-    }
-    if (seen == target) {
-      return dict.dict->entries[i].value;
-    }
-    seen++;
+  if (target >= 0 && target < dict.dict->len) {
+    return dict.dict->entries[target].value;
   }
   return tya_nil();
 }
@@ -1447,12 +1550,7 @@ TyaValue tya_has(TyaValue dict, TyaValue key) {
   if (key.kind != TYA_STRING || key.string == NULL || dict.kind != TYA_DICT || dict.dict == NULL) {
     return tya_bool(false);
   }
-  for (int i = 0; i < dict.dict->len; i++) {
-    if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, key.string) == 0) {
-      return tya_bool(true);
-    }
-  }
-  return tya_bool(false);
+  return tya_bool(tya_dict_find_entry(dict.dict, key.string) != NULL);
 }
 
 TyaValue tya_keys(TyaValue dict) {
@@ -1489,10 +1587,9 @@ TyaValue tya_dict_get(TyaValue dict, TyaValue key, TyaValue fallback, bool has_f
   if (key.kind != TYA_STRING || key.string == NULL || dict.kind != TYA_DICT || dict.dict == NULL) {
     return has_fallback ? fallback : tya_nil();
   }
-  for (int i = 0; i < dict.dict->len; i++) {
-    if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, key.string) == 0) {
-      return dict.dict->entries[i].value;
-    }
+  TyaDictEntry *entry = tya_dict_find_entry(dict.dict, key.string);
+  if (entry != NULL) {
+    return entry->value;
   }
   return has_fallback ? fallback : tya_nil();
 }
@@ -1509,13 +1606,7 @@ TyaValue tya_dict_delete(TyaValue dict, TyaValue key) {
   if (key.kind != TYA_STRING || key.string == NULL || dict.kind != TYA_DICT || dict.dict == NULL) {
     return tya_nil();
   }
-  for (int i = 0; i < dict.dict->len; i++) {
-    if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, key.string) == 0) {
-      dict.dict->entries[i].key = NULL;
-      dict.dict->entries[i].value = tya_nil();
-      return tya_nil();
-    }
-  }
+  tya_dict_delete_entry(dict.dict, key.string);
   return tya_nil();
 }
 
