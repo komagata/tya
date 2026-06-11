@@ -28,6 +28,7 @@ typedef struct TyaDict TyaDict;
 typedef struct TyaDictEntry TyaDictEntry;
 typedef struct TyaFunction TyaFunction;
 typedef struct TyaRaiseFrame TyaRaiseFrame;
+typedef struct TyaString TyaString;
 typedef struct TyaTask TyaTask;
 typedef struct TyaChannel TyaChannel;
 typedef struct TyaResource TyaResource;
@@ -39,6 +40,7 @@ struct TyaValue {
   double number;
   bool number_is_int;
   const char *string;
+  TyaString *string_value;
   TyaArray *array;
   TyaDict *dict;
   TyaFunction *function;

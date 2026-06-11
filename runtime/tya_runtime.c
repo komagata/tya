@@ -122,6 +122,8 @@ typedef enum {
   TYA_GC_RESOURCE = 7,
 } TyaGcKind;
 
+static void *tya_gc_alloc(size_t size, TyaGcKind kind);
+
 /* Sub-tag for the multi-purpose TyaResource container. v0.42 STEP 7
  * uses one container kind to host the three sync primitives so the
  * value-kind switch table stays compact. */
@@ -152,6 +154,12 @@ struct TyaBytes {
   TyaGcHeader gc;
   int len;
   uint8_t *data;
+};
+
+struct TyaString {
+  int len;
+  bool ascii_only;
+  const char *data;
 };
 
 typedef struct TyaDictMapEntry {
@@ -218,6 +226,65 @@ static uint64_t tya_dict_hash(const char *key) {
     p++;
   }
   return hash;
+}
+
+static bool tya_ascii_only_bytes(const char *data, int len) {
+  if (data == NULL) return true;
+  for (int i = 0; i < len; i++) {
+    if (((unsigned char)data[i] & 0x80) != 0) return false;
+  }
+  return true;
+}
+
+static TyaString *tya_new_string_ref(const char *data, int len, bool ascii_only) {
+  TyaString *s = malloc(sizeof(TyaString));
+  if (s == NULL) {
+    fprintf(stderr, "tya: out of memory\n");
+    exit(1);
+  }
+  s->len = len;
+  s->ascii_only = ascii_only;
+  s->data = data == NULL ? "" : data;
+  return s;
+}
+
+static TyaValue tya_string_with_len(const char *data, int len, bool ascii_only) {
+  TyaString *s = tya_new_string_ref(data, len, ascii_only);
+  return (TyaValue){.kind = TYA_STRING, .string = s->data, .string_value = s};
+}
+
+static TyaValue tya_string_alloc_len(int len, bool ascii_only) {
+  TyaString *s = malloc(sizeof(TyaString) + (size_t)len + 1);
+  if (s == NULL) {
+    fprintf(stderr, "tya: out of memory\n");
+    exit(1);
+  }
+  char *data = (char *)(s + 1);
+  s->len = len;
+  s->ascii_only = ascii_only;
+  s->data = data;
+  data[len] = '\0';
+  return (TyaValue){.kind = TYA_STRING, .string = data, .string_value = s};
+}
+
+static int tya_string_byte_len_value(TyaValue value) {
+  if (value.kind == TYA_STRING && value.string_value != NULL) return value.string_value->len;
+  return value.string == NULL ? 0 : (int)strlen(value.string);
+}
+
+static bool tya_string_ascii_only_value(TyaValue value) {
+  if (value.string_value != NULL) return value.string_value->ascii_only;
+  int len = value.string == NULL ? 0 : (int)strlen(value.string);
+  return tya_ascii_only_bytes(value.string, len);
+}
+
+static bool tya_string_equal_value(TyaValue left, TyaValue right) {
+  if (left.string == NULL || right.string == NULL) {
+    return left.string == right.string;
+  }
+  int left_len = tya_string_byte_len_value(left);
+  int right_len = tya_string_byte_len_value(right);
+  return left_len == right_len && memcmp(left.string, right.string, (size_t)left_len) == 0;
 }
 
 static void tya_dict_init(TyaDict *dict, int cap) {
@@ -812,7 +879,8 @@ TyaValue tya_float(double value) {
 }
 
 TyaValue tya_string(const char *value) {
-  return (TyaValue){.kind = TYA_STRING, .string = value};
+  const char *data = value == NULL ? "" : value;
+  return (TyaValue){.kind = TYA_STRING, .string = data};
 }
 
 TyaValue tya_array(const TyaValue *items, int count) {
@@ -1863,19 +1931,21 @@ TyaValue tya_starts_with(TyaValue text, TyaValue prefix) {
   if (text.kind != TYA_STRING || prefix.kind != TYA_STRING || text.string == NULL || prefix.string == NULL) {
     return tya_bool(false);
   }
-  return tya_bool(strncmp(text.string, prefix.string, strlen(prefix.string)) == 0);
+  int text_len = tya_string_byte_len_value(text);
+  int prefix_len = tya_string_byte_len_value(prefix);
+  return tya_bool(prefix_len <= text_len && memcmp(text.string, prefix.string, (size_t)prefix_len) == 0);
 }
 
 TyaValue tya_ends_with(TyaValue text, TyaValue suffix) {
   if (text.kind != TYA_STRING || suffix.kind != TYA_STRING || text.string == NULL || suffix.string == NULL) {
     return tya_bool(false);
   }
-  size_t text_len = strlen(text.string);
-  size_t suffix_len = strlen(suffix.string);
+  int text_len = tya_string_byte_len_value(text);
+  int suffix_len = tya_string_byte_len_value(suffix);
   if (suffix_len > text_len) {
     return tya_bool(false);
   }
-  return tya_bool(strcmp(text.string + text_len - suffix_len, suffix.string) == 0);
+  return tya_bool(memcmp(text.string + text_len - suffix_len, suffix.string, (size_t)suffix_len) == 0);
 }
 
 TyaValue tya_trim(TyaValue text) {
@@ -1897,18 +1967,18 @@ TyaValue tya_replace(TyaValue text, TyaValue old, TyaValue replacement) {
   if (text.kind != TYA_STRING || old.kind != TYA_STRING || replacement.kind != TYA_STRING || text.string == NULL || old.string == NULL || replacement.string == NULL) {
     return tya_string("");
   }
-  size_t old_len = strlen(old.string);
+  size_t old_len = (size_t)tya_string_byte_len_value(old);
   if (old_len == 0) {
     return text;
   }
-  size_t replacement_len = strlen(replacement.string);
+  size_t replacement_len = (size_t)tya_string_byte_len_value(replacement);
   size_t count = 0;
   const char *cursor = text.string;
   while ((cursor = strstr(cursor, old.string)) != NULL) {
     count++;
     cursor += old_len;
   }
-  size_t text_len = strlen(text.string);
+  size_t text_len = (size_t)tya_string_byte_len_value(text);
   size_t out_len = text_len + count * (replacement_len - old_len);
   char *out = malloc(out_len + 1);
   char *dst = out;
@@ -1923,14 +1993,14 @@ TyaValue tya_replace(TyaValue text, TyaValue old, TyaValue replacement) {
     cursor = next + old_len;
   }
   strcpy(dst, cursor);
-  return tya_string(out);
+  return tya_string_with_len(out, (int)out_len, tya_ascii_only_bytes(out, (int)out_len));
 }
 
 TyaValue tya_byte_len(TyaValue text) {
   if (text.kind != TYA_STRING || text.string == NULL) {
     return tya_number(0);
   }
-  return tya_number((double)strlen(text.string));
+  return tya_number((double)tya_string_byte_len_value(text));
 }
 
 TyaValue tya_string_slice(TyaValue text, TyaValue start, TyaValue end) {
@@ -1954,7 +2024,7 @@ TyaValue tya_string_slice(TyaValue text, TyaValue start, TyaValue end) {
   char *out = malloc((size_t)len + 1);
   memcpy(out, text.string + start_byte, (size_t)len);
   out[len] = '\0';
-  return tya_string(out);
+  return tya_string_with_len(out, len, tya_ascii_only_bytes(out, len));
 }
 
 TyaValue tya_ord(TyaValue text) {
@@ -2093,10 +2163,7 @@ bool tya_equal(TyaValue left, TyaValue right) {
   case TYA_NUMBER:
     return left.number == right.number;
   case TYA_STRING:
-    if (left.string == NULL || right.string == NULL) {
-      return left.string == right.string;
-    }
-    return strcmp(left.string, right.string) == 0;
+    return tya_string_equal_value(left, right);
   case TYA_ARRAY:
     return tya_deep_equal_bool(left, right);
   case TYA_DICT:
@@ -2144,7 +2211,7 @@ static bool tya_data_object_equal(TyaValue left, TyaValue right) {
   if (left_type.kind != TYA_STRING || right_type.kind != TYA_STRING || left_type.string == NULL || right_type.string == NULL) {
     return false;
   }
-  if (strcmp(left_type.string, right_type.string) != 0) {
+  if (!tya_string_equal_value(left_type, right_type)) {
     return false;
   }
   for (int i = 0; i < left.dict->len; i++) {
@@ -2196,10 +2263,7 @@ static bool tya_deep_equal_bool(TyaValue left, TyaValue right) {
   case TYA_NUMBER:
     return left.number == right.number;
   case TYA_STRING:
-    if (left.string == NULL || right.string == NULL) {
-      return left.string == right.string;
-    }
-    return strcmp(left.string, right.string) == 0;
+    return tya_string_equal_value(left, right);
   case TYA_ARRAY:
     if (left.array == NULL || right.array == NULL) {
       return left.array == right.array;
@@ -2338,13 +2402,13 @@ TyaValue tya_add(TyaValue left, TyaValue right) {
     return tya_bytes_concat(left, right);
   }
   if (left.kind == TYA_STRING && right.kind == TYA_STRING && left.string != NULL && right.string != NULL) {
-    size_t left_len = strlen(left.string);
-    size_t right_len = strlen(right.string);
-    char *out = malloc(left_len + right_len + 1);
-    memcpy(out, left.string, left_len);
-    memcpy(out + left_len, right.string, right_len);
-    out[left_len + right_len] = '\0';
-    return tya_string(out);
+    size_t left_len = (size_t)tya_string_byte_len_value(left);
+    size_t right_len = (size_t)tya_string_byte_len_value(right);
+    bool ascii_only = tya_string_ascii_only_value(left) && tya_string_ascii_only_value(right);
+    TyaValue out = tya_string_alloc_len((int)(left_len + right_len), ascii_only);
+    memcpy((char *)out.string, left.string, left_len);
+    memcpy((char *)out.string + left_len, right.string, right_len);
+    return out;
   }
   if (tya_legacy_modules_enabled() && (left.kind == TYA_STRING || right.kind == TYA_STRING)) {
     return tya_add(tya_to_string(left), tya_to_string(right));
