@@ -1,4 +1,4 @@
-import util
+import util/*
 
 print(util.Util.foo)
 print(util.Util.bar())
