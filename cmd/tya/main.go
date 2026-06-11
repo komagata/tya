@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -642,23 +644,19 @@ func buildExecutableWithCoverTarget(path string, output string, opt *codegen.Cov
 	if err != nil {
 		return nil, err
 	}
-	args := []string{cfile, filepath.Join(runtimeDir, "tya_runtime.c")}
-	httpC := filepath.Join(runtimeDir, "tya_http_server.c")
-	if _, err := os.Stat(httpC); err == nil {
-		args = append(args, httpC)
+	runtimeSources := runtimeSourceFiles(runtimeDir, opt != nil)
+	runtimeObjects, err := cachedRuntimeObjects(outDir, runtimeDir, runtimeSources, runtimeObjectCompileFlags(runtimeDir, opt != nil))
+	if err != nil {
+		return nil, err
 	}
+	args := []string{cfile}
+	args = append(args, runtimeObjects...)
 	if nativePlan != nil {
 		args = append(args, nativePlan.Sources...)
 		for _, dir := range nativePlan.IncludeDirs {
 			args = append(args, "-I", dir)
 		}
 		args = append(args, nativePlan.CFlags...)
-	}
-	if opt != nil {
-		coverC := filepath.Join(runtimeDir, "tya_cover.c")
-		if _, err := os.Stat(coverC); err == nil {
-			args = append(args, coverC)
-		}
 	}
 	args = append(args, "-I", runtimeDir, "-o", output)
 	// The runtime uses pthread primitives for GC and sync resources. libm
@@ -682,23 +680,195 @@ func buildExecutableWithCoverTarget(path string, output string, opt *codegen.Cov
 	if nativePlan != nil {
 		args = append(args, nativePlan.LDFlags...)
 	}
-	var compile *exec.Cmd
-	if cc := os.Getenv("CC"); cc != "" {
-		compile = exec.Command(cc, args...)
-	} else if cc := isolatedTestHostCC(); cc != "" {
-		compile = exec.Command(cc, args...)
-	} else {
-		zig, err := resolveZigToolchain()
-		if err != nil {
-			return nil, err
-		}
-		compile = zigCommand(zig.Path, append([]string{"cc"}, args...)...)
+	compile, err := ccCommand(args...)
+	if err != nil {
+		return nil, err
 	}
 	compile.Stderr = os.Stderr
 	if err := compile.Run(); err != nil {
 		return nil, err
 	}
 	return reg, nil
+}
+
+func runtimeSourceFiles(runtimeDir string, cover bool) []string {
+	sources := []string{filepath.Join(runtimeDir, "tya_runtime.c")}
+	for _, name := range []string{"tya_http_server.c"} {
+		path := filepath.Join(runtimeDir, name)
+		if _, err := os.Stat(path); err == nil {
+			sources = append(sources, path)
+		}
+	}
+	if cover {
+		path := filepath.Join(runtimeDir, "tya_cover.c")
+		if _, err := os.Stat(path); err == nil {
+			sources = append(sources, path)
+		}
+	}
+	return sources
+}
+
+func runtimeObjectCompileFlags(runtimeDir string, cover bool) []string {
+	flags := []string{"-I", runtimeDir}
+	if cover {
+		flags = append(flags, "-DTYA_ENABLE_COVERAGE")
+	}
+	if shouldEnableZlib() {
+		flags = append(flags, "-DTYA_ENABLE_ZLIB")
+	}
+	if shouldEnableOpenSSL() {
+		flags = append(flags, "-DTYA_ENABLE_OPENSSL")
+		flags = append(flags, compileOnlyFlags(opensslCompileFlags())...)
+	}
+	return flags
+}
+
+func compileOnlyFlags(flags []string) []string {
+	out := []string{}
+	for i := 0; i < len(flags); i++ {
+		flag := flags[i]
+		if flag == "-L" {
+			i++
+			continue
+		}
+		if strings.HasPrefix(flag, "-L") {
+			continue
+		}
+		out = append(out, flag)
+	}
+	return out
+}
+
+func cachedRuntimeObjects(fallbackDir string, runtimeDir string, sources []string, flags []string) ([]string, error) {
+	key, err := runtimeObjectCacheKey(runtimeDir, sources, flags)
+	if err != nil {
+		return nil, err
+	}
+	dir := runtimeObjectCacheDir(fallbackDir, key)
+	objects := runtimeObjectPaths(dir, sources)
+	if runtimeObjectsExist(objects) {
+		return objects, nil
+	}
+	if err := os.MkdirAll(filepath.Dir(dir), 0755); err != nil {
+		return nil, err
+	}
+	tmp, err := os.MkdirTemp(filepath.Dir(dir), key+".tmp-*")
+	if err != nil {
+		return nil, err
+	}
+	tmpObjects := runtimeObjectPaths(tmp, sources)
+	for i, source := range sources {
+		args := append([]string{"-c", source, "-o", tmpObjects[i]}, flags...)
+		cmd, err := ccCommand(args...)
+		if err != nil {
+			_ = os.RemoveAll(tmp)
+			return nil, err
+		}
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			_ = os.RemoveAll(tmp)
+			return nil, err
+		}
+	}
+	if err := os.Rename(tmp, dir); err != nil {
+		if runtimeObjectsExist(objects) {
+			_ = os.RemoveAll(tmp)
+			return objects, nil
+		}
+		_ = os.RemoveAll(dir)
+		if err := os.Rename(tmp, dir); err != nil {
+			_ = os.RemoveAll(tmp)
+			return nil, err
+		}
+	}
+	return objects, nil
+}
+
+func runtimeObjectCacheDir(fallbackDir string, key string) string {
+	if cacheRoot, err := os.UserCacheDir(); err == nil {
+		dir := filepath.Join(cacheRoot, "tya", "runtime-objects")
+		if err := os.MkdirAll(dir, 0755); err == nil {
+			return filepath.Join(dir, key)
+		}
+	}
+	return filepath.Join(fallbackDir, "runtime-objects", key)
+}
+
+func runtimeObjectCacheKey(runtimeDir string, sources []string, flags []string) (string, error) {
+	h := sha256.New()
+	fmt.Fprintf(h, "tya-runtime-cache-v1\n")
+	fmt.Fprintf(h, "version=%s\n", version)
+	fmt.Fprintf(h, "goos=%s\n", runtime.GOOS)
+	fmt.Fprintf(h, "goarch=%s\n", runtime.GOARCH)
+	fmt.Fprintf(h, "cc=%s\n", ccIdentity())
+	fmt.Fprintf(h, "runtime_dir=%s\n", filepath.Clean(runtimeDir))
+	for _, flag := range flags {
+		fmt.Fprintf(h, "flag=%s\n", flag)
+	}
+	for _, source := range sources {
+		raw, err := os.ReadFile(source)
+		if err != nil {
+			return "", err
+		}
+		abs, err := filepath.Abs(source)
+		if err != nil {
+			return "", err
+		}
+		fmt.Fprintf(h, "source=%s\n", filepath.Clean(abs))
+		sum := sha256.Sum256(raw)
+		fmt.Fprintf(h, "sha256=%x\n", sum)
+	}
+	return hex.EncodeToString(h.Sum(nil))[:32], nil
+}
+
+func runtimeObjectPaths(dir string, sources []string) []string {
+	objects := make([]string, 0, len(sources))
+	for i, source := range sources {
+		name := fmt.Sprintf("%02d-%s.o", i, strings.TrimSuffix(filepath.Base(source), filepath.Ext(source)))
+		objects = append(objects, filepath.Join(dir, name))
+	}
+	return objects
+}
+
+func runtimeObjectsExist(objects []string) bool {
+	if len(objects) == 0 {
+		return false
+	}
+	for _, object := range objects {
+		info, err := os.Stat(object)
+		if err != nil || info.IsDir() {
+			return false
+		}
+	}
+	return true
+}
+
+func ccIdentity() string {
+	if cc := os.Getenv("CC"); cc != "" {
+		return "CC=" + cc
+	}
+	if cc := isolatedTestHostCC(); cc != "" {
+		return "isolated=" + cc
+	}
+	zig, err := resolveZigToolchain()
+	if err != nil {
+		return "zig=unresolved"
+	}
+	return "zig=" + zig.Path
+}
+
+func ccCommand(args ...string) (*exec.Cmd, error) {
+	if cc := os.Getenv("CC"); cc != "" {
+		return exec.Command(cc, args...), nil
+	}
+	if cc := isolatedTestHostCC(); cc != "" {
+		return exec.Command(cc, args...), nil
+	}
+	zig, err := resolveZigToolchain()
+	if err != nil {
+		return nil, err
+	}
+	return zigCommand(zig.Path, append([]string{"cc"}, args...)...), nil
 }
 
 func isolatedTestHostCC() string {
