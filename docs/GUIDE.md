@@ -115,8 +115,10 @@ tya build hello.tya -o hello.exe
 hello.exe
 ```
 
-`tya run` is for quick local execution. `tya build` creates a reusable
-executable.
+`tya run` is for quick local execution. Native `tya run` builds use `-O1` by
+default. `tya build` creates a reusable executable and uses `-O2` by default.
+Set `TYA_CFLAGS` to append compiler flags and override defaults, for example
+`TYA_CFLAGS=-O0 tya build hello.tya -o hello`.
 
 ## A Small Script
 

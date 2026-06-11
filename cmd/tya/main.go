@@ -599,20 +599,24 @@ func compileAndRunInDir(path string, args []string, cwd string) error {
 }
 
 func buildExecutable(path string, output string) error {
-	_, err := buildExecutableWithCoverTarget(path, output, nil, "native")
+	_, err := buildExecutableWithCoverTargetFlags(path, output, nil, "native", nativeCFlags("run"))
 	return err
 }
 
 func buildExecutableWithCover(path string, output string, opt *codegen.CoverageOptions) (*codegen.CoverageRegistry, error) {
-	return buildExecutableWithCoverTarget(path, output, opt, "native")
+	return buildExecutableWithCoverTargetFlags(path, output, opt, "native", nativeCFlags("build"))
 }
 
 func buildExecutableTarget(path string, output string, target string) error {
-	_, err := buildExecutableWithCoverTarget(path, output, nil, target)
+	_, err := buildExecutableWithCoverTargetFlags(path, output, nil, target, nativeCFlags("build"))
 	return err
 }
 
 func buildExecutableWithCoverTarget(path string, output string, opt *codegen.CoverageOptions, target string) (*codegen.CoverageRegistry, error) {
+	return buildExecutableWithCoverTargetFlags(path, output, opt, target, nativeCFlags("build"))
+}
+
+func buildExecutableWithCoverTargetFlags(path string, output string, opt *codegen.CoverageOptions, target string, cflags []string) (*codegen.CoverageRegistry, error) {
 	if target == "" {
 		target = "native"
 	}
@@ -658,6 +662,7 @@ func buildExecutableWithCoverTarget(path string, output string, opt *codegen.Cov
 		}
 		args = append(args, nativePlan.CFlags...)
 	}
+	args = append(args, cflags...)
 	args = append(args, "-I", runtimeDir, "-o", output)
 	// The runtime uses pthread primitives for GC and sync resources. libm
 	// provides log2 / exp / sin / cos / atan2 etc.; glibc requires explicit
@@ -709,7 +714,8 @@ func runtimeSourceFiles(runtimeDir string, cover bool) []string {
 }
 
 func runtimeObjectCompileFlags(runtimeDir string, cover bool) []string {
-	flags := []string{"-I", runtimeDir}
+	flags := append([]string{"-O2"}, envCFlags()...)
+	flags = append(flags, "-I", runtimeDir)
 	if cover {
 		flags = append(flags, "-DTYA_ENABLE_COVERAGE")
 	}
@@ -721,6 +727,25 @@ func runtimeObjectCompileFlags(runtimeDir string, cover bool) []string {
 		flags = append(flags, compileOnlyFlags(opensslCompileFlags())...)
 	}
 	return flags
+}
+
+func nativeCFlags(mode string) []string {
+	flags := []string{}
+	switch mode {
+	case "run":
+		flags = append(flags, "-O1")
+	default:
+		flags = append(flags, "-O2")
+	}
+	return append(flags, envCFlags()...)
+}
+
+func envCFlags() []string {
+	raw := strings.TrimSpace(os.Getenv("TYA_CFLAGS"))
+	if raw == "" {
+		return nil
+	}
+	return strings.Fields(raw)
 }
 
 func compileOnlyFlags(flags []string) []string {

@@ -73,7 +73,7 @@ tya run hello.tya
 ```
 
 `tya run` builds a temporary executable, runs it, and removes the temporary
-file after execution.
+file after execution. Native `tya run` builds use `-O1` by default.
 
 To keep the executable:
 
@@ -81,6 +81,10 @@ To keep the executable:
 tya build hello.tya -o hello
 ./hello
 ```
+
+Native `tya build` builds use `-O2` by default. Set `TYA_CFLAGS` to append
+compiler flags and override defaults, for example `TYA_CFLAGS=-O0 tya build
+hello.tya -o hello`.
 
 To print the installed version:
 
