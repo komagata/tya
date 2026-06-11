@@ -5,7 +5,7 @@ mkdir $WORK/install/bin
 mkdir $WORK/install/share
 mkdir $WORK/install/share/tya
 mkdir $WORK/install/share/tya/runtime
-cp runtime/tya_runtime.c $WORK/install/share/tya/runtime/tya_runtime.c
+exec sh -c 'cp runtime/tya_runtime*.c "$WORK/install/share/tya/runtime/"'
 cp runtime/tya_runtime.h $WORK/install/share/tya/runtime/tya_runtime.h
 exec go build -o $WORK/install/bin/tya ./cmd/tya
 mkdir $WORK/outside

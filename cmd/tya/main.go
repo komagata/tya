@@ -649,7 +649,7 @@ func buildExecutableWithCoverTargetFlags(path string, output string, opt *codege
 		return nil, err
 	}
 	runtimeSources := runtimeSourceFiles(runtimeDir, opt != nil)
-	runtimeObjects, err := cachedRuntimeObjects(outDir, runtimeDir, runtimeSources, runtimeObjectCompileFlags(runtimeDir, opt != nil))
+	runtimeObjects, err := cachedRuntimeObjects(outDir, runtimeDir, runtimeSources, runtimeDependencyFiles(runtimeDir), runtimeObjectCompileFlags(runtimeDir, opt != nil))
 	if err != nil {
 		return nil, err
 	}
@@ -713,6 +713,16 @@ func runtimeSourceFiles(runtimeDir string, cover bool) []string {
 	return sources
 }
 
+func runtimeDependencyFiles(runtimeDir string) []string {
+	var deps []string
+	for _, pattern := range []string{"tya_runtime_*.c", "tya_runtime.h", "tya_http_server.h"} {
+		matches, _ := filepath.Glob(filepath.Join(runtimeDir, pattern))
+		deps = append(deps, matches...)
+	}
+	sort.Strings(deps)
+	return deps
+}
+
 func runtimeObjectCompileFlags(runtimeDir string, cover bool) []string {
 	flags := append([]string{"-O2"}, envCFlags()...)
 	flags = append(flags, "-I", runtimeDir)
@@ -764,8 +774,8 @@ func compileOnlyFlags(flags []string) []string {
 	return out
 }
 
-func cachedRuntimeObjects(fallbackDir string, runtimeDir string, sources []string, flags []string) ([]string, error) {
-	key, err := runtimeObjectCacheKey(runtimeDir, sources, flags)
+func cachedRuntimeObjects(fallbackDir string, runtimeDir string, sources []string, dependencies []string, flags []string) ([]string, error) {
+	key, err := runtimeObjectCacheKey(runtimeDir, sources, dependencies, flags)
 	if err != nil {
 		return nil, err
 	}
@@ -819,7 +829,7 @@ func runtimeObjectCacheDir(fallbackDir string, key string) string {
 	return filepath.Join(fallbackDir, "runtime-objects", key)
 }
 
-func runtimeObjectCacheKey(runtimeDir string, sources []string, flags []string) (string, error) {
+func runtimeObjectCacheKey(runtimeDir string, sources []string, dependencies []string, flags []string) (string, error) {
 	h := sha256.New()
 	fmt.Fprintf(h, "tya-runtime-cache-v1\n")
 	fmt.Fprintf(h, "version=%s\n", version)
@@ -831,19 +841,31 @@ func runtimeObjectCacheKey(runtimeDir string, sources []string, flags []string) 
 		fmt.Fprintf(h, "flag=%s\n", flag)
 	}
 	for _, source := range sources {
-		raw, err := os.ReadFile(source)
-		if err != nil {
+		if err := hashRuntimeFile(h, "source", source); err != nil {
 			return "", err
 		}
-		abs, err := filepath.Abs(source)
-		if err != nil {
+	}
+	for _, dep := range dependencies {
+		if err := hashRuntimeFile(h, "dependency", dep); err != nil {
 			return "", err
 		}
-		fmt.Fprintf(h, "source=%s\n", filepath.Clean(abs))
-		sum := sha256.Sum256(raw)
-		fmt.Fprintf(h, "sha256=%x\n", sum)
 	}
 	return hex.EncodeToString(h.Sum(nil))[:32], nil
+}
+
+func hashRuntimeFile(h io.Writer, label string, path string) error {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(h, "%s=%s\n", label, filepath.Clean(abs))
+	sum := sha256.Sum256(raw)
+	fmt.Fprintf(h, "sha256=%x\n", sum)
+	return nil
 }
 
 func runtimeObjectPaths(dir string, sources []string) []string {
@@ -1049,7 +1071,24 @@ func findRuntimeDir() (string, error) {
 
 func runtimeExists(dir string) bool {
 	info, err := os.Stat(filepath.Join(dir, "tya_runtime.c"))
-	return err == nil && !info.IsDir()
+	if err != nil || info.IsDir() {
+		return false
+	}
+	for _, name := range []string{
+		"tya_runtime_core.c",
+		"tya_runtime_collections.c",
+		"tya_runtime_io.c",
+		"tya_runtime_compiler_regex.c",
+		"tya_runtime_crypto_bytes.c",
+		"tya_runtime_net.c",
+		"tya_runtime_task_sync.c",
+	} {
+		info, err := os.Stat(filepath.Join(dir, name))
+		if err != nil || info.IsDir() {
+			return false
+		}
+	}
+	return true
 }
 
 func compileToC(path string) (string, error) {
