@@ -49,13 +49,13 @@ For local formula development from this repository:
 brew install --HEAD ./Formula/tya.rb
 ```
 
-For v0.72.12, download the release source and build the `tya` command locally.
+For v0.72.13, download the release source and build the `tya` command locally.
 This currently requires Go because the reference implementation is written
 in Go.
 
 ```sh
-curl -L https://github.com/komagata/tya/archive/refs/tags/v0.72.12.tar.gz | tar xz
-cd tya-0.72.12
+curl -L https://github.com/komagata/tya/archive/refs/tags/v0.72.13.tar.gz | tar xz
+cd tya-0.72.13
 go build -o tya ./cmd/tya
 ./tya version
 ```
@@ -82,9 +82,11 @@ tya build hello.tya -o hello
 ./hello
 ```
 
-Native `tya build` builds use `-O2` by default. Set `TYA_CFLAGS` to append
-compiler flags and override defaults, for example `TYA_CFLAGS=-O0 tya build
-hello.tya -o hello`.
+Native `tya build` builds use `-O2` by default. On amd64, native builds also
+use the portable `x86-64` CPU baseline so release binaries do not inherit the
+builder machine's newer CPU extensions. Set `TYA_CFLAGS` to append compiler
+flags and override defaults, for example `TYA_CFLAGS=-O0 tya build hello.tya
+-o hello`.
 
 To print the installed version:
 

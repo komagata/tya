@@ -28,7 +28,7 @@ import (
 	"tya/internal/runner"
 )
 
-const version = "0.72.12"
+const version = "0.72.13"
 
 var cliFormat = diag.FormatHuman
 var cliColor = diag.ColorAuto
@@ -724,7 +724,8 @@ func runtimeDependencyFiles(runtimeDir string) []string {
 }
 
 func runtimeObjectCompileFlags(runtimeDir string, cover bool) []string {
-	flags := append([]string{"-O2"}, envCFlags()...)
+	flags := append([]string{"-O2"}, portableNativeCFlags(runtime.GOARCH)...)
+	flags = append(flags, envCFlags()...)
 	flags = append(flags, "-I", runtimeDir)
 	if cover {
 		flags = append(flags, "-DTYA_ENABLE_COVERAGE")
@@ -740,6 +741,10 @@ func runtimeObjectCompileFlags(runtimeDir string, cover bool) []string {
 }
 
 func nativeCFlags(mode string) []string {
+	return nativeCFlagsForArch(mode, runtime.GOARCH)
+}
+
+func nativeCFlagsForArch(mode string, goarch string) []string {
 	flags := []string{}
 	switch mode {
 	case "run":
@@ -747,7 +752,15 @@ func nativeCFlags(mode string) []string {
 	default:
 		flags = append(flags, "-O2")
 	}
+	flags = append(flags, portableNativeCFlags(goarch)...)
 	return append(flags, envCFlags()...)
+}
+
+func portableNativeCFlags(goarch string) []string {
+	if goarch == "amd64" {
+		return []string{"-march=x86-64"}
+	}
+	return nil
 }
 
 func envCFlags() []string {

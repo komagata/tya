@@ -117,7 +117,9 @@ hello.exe
 
 `tya run` is for quick local execution. Native `tya run` builds use `-O1` by
 default. `tya build` creates a reusable executable and uses `-O2` by default.
-Set `TYA_CFLAGS` to append compiler flags and override defaults, for example
+On amd64, native builds also use the portable `x86-64` CPU baseline so release
+binaries do not inherit the builder machine's newer CPU extensions. Set
+`TYA_CFLAGS` to append compiler flags and override defaults, for example
 `TYA_CFLAGS=-O0 tya build hello.tya -o hello`.
 
 ## A Small Script
