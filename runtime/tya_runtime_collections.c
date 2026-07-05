@@ -423,7 +423,7 @@ TyaValue tya_string_index_of(TyaValue text, TyaValue needle, TyaValue start) {
   if (start_byte < 0) {
     return tya_number(-1);
   }
-  char *found = strstr(text.string + start_byte, needle.string);
+  const char *found = strstr(text.string + start_byte, needle.string);
   if (found == NULL) {
     return tya_number(-1);
   }

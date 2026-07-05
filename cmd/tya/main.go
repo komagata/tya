@@ -757,10 +757,17 @@ func nativeCFlagsForArch(mode string, goarch string) []string {
 }
 
 func portableNativeCFlags(goarch string) []string {
-	if goarch == "amd64" {
-		return []string{"-march=x86-64"}
+	if goarch != "amd64" {
+		return nil
 	}
-	return nil
+	// Zig's clang frontend rejects gcc/clang-style "-march=x86-64"
+	// (it reports "unknown CPU: 'x86'", parsing the hyphenated cpu
+	// name incorrectly) and instead wants the baseline ISA spelled
+	// with an underscore via -mcpu.
+	if strings.HasPrefix(ccIdentity(), "zig=") {
+		return []string{"-mcpu=x86_64"}
+	}
+	return []string{"-march=x86-64"}
 }
 
 func envCFlags() []string {
@@ -792,7 +799,7 @@ func cachedRuntimeObjects(fallbackDir string, runtimeDir string, sources []strin
 	if err != nil {
 		return nil, err
 	}
-	dir := runtimeObjectCacheDir(fallbackDir, key)
+	dir := runtimeObjectCacheDir(fallbackDir, runtimeDir, key)
 	objects := runtimeObjectPaths(dir, sources)
 	if runtimeObjectsExist(objects) {
 		return objects, nil
@@ -832,9 +839,24 @@ func cachedRuntimeObjects(fallbackDir string, runtimeDir string, sources []strin
 	return objects, nil
 }
 
-func runtimeObjectCacheDir(fallbackDir string, key string) string {
+func runtimeObjectCacheDir(fallbackDir string, runtimeDir string, key string) string {
 	if cacheRoot, err := os.UserCacheDir(); err == nil {
 		dir := filepath.Join(cacheRoot, "tya", "runtime-objects")
+		if err := os.MkdirAll(dir, 0755); err == nil {
+			return filepath.Join(dir, key)
+		}
+	}
+	// os.UserCacheDir can fail to be usable in sandboxed environments
+	// (e.g. testscript's HOME=/no-home, where a normal user can't
+	// create a directory directly under "/"). fallbackDir is normally
+	// the invoking source file's own ephemeral .tya/build directory,
+	// which would give this cache zero cross-invocation benefit for a
+	// test suite that builds hundreds of throwaway scripts. Prefer a
+	// directory beside the runtime sources instead: it's shared by
+	// every build against this checkout/install and, unlike the real
+	// user cache dir, doesn't depend on HOME being usable.
+	if runtimeDir != "" {
+		dir := filepath.Join(filepath.Dir(runtimeDir), ".tya-build-cache", "runtime-objects")
 		if err := os.MkdirAll(dir, 0755); err == nil {
 			return filepath.Join(dir, key)
 		}

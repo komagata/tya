@@ -1,6 +1,7 @@
 dist/
 _site/
 .tya/
+.tya-build-cache/
 .serena/
 .agents/agent
 .claude/worktrees/
