@@ -111,6 +111,30 @@ int main(void) {
 	}
 }
 
+func TestCRuntimeCollectsIntermediateStringConcatenations(t *testing.T) {
+	src := `#include "tya_runtime.h"
+#include <stdio.h>
+
+int main(void) {
+  TyaValue out = tya_string("");
+  tya_gc_register_root(&out);
+  for (int i = 0; i < 100000; i++) {
+    out = tya_add(out, tya_string("x"));
+    tya_gc_maybe_collect();
+  }
+  tya_gc_collect();
+  TyaValue stats = tya_gc_stats();
+  printf("%.0f\n", tya_len(out).number);
+  printf("%.0f\n", tya_dict_get(stats, tya_string("live_count"), tya_nil(), false).number);
+  return 0;
+}
+`
+	out := compileAndRunRuntime(t, src)
+	if string(out) != "100000\n1\n" {
+		t.Fatalf("got %q, want bounded live string count", out)
+	}
+}
+
 func TestCRuntimeProcessExitAndPanic(t *testing.T) {
 	out, code := compileAndRunRuntimeAllowExit(t, `#include "tya_runtime.h"
 

@@ -135,7 +135,7 @@ type CoverageRegistry struct {
 // Returns (csource, registry, diags, err). diags is nil on success,
 // or the same payload as err.(*CodegenError).Diags on failure.
 func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOptions) (string, *CoverageRegistry, []diag.Diagnostic, error) {
-	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, funcParams: map[string][]string{}, classes: map[string]string{}, classParams: map[string][]string{}, classMethods: map[string]string{}, methodParams: map[string][]string{}, classDecls: map[string]*ast.ClassDecl{}, structDecls: map[string]*ast.StructDecl{}, structWithSyms: map[string]string{}, interfaceDecls: map[string]*ast.InterfaceDecl{}, moduleClasses: map[string]string{}, sourcePath: sourcePath}
+	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, funcParams: map[string][]string{}, classes: map[string]string{}, classParams: map[string][]string{}, classMethods: map[string]string{}, methodParams: map[string][]string{}, classDecls: map[string]*ast.ClassDecl{}, structDecls: map[string]*ast.StructDecl{}, structWithSyms: map[string]string{}, interfaceDecls: map[string]*ast.InterfaceDecl{}, moduleClasses: map[string]string{}, sourcePath: sourcePath, gcSafeLoops: true}
 	if opt != nil {
 		g.coverEnabled = true
 		g.coverOpt = opt
@@ -270,6 +270,7 @@ type cgen struct {
 	coverEnabled      bool
 	coverOpt          *CoverageOptions
 	coverEntries      []CoverageEntry
+	gcSafeLoops       bool
 }
 
 func (g *cgen) globalLine(s string) {

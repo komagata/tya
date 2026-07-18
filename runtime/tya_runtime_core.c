@@ -19,6 +19,7 @@ typedef enum {
   TYA_GC_TASK = 5,
   TYA_GC_CHANNEL = 6,
   TYA_GC_RESOURCE = 7,
+  TYA_GC_STRING = 8,
 } TyaGcKind;
 
 static void *tya_gc_alloc(size_t size, TyaGcKind kind);
@@ -56,6 +57,7 @@ struct TyaBytes {
 };
 
 struct TyaString {
+  TyaGcHeader gc;
   int len;
   bool ascii_only;
   const char *data;
@@ -136,11 +138,7 @@ static bool tya_ascii_only_bytes(const char *data, int len) {
 }
 
 static TyaString *tya_new_string_ref(const char *data, int len, bool ascii_only) {
-  TyaString *s = malloc(sizeof(TyaString));
-  if (s == NULL) {
-    fprintf(stderr, "tya: out of memory\n");
-    exit(1);
-  }
+  TyaString *s = tya_gc_alloc(sizeof(TyaString), TYA_GC_STRING);
   s->len = len;
   s->ascii_only = ascii_only;
   s->data = data == NULL ? "" : data;
@@ -153,11 +151,7 @@ static TyaValue tya_string_with_len(const char *data, int len, bool ascii_only) 
 }
 
 static TyaValue tya_string_alloc_len(int len, bool ascii_only) {
-  TyaString *s = malloc(sizeof(TyaString) + (size_t)len + 1);
-  if (s == NULL) {
-    fprintf(stderr, "tya: out of memory\n");
-    exit(1);
-  }
+  TyaString *s = tya_gc_alloc(sizeof(TyaString) + (size_t)len + 1, TYA_GC_STRING);
   char *data = (char *)(s + 1);
   s->len = len;
   s->ascii_only = ascii_only;
@@ -279,7 +273,14 @@ static void tya_dict_set_entry(TyaDict *dict, const char *key, TyaValue value) {
     return;
   }
   tya_dict_ensure_entry_cap(dict, dict->len + 1);
-  dict->entries[dict->len] = (TyaDictEntry){key, value};
+  size_t key_len = strlen(key);
+  char *owned_key = malloc(key_len + 1);
+  if (owned_key == NULL) {
+    fprintf(stderr, "tya: out of memory\n");
+    exit(1);
+  }
+  memcpy(owned_key, key, key_len + 1);
+  dict->entries[dict->len] = (TyaDictEntry){owned_key, value};
   dict->len++;
   if (dict->map == NULL || dict->len * 2 >= dict->map_cap) {
     tya_dict_rebuild_map(dict);
@@ -295,6 +296,7 @@ static void tya_dict_delete_entry(TyaDict *dict, const char *key) {
   TyaDictEntry *entry = tya_dict_find_entry(dict, key);
   if (dict == NULL || entry == NULL) return;
   int index = (int)(entry - dict->entries);
+  free((char *)entry->key);
   for (int i = index + 1; i < dict->len; i++) {
     dict->entries[i - 1] = dict->entries[i];
   }
@@ -639,11 +641,17 @@ static void tya_gc_mark_header(TyaGcHeader *h) {
     case TYA_GC_RESOURCE:
       /* leaf — sync primitives hold no Tya values */
       break;
+    case TYA_GC_STRING:
+      /* leaf */
+      break;
   }
 }
 
 static void tya_gc_mark_value(TyaValue v) {
   switch (v.kind) {
+    case TYA_STRING:
+      if (v.string_value) tya_gc_mark_header((TyaGcHeader *)v.string_value);
+      break;
     case TYA_ARRAY:
       if (v.array) tya_gc_mark_header((TyaGcHeader *)v.array);
       break;
@@ -685,6 +693,7 @@ static void tya_gc_free_one(TyaGcHeader *h) {
     }
     case TYA_GC_DICT: {
       TyaDict *d = (TyaDict *)h;
+      for (int i = 0; i < d->len; i++) free((char *)d->entries[i].key);
       free(d->entries);
       free(d->map);
       free(d);
@@ -729,6 +738,9 @@ static void tya_gc_free_one(TyaGcHeader *h) {
       free(r);
       break;
     }
+    case TYA_GC_STRING:
+      free(h);
+      break;
   }
 }
 
@@ -816,11 +828,8 @@ TyaValue tya_dict(const TyaDictEntry *entries, int count) {
   TyaDict *dict = tya_gc_alloc(sizeof(TyaDict), TYA_GC_DICT);
   tya_dict_init(dict, count);
   for (int i = 0; i < count; i++) {
-    tya_dict_ensure_entry_cap(dict, dict->len + 1);
-    dict->entries[dict->len] = entries[i];
-    dict->len++;
+    tya_dict_set_entry(dict, entries[i].key, entries[i].value);
   }
-  tya_dict_rebuild_map(dict);
   return (TyaValue){.kind = TYA_DICT, .dict = dict};
 }
 
@@ -1440,4 +1449,3 @@ void tya_set_index(TyaValue value, TyaValue index, TyaValue item) {
     tya_set_member(value, index.string, item);
   }
 }
-

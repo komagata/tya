@@ -25,6 +25,14 @@ func TestEmitCCompilesSimpleProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCollectsStringsDuringTopLevelWhileLoop(t *testing.T) {
+	src := "out = \"\"\ni = 0\nwhile i < 10000\n  out = out + \"x\"\n  i = i + 1\nprint(out.len())\n"
+	out := compileAndRun(t, src)
+	if string(out) != "10000\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCCompilesControlFlowExpressions(t *testing.T) {
 	src := "label = if true\n  \"adult\"\nelse\n  \"young\"\nprint(label)\nmissing = if false\n  \"bad\"\nprint(missing)\ni = 0\nlast_while = while i < 3\n  i = i + 1\n  i\nprint(last_while)\nlast_for = for item in [1, 2, 3]\n  item\nprint(last_for)\nstatus = match \"ok\"\n  case \"ok\"\n    \"success\"\n  case _\n    \"fallback\"\nprint(status)\n"
 	out := compileAndRun(t, src)
