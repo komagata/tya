@@ -331,6 +331,14 @@ func (g *cgen) matchExpr(n *ast.MatchStmt) (string, string, error) {
 }
 
 func (g *cgen) expr(expr ast.Expr) (string, string, error) {
+	value, typ, err := g.exprRaw(expr)
+	if err != nil {
+		return "", "", err
+	}
+	return fmt.Sprintf("tya_gc_protect(%s)", value), typ, nil
+}
+
+func (g *cgen) exprRaw(expr ast.Expr) (string, string, error) {
 	switch n := expr.(type) {
 	case *ast.IntLit:
 		return "tya_number(" + strconv.FormatInt(n.Value, 10) + ")", "TyaValue", nil

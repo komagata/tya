@@ -271,6 +271,7 @@ type cgen struct {
 	coverOpt          *CoverageOptions
 	coverEntries      []CoverageEntry
 	gcSafeLoops       bool
+	gcFrameName       string
 }
 
 func (g *cgen) globalLine(s string) {

@@ -697,6 +697,7 @@ void tya_panic(TyaValue message) {
 void tya_push_raise_frame(TyaRaiseFrame *frame) {
   frame->value = tya_nil();
   frame->prev = tya_raise_frame;
+  frame->gc_roots = tya_gc_thread_roots;
   tya_raise_frame = frame;
 }
 
@@ -724,6 +725,7 @@ void tya_raise(TyaValue value) {
     exit(1);
   }
   tya_raise_frame->value = value;
+  tya_gc_unwind_roots(tya_raise_frame->gc_roots);
   longjmp(tya_raise_frame->env, 1);
 }
 
@@ -1388,4 +1390,3 @@ TyaValue tya_serialization_has_member(TyaValue value, TyaValue key_value) {
   }
   return tya_bool(false);
 }
-

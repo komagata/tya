@@ -288,7 +288,7 @@ static void tya_dict_set_entry(TyaDict *dict, const char *key, TyaValue value) {
   }
   int slot = tya_dict_map_slot(dict, key);
   if (slot >= 0) {
-    dict->map[slot] = (TyaDictMapEntry){key, dict->len - 1};
+    dict->map[slot] = (TyaDictMapEntry){owned_key, dict->len - 1};
   }
 }
 
@@ -494,6 +494,8 @@ struct TyaTask {
   TyaValue raise_value;  /* in-flight raise to propagate to await */
   TyaValue pending_value;
   TyaValue waiting_value;
+  TyaGcRootFrame *gc_roots;
+  TyaRaiseFrame *raise_frame;
   bool channel_send_failed;
   bool sleeping;
   double wake_time;
@@ -540,6 +542,8 @@ static size_t tya_gc_threshold = 1024;
 static TyaValue **tya_gc_roots = NULL;
 static size_t tya_gc_root_count = 0;
 static size_t tya_gc_root_cap = 0;
+static TyaGcRootFrame *tya_gc_root_frames = NULL;
+static _Thread_local TyaGcRootFrame *tya_gc_thread_roots = NULL;
 
 /* tya_gc_mu serializes allocator state, the live-allocation list, the
  * global root array, and the collector. v0.42 uses a single mutex; an
@@ -574,6 +578,85 @@ void tya_gc_register_root(TyaValue *p) {
   }
   tya_gc_roots[tya_gc_root_count++] = p;
   pthread_mutex_unlock(&tya_gc_mu);
+}
+
+void tya_gc_enter_frame(TyaGcRootFrame *frame, TyaValue **roots, int count) {
+  frame->roots = roots;
+  frame->count = count;
+  frame->protected_values = NULL;
+  frame->protected_count = 0;
+  frame->protected_cap = 0;
+  frame->thread_prev = tya_gc_thread_roots;
+  pthread_mutex_lock(&tya_gc_mu);
+  frame->global_prev = NULL;
+  frame->global_next = tya_gc_root_frames;
+  if (tya_gc_root_frames != NULL) tya_gc_root_frames->global_prev = frame;
+  tya_gc_root_frames = frame;
+  pthread_mutex_unlock(&tya_gc_mu);
+  tya_gc_thread_roots = frame;
+}
+
+void tya_gc_leave_frame(TyaGcRootFrame *frame) {
+  if (frame == NULL) return;
+  pthread_mutex_lock(&tya_gc_mu);
+  if (frame->global_prev != NULL) {
+    frame->global_prev->global_next = frame->global_next;
+  } else {
+    tya_gc_root_frames = frame->global_next;
+  }
+  if (frame->global_next != NULL) frame->global_next->global_prev = frame->global_prev;
+  pthread_mutex_unlock(&tya_gc_mu);
+  tya_gc_thread_roots = frame->thread_prev;
+  free(frame->protected_values);
+}
+
+TyaValue tya_gc_protect(TyaValue value) {
+  TyaGcRootFrame *frame = tya_gc_thread_roots;
+  if (frame == NULL) return value;
+  switch (value.kind) {
+    case TYA_STRING:
+    case TYA_ARRAY:
+    case TYA_DICT:
+    case TYA_OBJECT:
+    case TYA_FUNCTION:
+    case TYA_ERROR:
+    case TYA_BYTES:
+    case TYA_TASK:
+    case TYA_CHANNEL:
+    case TYA_RESOURCE:
+      break;
+    default:
+      return value;
+  }
+  pthread_mutex_lock(&tya_gc_mu);
+  if (frame->protected_count == frame->protected_cap) {
+    int cap = frame->protected_cap == 0 ? 8 : frame->protected_cap * 2;
+    TyaValue *values = realloc(frame->protected_values, sizeof(TyaValue) * (size_t)cap);
+    if (values == NULL) {
+      pthread_mutex_unlock(&tya_gc_mu);
+      fprintf(stderr, "tya: out of memory\n");
+      exit(1);
+    }
+    frame->protected_values = values;
+    frame->protected_cap = cap;
+  }
+  frame->protected_values[frame->protected_count++] = value;
+  pthread_mutex_unlock(&tya_gc_mu);
+  return value;
+}
+
+void tya_gc_clear_protected(void) {
+  TyaGcRootFrame *frame = tya_gc_thread_roots;
+  if (frame == NULL) return;
+  pthread_mutex_lock(&tya_gc_mu);
+  frame->protected_count = 0;
+  pthread_mutex_unlock(&tya_gc_mu);
+}
+
+static void tya_gc_unwind_roots(TyaGcRootFrame *target) {
+  while (tya_gc_thread_roots != target) {
+    tya_gc_leave_frame(tya_gc_thread_roots);
+  }
 }
 
 static void tya_gc_mark_value(TyaValue v);

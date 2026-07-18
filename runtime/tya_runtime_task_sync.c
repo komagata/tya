@@ -120,6 +120,8 @@ TyaValue tya_task_new(TyaValue callee, int argc, TyaValue a, TyaValue b, TyaValu
   t->raise_value = tya_nil();
   t->pending_value = tya_nil();
   t->waiting_value = tya_nil();
+  t->gc_roots = NULL;
+  t->raise_frame = NULL;
   t->channel_send_failed = false;
   t->sleeping = false;
   t->wake_time = 0.0;

@@ -495,6 +495,14 @@ void tya_gc_collect(void) {
   for (size_t i = 0; i < tya_gc_root_count; i++) {
     tya_gc_mark_value(*tya_gc_roots[i]);
   }
+  for (TyaGcRootFrame *frame = tya_gc_root_frames; frame != NULL; frame = frame->global_next) {
+    for (int i = 0; i < frame->count; i++) {
+      tya_gc_mark_value(*frame->roots[i]);
+    }
+    for (int i = 0; i < frame->protected_count; i++) {
+      tya_gc_mark_value(frame->protected_values[i]);
+    }
+  }
   /* Mark in-flight raise values. */
   for (TyaRaiseFrame *frame = tya_raise_frame; frame != NULL; frame = frame->prev) {
     tya_gc_mark_value(frame->value);
@@ -664,8 +672,16 @@ static void tya_scheduler_run_one(void) {
   if (t == NULL) return;
   tya_scheduler_ctx_valid = true;
   TyaTask *prev = tya_current_task_ptr;
+  TyaGcRootFrame *prev_gc_roots = tya_gc_thread_roots;
+  TyaRaiseFrame *prev_raise_frame = tya_raise_frame;
   tya_current_task_ptr = t;
+  tya_gc_thread_roots = t->gc_roots;
+  tya_raise_frame = t->raise_frame;
   swapcontext(&tya_scheduler_ctx, &t->ctx);
+  t->gc_roots = tya_gc_thread_roots;
+  t->raise_frame = tya_raise_frame;
+  tya_gc_thread_roots = prev_gc_roots;
+  tya_raise_frame = prev_raise_frame;
   tya_current_task_ptr = prev;
 }
 
@@ -744,4 +760,3 @@ static void tya_task_fiber_trampoline(uint32_t raw_lo, uint32_t raw_hi) {
  * registers each new task in the innermost scope (if any) so that
  * tya_scope_exit can wait for it before returning. */
 static _Thread_local TyaScope *tya_current_scope = NULL;
-

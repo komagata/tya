@@ -3,10 +3,10 @@
 cd $REPO
 
 exec go run ./cmd/tya --emit-c $WORK/mismatch/main.tya
-stdout 'tya_set_index\(greeting, tya_string\("text"\), text\)'
+stdout 'tya_set_index.*tya_string\("text"\).*text'
 
 exec go run ./cmd/tya --emit-c $WORK/two_modules/main.tya
-stdout 'tya_set_index\(greeting, tya_string\("extra"\), extra\)'
+stdout 'tya_set_index.*tya_string\("extra"\).*extra'
 
 exec go run ./cmd/tya --emit-c $WORK/alias/main.tya
 

@@ -50,6 +50,8 @@ func (g *cgen) emitFuncWithCaptures(name string, fn *ast.FuncLit, classRef strin
 		interfaceSuperSym: g.interfaceSuperSym,
 		predicateName:     predicateName(name),
 		closureVars:       captures,
+		gcSafeLoops:       true,
+		gcFrameName:       "__gc_frame",
 	}
 	hasDefaults := false
 	for _, def := range fn.Defaults {
@@ -62,15 +64,6 @@ func (g *cgen) emitFuncWithCaptures(name string, fn *ast.FuncLit, classRef strin
 		child.vars[param] = true
 		if i < 6 {
 			child.line(fmt.Sprintf("TyaValue %s = __arg%d;", cName(param), i))
-			if i < len(fn.Defaults) && fn.Defaults[i] != nil {
-				def, _, err := child.expr(fn.Defaults[i])
-				if err != nil {
-					return "", err
-				}
-				child.line(fmt.Sprintf("if (%s.kind == TYA_MISSING) { %s = %s; }", cName(param), cName(param), def))
-			} else if hasDefaults {
-				child.line(fmt.Sprintf("if (%s.kind == TYA_MISSING) { %s = tya_nil(); }", cName(param), cName(param)))
-			}
 		}
 	}
 	for _, local := range assignedNames(fn.Body) {
@@ -79,6 +72,38 @@ func (g *cgen) emitFuncWithCaptures(name string, fn *ast.FuncLit, classRef strin
 		}
 		child.vars[local] = true
 		child.line(fmt.Sprintf("TyaValue %s = tya_nil();", cName(local)))
+	}
+	rootNames := []string{"__this"}
+	for i, param := range fn.Params {
+		if i < 6 {
+			rootNames = append(rootNames, cName(param))
+		}
+	}
+	for _, local := range assignedNames(fn.Body) {
+		if !contains(rootNames, cName(local)) {
+			rootNames = append(rootNames, cName(local))
+		}
+	}
+	rootPointers := make([]string, 0, len(rootNames))
+	for _, root := range rootNames {
+		rootPointers = append(rootPointers, "&"+root)
+	}
+	child.line(fmt.Sprintf("TyaValue *__gc_roots[] = {%s};", strings.Join(rootPointers, ", ")))
+	child.line("TyaGcRootFrame __gc_frame;")
+	child.line(fmt.Sprintf("tya_gc_enter_frame(&__gc_frame, __gc_roots, %d);", len(rootPointers)))
+	for i, param := range fn.Params {
+		if i >= 6 {
+			continue
+		}
+		if i < len(fn.Defaults) && fn.Defaults[i] != nil {
+			def, _, err := child.expr(fn.Defaults[i])
+			if err != nil {
+				return "", err
+			}
+			child.line(fmt.Sprintf("if (%s.kind == TYA_MISSING) { %s = %s; }", cName(param), cName(param), def))
+		} else if hasDefaults {
+			child.line(fmt.Sprintf("if (%s.kind == TYA_MISSING) { %s = tya_nil(); }", cName(param), cName(param)))
+		}
 	}
 	if fn.Expr != nil {
 		value, _, err := child.expr(fn.Expr)
@@ -158,19 +183,29 @@ func (g *cgen) returnLine(value string) {
 	for i := 0; i < g.raiseDepth; i++ {
 		g.line("tya_pop_raise_frame();")
 	}
-	if g.predicateName == "" {
-		g.line(fmt.Sprintf("return %s;", value))
-		return
-	}
 	result := fmt.Sprintf("__predicate_result_%d", g.temp)
 	g.temp++
 	g.line(fmt.Sprintf("TyaValue %s = %s;", result, value))
-	g.line(fmt.Sprintf("if (%s.kind != TYA_BOOL) {", result))
-	g.indent++
-	g.line(fmt.Sprintf("tya_panic(tya_string(%s));", strconv.Quote(g.predicateName+" must return boolean")))
-	g.indent--
-	g.line("}")
+	if g.predicateName != "" {
+		g.line(fmt.Sprintf("if (%s.kind != TYA_BOOL) {", result))
+		g.indent++
+		g.line(fmt.Sprintf("tya_panic(tya_string(%s));", strconv.Quote(g.predicateName+" must return boolean")))
+		g.indent--
+		g.line("}")
+	}
+	if g.gcFrameName != "" {
+		g.line(fmt.Sprintf("tya_gc_leave_frame(&%s);", g.gcFrameName))
+	}
 	g.line(fmt.Sprintf("return %s;", result))
+}
+
+func contains(values []string, target string) bool {
+	for _, value := range values {
+		if value == target {
+			return true
+		}
+	}
+	return false
 }
 
 func predicateName(name string) string {

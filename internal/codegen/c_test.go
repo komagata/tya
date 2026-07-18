@@ -33,6 +33,30 @@ func TestEmitCCollectsStringsDuringTopLevelWhileLoop(t *testing.T) {
 	}
 }
 
+func TestEmitCCollectsStringsDuringFunctionWhileLoop(t *testing.T) {
+	src := "build = ->\n  out = \"\"\n  i = 0\n  while i < 100000\n    out = out + \"x\"\n    i = i + 1\n  out.len()\nprint(build())\n"
+	out := compileAndRun(t, src)
+	if string(out) != "100000\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
+func TestEmitCUnwindsFunctionGCRootsWhenRaising(t *testing.T) {
+	src := "fail = ->\n  local = \"temporary\"\n  raise error(\"boom\")\ntry\n  fail()\ncatch err\n  print(err[\"message\"])\nruntime_gc_collect()\nprint(\"ok\")\n"
+	out := compileAndRun(t, src)
+	if string(out) != "boom\nok\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
+func TestEmitCProtectsNestedExpressionValuesDuringFunctionGC(t *testing.T) {
+	src := "spin = ->\n  i = 0\n  while i < 10000\n    waste = \"x\" + i.to_string()\n    i = i + 1\n  \"done\"\nbuild = ->\n  out = []\n  out.push(spin())\n  { first: [{ value: \"kept\" }], second: spin(), pushed: out[0] }\ndata = build()\nprint(data[\"first\"][0][\"value\"])\nprint(data[\"second\"])\nprint(data[\"pushed\"])\n"
+	out := compileAndRun(t, src)
+	if string(out) != "kept\ndone\ndone\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCCompilesControlFlowExpressions(t *testing.T) {
 	src := "label = if true\n  \"adult\"\nelse\n  \"young\"\nprint(label)\nmissing = if false\n  \"bad\"\nprint(missing)\ni = 0\nlast_while = while i < 3\n  i = i + 1\n  i\nprint(last_while)\nlast_for = for item in [1, 2, 3]\n  item\nprint(last_for)\nstatus = match \"ok\"\n  case \"ok\"\n    \"success\"\n  case _\n    \"fallback\"\nprint(status)\n"
 	out := compileAndRun(t, src)

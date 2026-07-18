@@ -28,6 +28,7 @@ typedef struct TyaDict TyaDict;
 typedef struct TyaDictEntry TyaDictEntry;
 typedef struct TyaFunction TyaFunction;
 typedef struct TyaRaiseFrame TyaRaiseFrame;
+typedef struct TyaGcRootFrame TyaGcRootFrame;
 typedef struct TyaString TyaString;
 typedef struct TyaTask TyaTask;
 typedef struct TyaChannel TyaChannel;
@@ -65,6 +66,18 @@ struct TyaRaiseFrame {
   jmp_buf env;
   TyaValue value;
   TyaRaiseFrame *prev;
+  TyaGcRootFrame *gc_roots;
+};
+
+struct TyaGcRootFrame {
+  TyaValue **roots;
+  int count;
+  TyaGcRootFrame *thread_prev;
+  TyaGcRootFrame *global_prev;
+  TyaGcRootFrame *global_next;
+  TyaValue *protected_values;
+  int protected_count;
+  int protected_cap;
 };
 
 TyaValue tya_nil(void);
@@ -352,15 +365,20 @@ TyaValue tya_sync_wait_group_wait(TyaValue wg);
  * tya_gc_register_root  generated code calls this at startup for every
  *                       module-level TyaValue global so the collector can
  *                       reach them as roots.
- * tya_gc_collect        runs a full mark-and-sweep collection. Safe only
- *                       at points where every live local TyaValue is also
- *                       reachable from a registered root (e.g. between
- *                       top-level statements). See docs/v0.41/SPEC.md.
+ * tya_gc_enter_frame    registers a generated function's local values as
+ *                       roots until tya_gc_leave_frame is called.
+ * tya_gc_collect        runs a full mark-and-sweep collection. Generated
+ *                       code calls it only at points where expression
+ *                       temporaries have been protected or consumed.
  * tya_gc_maybe_collect  threshold-driven trigger emitted by generated
  *                       code at safe points; calls tya_gc_collect when
  *                       the live set has grown past the threshold.
  * tya_gc_stats          returns a dict snapshot of the GC counters. */
 void tya_gc_register_root(TyaValue *p);
+void tya_gc_enter_frame(TyaGcRootFrame *frame, TyaValue **roots, int count);
+void tya_gc_leave_frame(TyaGcRootFrame *frame);
+TyaValue tya_gc_protect(TyaValue value);
+void tya_gc_clear_protected(void);
 void tya_gc_collect(void);
 void tya_gc_maybe_collect(void);
 TyaValue tya_gc_stats(void);

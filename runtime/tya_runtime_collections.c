@@ -1,4 +1,4 @@
-TyaValue tya_member(TyaValue dict, const char *key) {
+static TyaValue tya_member_raw(TyaValue dict, const char *key) {
   TyaValue primitive = tya_primitive_member(dict, key);
   if (primitive.kind != TYA_NIL) {
     return primitive;
@@ -64,6 +64,10 @@ TyaValue tya_member(TyaValue dict, const char *key) {
     exit(1);
   }
   return tya_nil();
+}
+
+TyaValue tya_member(TyaValue dict, const char *key) {
+  return tya_gc_protect(tya_member_raw(dict, key));
 }
 
 void tya_set_member(TyaValue dict, const char *key, TyaValue value) {
@@ -1357,4 +1361,3 @@ TyaValue tya_to_float(TyaValue value) {
 TyaValue tya_to_number(TyaValue value) {
   return tya_to_float(value);
 }
-

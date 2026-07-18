@@ -135,6 +135,25 @@ int main(void) {
 	}
 }
 
+func TestCRuntimeDictMapOwnsDynamicStringKeys(t *testing.T) {
+	src := `#include "tya_runtime.h"
+
+int main(void) {
+  TyaValue dict = tya_dict(0, 0);
+  tya_gc_register_root(&dict);
+  TyaValue key = tya_add(tya_string("na"), tya_string("me"));
+  tya_dict_set(dict, key, tya_string("kept"));
+  tya_gc_collect();
+  tya_print(tya_dict_get(dict, tya_string("name"), tya_nil(), false));
+  return 0;
+}
+`
+	out := compileAndRunRuntime(t, src)
+	if string(out) != "kept\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestCRuntimeProcessExitAndPanic(t *testing.T) {
 	out, code := compileAndRunRuntimeAllowExit(t, `#include "tya_runtime.h"
 

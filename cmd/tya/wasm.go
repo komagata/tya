@@ -143,6 +143,7 @@ typedef struct TyaArray TyaArray;
 typedef struct TyaDict TyaDict;
 typedef struct TyaFunction TyaFunction;
 typedef struct TyaValue TyaValue;
+typedef struct TyaGcRootFrame { int unused; } TyaGcRootFrame;
 struct TyaValue { TyaKind kind; bool boolean; double number; const char *string; TyaArray *array; TyaDict *dict; TyaFunction *function; };
 typedef struct { const char *key; TyaValue value; } TyaDictEntry;
 typedef TyaValue (*TyaFunctionPtr)(TyaValue, TyaValue, TyaValue, TyaValue, TyaValue, TyaValue, TyaValue);
@@ -189,6 +190,10 @@ TyaValue tya_file_write_bytes(TyaValue path, TyaValue b);
 TyaValue tya_file_append(TyaValue path, TyaValue text);
 void tya_panic(TyaValue value);
 void tya_gc_register_root(TyaValue *root);
+void tya_gc_enter_frame(TyaGcRootFrame *frame, TyaValue **roots, int count);
+void tya_gc_leave_frame(TyaGcRootFrame *frame);
+TyaValue tya_gc_protect(TyaValue value);
+void tya_gc_clear_protected(void);
 void tya_gc_maybe_collect(void);
 void tya_print(TyaValue value);
 TyaValue tya_to_string(TyaValue value);
@@ -370,6 +375,10 @@ void tya_set_member(TyaValue value, const char *key, TyaValue item) {
   dict->entries[dict->len++] = (TyaDictEntry){key, item};
 }
 void tya_gc_register_root(TyaValue *root) { (void)root; }
+void tya_gc_enter_frame(TyaGcRootFrame *frame, TyaValue **roots, int count) { (void)frame; (void)roots; (void)count; }
+void tya_gc_leave_frame(TyaGcRootFrame *frame) { (void)frame; }
+TyaValue tya_gc_protect(TyaValue value) { return value; }
+void tya_gc_clear_protected(void) {}
 void tya_gc_maybe_collect(void) {}
 TyaValue tya_args(int argc, char **argv) {
   TyaValue *items = tya_alloc(sizeof(TyaValue) * argc);

@@ -206,6 +206,7 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		g.line(fmt.Sprintf("while (tya_truthy(%s)) {", cond))
 		g.indent++
 		if g.gcSafeLoops {
+			g.line("tya_gc_clear_protected();")
 			g.line("tya_gc_maybe_collect();")
 		}
 		for _, stmt := range n.Body {
